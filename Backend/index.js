@@ -28,6 +28,8 @@ app.get("/", (req, res) => {
   res.json("Welcome to SmartYatri Backend Development! 🚀");
 });
 
+app.use("/api/auth", require("./routes/AuthenticationRoutes"));
+
 app.listen(PORT, () => {
   console.log(`Server listening on PORT ${PORT} ⛳`);
 });
