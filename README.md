@@ -86,7 +86,7 @@
 
 
 ```
-SmartYatri/
+TrupUp/
 ├── client/ → React Frontend
 │ ├── components/
 │ ├── pages/
