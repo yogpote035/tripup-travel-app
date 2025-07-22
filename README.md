@@ -56,6 +56,7 @@
 - **React Icons** – UI icons
 - **React Toastify** – Notifications
 - **React DatePicker** – Calendar UI
+- **Rect-Redux** – Handling State
 - **Cloudinary** – Image upload
 
 ### 🧠 Backend
