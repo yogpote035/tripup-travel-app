@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../../AllStatesFeatures/Authentication/authSlice";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-
+import Loading from "../../General/Loading";
 function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -15,6 +15,18 @@ function Login() {
     phone: "",
     password: "",
   });
+
+  const loading = useSelector((state) => state.auth.loading);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/", { replace: true }); //if logged in
+    }
+  }, [isAuthenticated, navigate]);
+  if (loading) {
+    return <Loading message="Verifying Your Credentials" />;
+  }
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -29,21 +41,20 @@ function Login() {
       password: formData.password,
       ...(usePhone ? { phone: formData.phone } : { email: formData.email }),
     };
-
     dispatch(loginUser(payload));
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4">
-      <div className="bg-white shadow-md rounded-xl p-6 w-full max-w-md">
-        <h2 className="text-center text-2xl font-bold text-indigo-600 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      <div className="bg-gray-800 shadow-md rounded-xl p-6 w-full max-w-md  border border-white">
+        <h2 className="text-center text-2xl font-bold text-white mb-6">
           Login on TripUp
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {!usePhone ? (
             <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
+              <label className="block mb-1 text-sm font-medium text-white">
                 Email
               </label>
               <input
@@ -52,13 +63,13 @@ function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
-                className="w-full px-3 py-2 border rounded-md outline-none"
+                className="w-full px-3 py-2 border rounded-md outline-none text-white"
                 required
               />
             </div>
           ) : (
             <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
+              <label className="block mb-1 text-sm font-medium text-white">
                 Phone
               </label>
               <input
@@ -67,7 +78,7 @@ function Login() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="Enter your phone number"
-                className="w-full px-3 py-2 border rounded-md outline-none"
+                className="w-full px-3 py-2 border rounded-md outline-none text-white"
                 required
               />
             </div>
@@ -75,7 +86,7 @@ function Login() {
 
           {/* Password */}
           <div className="relative">
-            <label className="block mb-1 text-sm font-medium text-gray-700">
+            <label className="block mb-1 text-sm font-medium text-white">
               Password
             </label>
             <input
@@ -84,7 +95,7 @@ function Login() {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your password"
-              className="w-full px-3 py-2 border rounded-md pr-10 outline-none"
+              className="w-full px-3 py-2 border rounded-md pr-10 outline-none text-white"
               required
             />
             <button
@@ -100,20 +111,27 @@ function Login() {
           <button
             type="submit"
             className={`w-full 
-             text-white font-semibold py-2 rounded-md bg-rose-600 hover:bg-rose-700 transition-colors`}
+             text-black font-semibold py-2 rounded-md bg-white hover:bg-gray-300 transition-colors`}
           >
             Login
           </button>
 
-          <p className="text-sm text-center text-gray-500">
+          <p className="text-sm text-center text-white">
             {usePhone ? "Prefer email login?" : "Prefer phone login?"}{" "}
             <button
               type="button"
               onClick={() => setUsePhone(!usePhone)}
-              className="text-indigo-600 hover:underline font-medium"
+              className="text-white hover:underline font-medium"
             >
               Switch to {usePhone ? "Email" : "Phone"}
             </button>
+          </p>
+          <p className="text-sm text-center text-white">
+            Not Have a Account?{" "}
+            <Link to={"/signup"}>
+              {" "}
+              <span className="font-bold hover:underline hover:text-yellow-300">Signup</span>
+            </Link>
           </p>
         </form>
       </div>

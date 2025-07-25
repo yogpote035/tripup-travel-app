@@ -25,10 +25,11 @@ app.get("/health", (req, res) => res.status(200).send("ok"));
 app.head("/health", (req, res) => res.status(200).send("ok"));
 
 app.get("/", (req, res) => {
-  res.json("Welcome to SmartYatri Backend Development! 🚀");
+  res.json("Welcome to TripUp Backend Development! 🚀");
 });
 
 app.use("/api/auth", require("./routes/AuthenticationRoutes"));
+app.use("/api/train", require("./routes/TrainRoutes"));
 
 app.listen(PORT, () => {
   console.log(`Server listening on PORT ${PORT} ⛳`);

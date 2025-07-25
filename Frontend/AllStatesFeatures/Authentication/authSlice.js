@@ -3,11 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const initialState = {
-  user: {
-    userId: null,
-    username: null,
-    token: null,
-  },
+  user: null,
   isAuthenticated: false,
   loading: false,
   error: null,
@@ -29,9 +25,9 @@ const authSlice = createSlice({
         username: action.payload.username,
         token: action.payload.token,
       };
-      localStorage.setItem("userId", JSON.stringify(action.payload.userId));
-      localStorage.setItem("username", JSON.stringify(action.payload.username));
-      localStorage.setItem("token", JSON.stringify(action.payload.token));
+      localStorage.setItem("userId", action.payload.userId);
+      localStorage.setItem("username", action.payload.username);
+      localStorage.setItem("token", action.payload.token);
     },
     loginFailure: (state, action) => {
       state.loading = false;
@@ -52,9 +48,9 @@ const authSlice = createSlice({
         username: action.payload.username,
         token: action.payload.token,
       };
-      localStorage.setItem("userId", JSON.stringify(action.payload.userId));
-      localStorage.setItem("username", JSON.stringify(action.payload.username));
-      localStorage.setItem("token", JSON.stringify(action.payload.token));
+      localStorage.setItem("userId", action.payload.userId);
+      localStorage.setItem("username", action.payload.username);
+      localStorage.setItem("token", action.payload.token);
     },
     signupFailure: (state, action) => {
       state.loading = false;
@@ -97,7 +93,7 @@ export const loginUser = (payload) => async (dispatch) => {
   const { email, phone, password } = payload;
   try {
     const { data, status } = await axios.post(
-      "http://localhost:5000/api/auth/login",
+      `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
       {
         email, //based on mobile or email
         phone,
@@ -146,7 +142,7 @@ export const signupUser = (payload) => async (dispatch) => {
 
   try {
     const { data, status } = await axios.post(
-      "http://localhost:5000/api/auth/signup",
+      `${import.meta.env.VITE_API_BASE_URL}/auth/signup`,
       {
         name,
         email,
@@ -159,6 +155,7 @@ export const signupUser = (payload) => async (dispatch) => {
       return dispatch(signupFailure("User already exists"));
     }
     dispatch(signupSuccess(data));
+    toast.success(data.message || "Signup successful");
   } catch (error) {
     dispatch(
       signupFailure(
