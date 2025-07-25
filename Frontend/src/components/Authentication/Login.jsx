@@ -37,7 +37,7 @@ function Login() {
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="bg-white shadow-md rounded-xl p-6 w-full max-w-md">
         <h2 className="text-center text-2xl font-bold text-indigo-600 mb-6">
-          Login to TripUp
+          Login on TripUp
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -100,7 +100,7 @@ function Login() {
           <button
             type="submit"
             className={`w-full 
-             text-white font-semibold py-2 rounded-md hover:bg-rose-800 transition-colors`}
+             text-white font-semibold py-2 rounded-md bg-rose-600 hover:bg-rose-700 transition-colors`}
           >
             Login
           </button>

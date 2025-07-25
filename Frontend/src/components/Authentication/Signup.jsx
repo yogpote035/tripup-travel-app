@@ -34,7 +34,7 @@ function Signup() {
         className="bg-white p-10 rounded-lg shadow-lg w-full max-w-2xl space-y-6"
       >
         <h2 className="text-3xl font-bold text-center text-indigo-700 mb-4">
-          Welcome On SmartYatri Please SignUp
+          Welcome on TripUp Please SignUp
         </h2>
 
         <div>
@@ -104,7 +104,9 @@ function Signup() {
         <button
           type="submit"
           className="w-full py-2 font-semibold rounded shadow bg-indigo-500 text-white hover:bg-indigo-600          "
-        >Signup</button>
+        >
+          Signup
+        </button>
       </form>
     </div>
   );
