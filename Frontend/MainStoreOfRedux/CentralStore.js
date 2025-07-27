@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../AllStatesFeatures/Authentication/authSlice";
-import trainReducer from "../AllStatesFeatures/Train/trainSlice";
-let Store = {};
+import trainReducer from "../AllStatesFeatures/Train/AllTrainsSlice";
+import bookingReducer from "../AllStatesFeatures/Train/BookTrainTicketSlice";
+let Store = {}; //initialize because export default
 export default Store = configureStore({
   reducer: {
     auth: authReducer,
-    train: trainReducer,
+    train: trainReducer, //for Get All Train Between Source And Destination
+    bookTrainTicket: bookingReducer,
   },
 });

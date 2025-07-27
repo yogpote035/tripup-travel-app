@@ -4,6 +4,9 @@ import { toast } from "react-toastify";
 
 const initialState = {
   trains: [],
+  from: "",
+  to: "",
+  total: 0,
   loading: false,
   error: null,
 };
@@ -18,11 +21,17 @@ const trainSlice = createSlice({
     },
     fetchTrainsSuccess: (state, action) => {
       state.loading = false;
-      state.trains = action.payload;
+      state.trains = action.payload.trains || [];
+      state.from = action.payload.from || "";
+      state.to = action.payload.to || "";
+      state.total = action.payload.total || action.payload.trains?.length || 0;
     },
     fetchTrainsFailure: (state, action) => {
       state.loading = false;
       state.trains = [];
+      state.from = "";
+      state.to = "";
+      state.total = 0;
       state.error = action.payload;
     },
     clearTrainErrors: (state) => {
@@ -40,44 +49,41 @@ export const {
 
 export default trainSlice.reducer;
 
-//fetch trains between 2 stations
 export const fetchTrainsBetweenStations =
-  ({ from, to }) =>
+  ({ from, to, day, trainType }) =>
   async (dispatch) => {
-    console.log("from train slice b/w two station");
-    console.log(from + " : " + to);
     dispatch(fetchTrainsRequest());
+
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/train/train-between`,
-        { params: { from, to } }
+        {
+          params: {
+            from,
+            to,
+            ...(day && { day }),
+            ...(trainType && { trainType }),
+          },
+        }
       );
-      if (res.status === 406) {
-        dispatch(
-          fetchTrainsFailure(
-            res?.data?.message || "Source and Destination Station is Required"
-          )
-        );
-        return toast.error(
-          res?.data?.message || "Source and Destination Station is Required"
-        );
+
+      if (res.status === 406 || res.status === 208) {
+        const msg = res.data?.message || "No Train Found";
+        dispatch(fetchTrainsFailure(msg));
+        toast.error(msg);
+        return;
       }
-      if (res.status === 208) {
-        dispatch(
-          fetchTrainsFailure(
-            res?.data?.message || "No Train Matches Your Route"
-          )
-        );
-        return toast.error(res?.data?.message || "No Train Found Between");
-      }
-      console.log(res.data);
-      dispatch(fetchTrainsSuccess(res.data));
-    } catch (error) {
       dispatch(
-        fetchTrainsFailure(
-          error.response?.data?.message || "Failed to load trains"
-        )
+        fetchTrainsSuccess({
+          trains: res.data,
+          from,
+          to,
+          total: res.data.length,
+        })
       );
-      toast.error("Failed to fetch trains between selected stations");
+    } catch (error) {
+      const errMsg = error.response?.data?.message || "Failed to fetch trains";
+      dispatch(fetchTrainsFailure(errMsg));
+      toast.error(errMsg);
     }
   };

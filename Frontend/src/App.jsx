@@ -11,13 +11,14 @@ import Bookings from "./components/Booking/Booking.jsx";
 import Itinerary from "./components/Itinerary/Itinerary.jsx";
 import Diary from "./components/Diary/Diary.jsx";
 import TrainPage from "./components/Train/TrainPage.jsx";
+import TrainSeatBooking from "./components/Train/TrainSeatBooking.jsx";
 function App() {
   return (
     <>
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <div className="mb-10"></div>
-        <main className="flex-grow">
+        <main className="flex-grow bg-gray-900">
           <Routes>
             <Route exact path="/" element={<Home />} />
             <Route exact path="/login" element={<Login />} />
@@ -26,6 +27,7 @@ function App() {
             <Route exact path="/itinerary" element={<Itinerary />} />
             <Route exact path="/diary" element={<Diary />} />
             <Route path="/train" element={<TrainPage />} />
+            <Route path="/train-seat-book" element={<TrainSeatBooking />} />
             <Route
               path="/bus"
               element={<h1 className="text-rose-400 mt-10">Bus</h1>}

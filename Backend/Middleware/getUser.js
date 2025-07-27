@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 module.exports.getUser = (request, response, next) => {
   const token = request.header("token");
-
+  
   if (!token) {
     return response.status(401).json({
       message: "Token Is Missing, Please Authenticate using Valid Token",
@@ -10,7 +10,7 @@ module.exports.getUser = (request, response, next) => {
   }
 
   try {
-    const data = jwt.verify(token, process.env.secret);
+    const data = jwt.verify(token, process.env.JWT_SECRET);
     request.user = data.user;
     next();
   } catch (error) {

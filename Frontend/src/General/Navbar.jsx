@@ -47,13 +47,22 @@ const Navbar = () => {
               sidebarOpen ? "md:translate-x-[-176px]" : "md:translate-x-0"
             }`}
           >
-            <Link to="/bookings" className="text-white hover:text-white font-medium">
+            <Link
+              to="/bookings"
+              className="text-white hover:text-white font-medium"
+            >
               Bookings
             </Link>
-            <Link to="/itinerary" className="text-white hover:text-white font-medium">
+            <Link
+              to="/itinerary"
+              className="text-white hover:text-white font-medium"
+            >
               Itinerary
             </Link>
-            <Link to="/diary" className="text-white hover:text-white font-medium">
+            <Link
+              to="/diary"
+              className="text-white hover:text-white font-medium"
+            >
               Diary
             </Link>
           </div>
@@ -75,7 +84,7 @@ const Navbar = () => {
           <h2 className="text-xl font-bold text-white">Menu</h2>
           <button
             onClick={toggleSidebar}
-            className="text-gray-600 hover:text-red-600"
+            className="text-gray-600 hover:text-white"
           >
             <FaTimes className="text-xl" />
           </button>
