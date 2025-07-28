@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { fetchTrainsBetweenStations } from "../../../AllStatesFeatures/Train/AllTrainsSlice";
 import { MdSwapVerticalCircle } from "react-icons/md";
 
-const SearchTrain = () => {
+const SearchTrain = ({ onDateChange }) => {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [date, setDate] = useState("");
@@ -22,13 +22,14 @@ const SearchTrain = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!from || !to) return toast.warn("Both stations are required");
+    if (!from || !to || !date) return toast.warn("Fields are required");
     if (from.toLowerCase() === to.toLowerCase())
       return toast.info("From and To cannot be same");
 
     const payload = { from, to };
 
     if (date) {
+      onDateChange(date); //pass to TrainList
       const day = new Date(date).toLocaleDateString("en-US", {
         weekday: "short",
       });
@@ -45,7 +46,7 @@ const SearchTrain = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-gray-800 text-white max-w-xl mx-auto p-6 rounded-lg shadow-lg space-y-6"
+      className="bg-gray-800 text-white max-w-xl mx-auto p-4 rounded-xl shadow-lg space-y-6"
     >
       <h2 className="text-2xl font-bold text-blue-400 text-center">
         Search Trains
@@ -120,6 +121,7 @@ const SearchTrain = () => {
           <input
             type="date"
             value={date}
+            required
             placeholder="All Dates"
             onChange={(e) => setDate(e.target.value)}
             min={new Date().toISOString().split("T")[0]}

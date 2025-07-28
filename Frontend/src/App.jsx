@@ -12,6 +12,7 @@ import Itinerary from "./components/Itinerary/Itinerary.jsx";
 import Diary from "./components/Diary/Diary.jsx";
 import TrainPage from "./components/Train/TrainPage.jsx";
 import TrainSeatBooking from "./components/Train/TrainSeatBooking.jsx";
+import MyTrainBookings from "./components/Train/MyTrainBookings.jsx";
 function App() {
   return (
     <>
@@ -26,8 +27,12 @@ function App() {
             <Route exact path="/bookings" element={<Bookings />} />
             <Route exact path="/itinerary" element={<Itinerary />} />
             <Route exact path="/diary" element={<Diary />} />
-            <Route path="/train" element={<TrainPage />} />
+
+            {/* Seat Booking Routes */}
             <Route path="/train-seat-book" element={<TrainSeatBooking />} />
+
+            {/* Separate Call for Search From Here */}
+            <Route path="/train" element={<TrainPage />} />
             <Route
               path="/bus"
               element={<h1 className="text-rose-400 mt-10">Bus</h1>}
@@ -36,6 +41,18 @@ function App() {
               path="/flight"
               element={<h1 className="text-rose-400 mt-10">Flight</h1>}
             />
+
+            {/*Get Booking Routes */}
+            <Route path="/train-bookings" element={<MyTrainBookings />} />
+            <Route
+              path="/bus-bookings"
+              element={<h1 className="text-rose-400 mt-10">Bus Booking</h1>}
+            />
+            <Route
+              path="/flight-bookings"
+              element={<h1 className="text-rose-400 mt-10">Flight Bookings</h1>}
+            />
+            {/* For Non Existing Route */}
             <Route
               path="*"
               element={

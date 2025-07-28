@@ -35,7 +35,9 @@ module.exports.TrainBetween = async (req, res) => {
       route: {
         $all: [new RegExp(`^${from}$`, "i"), new RegExp(`^${to}$`, "i")],
       },
-      ...(day && { days: new RegExp(`^${day}$`, "i") }),
+      ...(day && {
+        days: { $in: [new RegExp(`^${day}$`, "i"), /^Daily$/i] },
+      }),
       ...(trainType && { trainType: new RegExp(`^${trainType}$`, "i") }),
     });
 
@@ -200,5 +202,31 @@ module.exports.bookTrain = async (req, res) => {
   } catch (err) {
     console.error("Booking error:", err);
     res.status(500).json({ message: "Booking failed" });
+  }
+};
+
+exports.getUserBookings = async (req, res) => {
+  try {
+    const userId = req.header("userId");
+    console.log("request receive in Get Booking");
+    console.log("User ID: ", userId);
+
+    if (!userId) {
+      return res.status(406).json({ message: "Please Provide Parameters" });
+    }
+    const bookings = await TrainBookingModel.find({ user: userId }).sort({
+      bookedAt: -1,
+    });
+
+    if (!bookings.length) {
+      return res
+        .status(208)
+        .json({ message: "Oh! no, Sorry We Didn't Get Your Memories" });
+    }
+
+    res.status(200).json(bookings);
+  } catch (err) {
+    console.error("Error fetching user bookings:", err);
+    res.status(500).json({ message: "Failed to retrieve bookings" });
   }
 };

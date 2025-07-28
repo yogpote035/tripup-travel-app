@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import Loading from "../../General/Loading";
 import { useNavigate } from "react-router-dom";
 
-const TrainList = () => {
+const TrainList = ({ searchDate }) => {
   const { trains, loading, error, from, to, total } = useSelector(
     (state) => state.train
   );
@@ -36,102 +36,101 @@ const TrainList = () => {
       <div className="grid gap-6">
         {trains &&
           trains.map((train, index) => (
-            <div
-              key={index}
-              className="bg-gray-800 text-white border border-gray-700 p-5 rounded-xl shadow-md hover:shadow-lg transition-all"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-bold text-blue-300">
-                  {train.trainName}{" "}
-                  <span className="text-gray-400">({train.trainNumber})</span>
-                </h3>
-                <span className="text-sm px-2 py-1 bg-gray-700 rounded-full text-gray-300">
-                  {train.trainType}
-                </span>
-              </div>
+            <div key={index} className="w-full sm:w-full md:w-full">
+              <div className="bg-gray-800 text-white border border-gray-700 p-3 rounded-xl shadow-md hover:shadow-lg transition-all">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-bold text-blue-300">
+                    {train.trainName}{" "}
+                    <span className="text-gray-400">({train.trainNumber})</span>
+                  </h3>
 
-              <div className="text-sm mb-1">
-                <strong>Route:</strong>{" "}
-                <span className="text-gray-300">
-                  {train.route?.join(" → ")}
-                </span>
-              </div>
+                  <span className="text-sm px-2 py-1 bg-gray-700 rounded-full text-gray-300">
+                    {train.trainType}
+                  </span>
+                </div>
+                <div className="relative bg-gray-700 p-4 rounded-md mb-4">
+                  <span className="absolute left-3 top-2 text-xs uppercase tracking-wider text-gray-400 font-medium">
+                    Route and Running Days{" "}
+                  </span>
+                  <div className="text-center font-semibold text-blue-100 tracking-wide text-sm mt-2">
+                    {train.route?.join(" → ")}
+                    <br />
+                    <span className="text-sm px-2 mx-8 py-1  tracking-wider text-indigo-300">
+                      {train.days?.join(" | ")}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row justify-between text-sm mb-1 gap-1">
+                  <span>
+                    <strong>Departure from {from}:</strong>{" "}
+                    {train.departure?.time}
+                  </span>
+                  <span className="text-gray-300">
+                    {" "}
+                    <strong>Distance: </strong>
+                    {train.distance} km
+                  </span>
+                  <span>
+                    <strong>Arrival to {to}:</strong> {train.arrival?.time}
+                  </span>
+                </div>
+                {/* Coaches */}
+                <div className="mb-1 text-sm">
+                  <strong>Coach Types:</strong>
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {train.coaches?.map((coach, i) => (
+                      <div
+                        key={i}
+                        className="bg-gray-700 rounded-md p-3 text-gray-200 border border-gray-600 flex flex-col justify-between"
+                      >
+                        <div className="font-medium text-blue-300">
+                          {coach.coachType} ({coach.coachCode})
+                        </div>
 
-              <div className="text-sm mb-1">
-                <strong>Distance:</strong>{" "}
-                <span className="text-gray-300">{train.distance} km</span>
-              </div>
+                        <div className="mt-1 text-sm">
+                          <span className="text-gray-300">
+                            Seats:{" "}
+                            {coach.availableSeats > 0 ? (
+                              <span className="text-green-400 font-semibold">
+                                {coach.availableSeats}
+                              </span>
+                            ) : (
+                              <span className="text-red-500 font-semibold">
+                                0 (Unavailable)
+                              </span>
+                            )}
+                          </span>
+                        </div>
 
-              <div className="text-sm mb-1">
-                <strong>Running Days:</strong>{" "}
-                <span className="text-gray-300">{train.days?.join(" | ")}</span>
-              </div>
+                        <div className="text-sm mt-1 text-gray-300">
+                          Fare:{" "}
+                          <span className="text-white font-bold">
+                            ₹{coach.fare?.toFixed(2) || 0}
+                          </span>
+                        </div>
 
-              <div className="flex flex-col sm:flex-row justify-between text-sm mt-3 gap-1">
-                <span>
-                  <strong>Departure from {from}:</strong>{" "}
-                  {train.departure?.time}
-                </span>
-                <span>
-                  <strong>Arrival to {to}:</strong> {train.arrival?.time}
-                </span>
-              </div>
-
-              {/* Coaches */}
-              <div className="mt-4 text-sm">
-                <strong>Coach Types:</strong>
-                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {train.coaches?.map((coach, i) => (
-                    <div
-                      key={i}
-                      className="bg-gray-700 rounded-md p-3 text-gray-200 border border-gray-600 flex flex-col justify-between"
-                    >
-                      <div className="font-medium text-blue-300">
-                        {coach.coachType} ({coach.coachCode})
+                        {coach.availableSeats > 0 && (
+                          <button
+                            className="mt-3 px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm font-semibold text-white transition outline-none focus:outline-none"
+                            onClick={() =>
+                              navigate("/train-seat-book", {
+                                state: {
+                                  trainNumber: train?.trainNumber,
+                                  coachType: coach?.coachType,
+                                  trainName: train?.trainName,
+                                  from: from,
+                                  to: to,
+                                  journeyDate: searchDate ? searchDate : "",
+                                },
+                              })
+                            }
+                          >
+                            Book Now
+                          </button>
+                        )}
                       </div>
-
-                      <div className="mt-1 text-sm">
-                        <span className="text-gray-300">
-                          Seats:{" "}
-                          {coach.availableSeats > 0 ? (
-                            <span className="text-green-400 font-semibold">
-                              {coach.availableSeats}
-                            </span>
-                          ) : (
-                            <span className="text-red-500 font-semibold">
-                              0 (Unavailable)
-                            </span>
-                          )}
-                        </span>
-                      </div>
-
-                      <div className="text-sm mt-1 text-gray-300">
-                        Fare:{" "}
-                        <span className="text-white font-bold">
-                          ₹{coach.fare?.toFixed(2) || 0}
-                        </span>
-                      </div>
-
-                      {coach.availableSeats > 0 && (
-                        <button
-                          className="mt-3 px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm font-semibold text-white transition outline-none focus:outline-none"
-                          onClick={() =>
-                            navigate("/train-seat-book", {
-                              state: {
-                                trainNumber: train?.trainNumber,
-                                coachType: train?.coachType,
-                                trainName: train?.trainName,
-                                from: from,
-                                to: to,
-                              },
-                            })
-                          }
-                        >
-                          Book Now
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

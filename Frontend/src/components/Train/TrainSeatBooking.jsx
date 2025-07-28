@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { bookTrainSeats } from "../../../AllStatesFeatures/Train/BookTrainTicketSlice";
+import Loading from "../../General/Loading";
+
 const TrainSeatBooking = () => {
   const { state } = useLocation();
   const { loading, error } = useSelector((state) => state.bookTrainTicket);
+  const navigate = useNavigate();
 
   const dispatch = useDispatch();
   const [trainNumber, setTrainNumber] = useState(state?.trainNumber || "");
@@ -21,6 +24,11 @@ const TrainSeatBooking = () => {
   const [phone, setPhone] = useState("");
   const [passengerNames, setPassengerNames] = useState([""]);
 
+  if (loading) {
+    return (
+      <Loading message="Wait ,Your Journey is Loading,We are Making Place For You " />
+    );
+  }
   const handlePassengerChange = (index, value) => {
     const updated = [...passengerNames];
     updated[index] = value;
@@ -48,8 +56,7 @@ const TrainSeatBooking = () => {
       return toast.warn("Please fill in all passenger names.");
     }
 
-    toast.success("✅ " + "Data is Received");
-    const sampleObject = {
+    const dataObject = {
       userId: localStorage.getItem("userId"),
       trainNumber,
       trainName,
@@ -61,8 +68,7 @@ const TrainSeatBooking = () => {
       ...(email && { email }),
       ...(phone && { phone }),
     };
-    dispatch(bookTrainSeats(sampleObject));
-    console.log(sampleObject);
+    dispatch(bookTrainSeats(dataObject, navigate));
   };
 
   return (
@@ -128,8 +134,8 @@ const TrainSeatBooking = () => {
             type="date"
             value={journeyDate}
             onChange={(e) => setJourneyDate(e.target.value)}
-            className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600 outline-none focus:outline-none"
-            required
+            className="w-full px-3 py-2 rounded cursor-not-allowed bg-gray-700 text-white border border-gray-600 outline-none focus:outline-none"
+            disabled
           />
         </div>
 
