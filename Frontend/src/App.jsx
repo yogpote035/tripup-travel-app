@@ -13,6 +13,8 @@ import Diary from "./components/Diary/Diary.jsx";
 import TrainPage from "./components/Train/TrainPage.jsx";
 import TrainSeatBooking from "./components/Train/TrainSeatBooking.jsx";
 import MyTrainBookings from "./components/Train/MyTrainBookings.jsx";
+import ProtectedRoutes from "./General/ProtectedRoutes.jsx";
+
 function App() {
   return (
     <>
@@ -24,14 +26,45 @@ function App() {
             <Route exact path="/" element={<Home />} />
             <Route exact path="/login" element={<Login />} />
             <Route exact path="/signup" element={<Signup />} />
-            <Route exact path="/bookings" element={<Bookings />} />
-            <Route exact path="/itinerary" element={<Itinerary />} />
-            <Route exact path="/diary" element={<Diary />} />
+            <Route
+              exact
+              path="/bookings"
+              element={
+                <ProtectedRoutes>
+                  <Bookings />
+                </ProtectedRoutes>
+              }
+            />
+            <Route
+              exact
+              path="/itinerary"
+              element={
+                <ProtectedRoutes>
+                  <Itinerary />
+                </ProtectedRoutes>
+              }
+            />
+            <Route
+              exact
+              path="/diary"
+              element={
+                <ProtectedRoutes>
+                  <Diary />
+                </ProtectedRoutes>
+              }
+            />
 
             {/* Seat Booking Routes */}
-            <Route path="/train-seat-book" element={<TrainSeatBooking />} />
+            <Route
+              path="/train-seat-book"
+              element={
+                <ProtectedRoutes>
+                  <TrainSeatBooking />
+                </ProtectedRoutes>
+              }
+            />
 
-            {/* Separate Call for Search From Here */}
+            {/* Separate Call for Search From Here {without Protection} */}
             <Route path="/train" element={<TrainPage />} />
             <Route
               path="/bus"
@@ -43,14 +76,29 @@ function App() {
             />
 
             {/*Get Booking Routes */}
-            <Route path="/train-bookings" element={<MyTrainBookings />} />
+            <Route
+              path="/train-bookings"
+              element={
+                <ProtectedRoutes>
+                  <MyTrainBookings />
+                </ProtectedRoutes>
+              }
+            />
             <Route
               path="/bus-bookings"
-              element={<h1 className="text-rose-400 mt-10">Bus Booking</h1>}
+              element={
+                <ProtectedRoutes>
+                  <h1 className="text-rose-400 mt-10">Bus Booking</h1>
+                </ProtectedRoutes>
+              }
             />
             <Route
               path="/flight-bookings"
-              element={<h1 className="text-rose-400 mt-10">Flight Bookings</h1>}
+              element={
+                <ProtectedRoutes>
+                  <h1 className="text-rose-400 mt-10">Flight Bookings</h1>
+                </ProtectedRoutes>
+              }
             />
             {/* For Non Existing Route */}
             <Route

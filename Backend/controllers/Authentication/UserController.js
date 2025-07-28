@@ -1,6 +1,7 @@
 const UserModel = require("../../models/UserModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const validateEmail = require("../../Middleware/validateEmail");
 
 module.exports.Signup = async (request, response) => {
   const { name, email, phone, password } = request.body;
@@ -26,6 +27,14 @@ module.exports.Signup = async (request, response) => {
       .status(208)
       .json({ message: "This Mail User Already Exists" });
   }
+
+  const isEmailValid = await validateEmail(email);
+  if (!isEmailValid) {
+    return response
+      .status(406)
+      .json({ message: "Email does not appear to be valid." });
+  }
+
   try {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);

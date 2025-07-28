@@ -62,12 +62,12 @@ const Home = () => {
           Your one-stop platform for booking tickets, planning itineraries, and
           recording your travel moments — via Train, Bus, or Flight.
         </p>
-        <Link
-          to="/bookings"
+        {/* <Link
+          to="/"
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition"
         >
           Book Your Journey
-        </Link>
+        </Link> */}
       </section>
 
       {/* Services (Mode Selection) */}

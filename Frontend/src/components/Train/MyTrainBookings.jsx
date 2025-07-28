@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getUserTrainBookings } from "../../../AllStatesFeatures/Train/BookTrainTicketSlice";
+import {
+  getUserTrainBookings,
+  downloadTicket,
+  MailTicketPdf,
+} from "../../../AllStatesFeatures/Train/BookTrainTicketSlice";
 import Loading from "../../General/Loading";
+import { SiGmail } from "react-icons/si";
+import { IoMdDownload } from "react-icons/io";
 
 const MyTrainBookings = () => {
   const dispatch = useDispatch();
@@ -24,7 +30,7 @@ const MyTrainBookings = () => {
 
   if (!booking || booking.length === 0)
     return (
-      <p className="text-center text-gray-400 mt-50 text-lg">
+      <p className="text-center text-gray-400 mt-20 text-lg">
         You have no bookings yet.
       </p>
     );
@@ -38,22 +44,45 @@ const MyTrainBookings = () => {
       <div className="grid gap-6">
         {Array.isArray(booking) &&
           booking.length > 0 &&
-          booking?.map((b, i) => (
+          booking.map((b, i) => (
             <div
               key={i}
-              className="bg-gray-800 text-white border border-gray-700 p-5 rounded-xl shadow-md hover:shadow-lg transition-all"
+              className="bg-gray-800 text-white border border-gray-700 p-5 rounded-xl shadow-md hover:shadow-lg transition-all relative"
             >
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-bold text-blue-300">
-                  {b.trainName}{" "}
-                  <span className="text-gray-400">({b.trainNumber})</span>
-                </h3>
-                <span className="text-sm px-2 py-1 bg-gray-700 rounded-full text-gray-300">
-                  {b.coachType}
-                </span>
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="text-lg font-bold text-blue-300">
+                    {b.trainName}{" "}
+                    <span className="text-gray-400">({b.trainNumber})</span>
+                  </h3>
+                  <span className="text-sm px-2 py-1 bg-gray-700 rounded-full text-gray-300 inline-block mt-1">
+                    {b.coachType}
+                  </span>
+                </div>
+
+                {/* Buttons on the right */}
+                <div className="flex flex-col gap-2 items-end">
+                  <button
+                    type="button"
+                    onClick={() => dispatch(downloadTicket(b._id))}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 hover:font-bold text-sm text-black rounded-md shadow-sm transition"
+                  >
+                    <IoMdDownload className="text-lg" />
+                    <span>Download Ticket</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => dispatch(MailTicketPdf(b._id))}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 hover:font-bold text-sm text-black rounded-md shadow-sm transition"
+                  >
+                    <SiGmail className="text-base text-red-500" />
+                    <span>Mail Ticket</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="text-sm text-gray-300 mb-1">
+              <div className="text-sm text-gray-300 mb-1 space-y-1">
                 <p>
                   <strong>Route:</strong> {b.from} ➝ {b.to}
                 </p>

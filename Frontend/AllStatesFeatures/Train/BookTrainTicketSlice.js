@@ -32,6 +32,7 @@ const bookingSlice = createSlice({
     clearBookingData: (state) => {
       state.booking = null;
     },
+    // for booking seat
     getBookingRequest: (state) => {
       state.loading = true;
       state.error = null;
@@ -52,20 +53,40 @@ const bookingSlice = createSlice({
     clearGetBookingData: (state) => {
       state.booking = null;
     },
+    // download receipt
+
+    getDownloadRequest: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    getDownloadSuccess: (state, action) => {
+      state.loading = false;
+      state.error = null;
+    },
+    getDownloadFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload || "";
+    },
   },
 });
 
 export const {
+  // for book Train
   bookingRequest,
   bookingSuccess,
   bookingFailure,
   clearBookingError,
   clearBookingData,
   getBookingRequest,
+  // All Booking
   getAllBookingSuccess,
   getBookingFailure,
   clearGetBookingData,
   clearGetBookingError,
+  //for download Ticket
+  getDownloadRequest,
+  getDownloadSuccess,
+  getDownloadFailure,
 } = bookingSlice.actions;
 
 export default bookingSlice.reducer;
@@ -73,7 +94,6 @@ export default bookingSlice.reducer;
 export const bookTrainSeats = (bookingData, navigate) => async (dispatch) => {
   dispatch(bookingRequest());
   try {
-    console.log("calling backend");
     const response = await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}/train/train-book-seat`,
       bookingData,
@@ -107,7 +127,6 @@ export const getUserTrainBookings = () => async (dispatch) => {
       }
     );
 
-
     // if (response.status === 208) {
     //   return;
     //   // dispatch(getBookingFailure(response?.data?.message));
@@ -119,5 +138,77 @@ export const getUserTrainBookings = () => async (dispatch) => {
     const errMsg = error.response?.data?.message || "Failed to load bookings";
     dispatch(getBookingFailure(errMsg));
     toast.error(errMsg);
+  }
+};
+
+// for download ticket in form of pdf
+export const downloadTicket = (bookingId) => async (dispatch) => {
+  dispatch(getDownloadRequest());
+  try {
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_BASE_URL}/train/train-bookings-receipt`,
+      {
+        params: {
+          bookingId,
+        },
+        responseType: "blob",
+        headers: {
+          token: localStorage.getItem("token"),
+        },
+      }
+    );
+
+    // Get file name from header
+    const contentDisposition = response.headers["content-disposition"];
+    let filename = "ticket.pdf";
+
+    if (contentDisposition?.includes("filename=")) {
+      const match = contentDisposition.match(/filename="?(.+?)"?$/);
+      if (match) filename = match[1];
+    }
+
+    // Trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    // Optional success message
+    dispatch(getDownloadSuccess());
+    toast.success("Ticket downloaded!");
+  } catch (error) {
+    const errMsg = error.response?.data?.message || "Failed to Get Your ticket";
+    toast.error(errMsg);
+    dispatch(getDownloadFailure(errMsg));
+  }
+};
+
+// for Mail ticket in form of pdf
+export const MailTicketPdf = (bookingId) => async (dispatch) => {
+  dispatch(getDownloadRequest()); //states not  need here ,i used for timepass message
+  try {
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_BASE_URL}/train/train-bookings-receipt-mail`,
+      {
+        params: {
+          bookingId,
+        },
+        headers: {
+          token: localStorage.getItem("token"),
+        },
+      }
+    );
+
+    // Optional success message
+    dispatch(getDownloadSuccess());
+    toast.success("Ticket Mail Successfully!");
+  } catch (error) {
+    const errMsg =
+      error.response?.data?.message || "Failed to Mail Your ticket";
+    toast.error(errMsg);
+    dispatch(getDownloadFailure(errMsg));
   }
 };

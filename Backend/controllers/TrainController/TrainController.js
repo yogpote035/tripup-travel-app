@@ -1,6 +1,9 @@
 const TrainBookingModel = require("../../models/TrainBookingModel");
 const UserModel = require("../../models/UserModel");
 const TrainModel = require("../../models/TrainModel");
+const puppeteer = require("puppeteer");
+const nodemailer = require("nodemailer");
+const validateEmail = require("../../Middleware/validateEmail");
 
 const getDistance = (train, from, to) => {
   const stationDistances = Object.fromEntries(train.stationDistances);
@@ -21,7 +24,6 @@ const getDistance = (train, from, to) => {
 
 module.exports.TrainBetween = async (req, res) => {
   const { from, to, day, trainType } = req.query;
-  console.log("TrainBetween API request received");
 
   if (!from || !to) {
     return res.status(406).json({ message: "Please Provide Parameters" });
@@ -77,7 +79,6 @@ module.exports.TrainBetween = async (req, res) => {
 
     return res.status(200).json(validTrains);
   } catch (error) {
-    console.error("TrainBetween error:", error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -101,9 +102,29 @@ module.exports.bookTrain = async (req, res) => {
     !passengerNames ||
     !from ||
     !to ||
-    !journeyDate
+    !journeyDate ||
+    !userId
   ) {
     return res.status(400).json({ message: "Missing booking data" });
+  }
+
+  // Fallback to user info from UserModel
+  let userEmail = email;
+  let userPhone = phone;
+
+  if ((!email || !phone) && userId) {
+    const user = await UserModel.findById(userId);
+    if (user) {
+      userEmail = email || user.email;
+      userPhone = phone || user.phone;
+    }
+  }
+  const isEmailValid = await validateEmail(userEmail);
+
+  if (!isEmailValid) {
+    return res
+      .status(406)
+      .json({ message: "Email does not appear to be valid." });
   }
 
   try {
@@ -164,18 +185,6 @@ module.exports.bookTrain = async (req, res) => {
     selectedCoach.availableSeats -= passengerNames.length;
     await train.save();
 
-    // Fallback to user info from UserModel
-    let userEmail = email;
-    let userPhone = phone;
-
-    if ((!email || !phone) && userId) {
-      const user = await UserModel.findById(userId);
-      if (user) {
-        userEmail = email || user.email;
-        userPhone = phone || user.phone;
-      }
-    }
-
     const fare =
       Math.round(selectedCoach.baseFarePerKm * distance) *
       passengerNames.length;
@@ -200,17 +209,14 @@ module.exports.bookTrain = async (req, res) => {
       booking,
     });
   } catch (err) {
-    console.error("Booking error:", err);
     res.status(500).json({ message: "Booking failed" });
   }
 };
 
-exports.getUserBookings = async (req, res) => {
+module.exports.getUserBookings = async (req, res) => {
   try {
     const userId = req.header("userId");
-    console.log("request receive in Get Booking");
-    console.log("User ID: ", userId);
-
+ 
     if (!userId) {
       return res.status(406).json({ message: "Please Provide Parameters" });
     }
@@ -226,7 +232,264 @@ exports.getUserBookings = async (req, res) => {
 
     res.status(200).json(bookings);
   } catch (err) {
-    console.error("Error fetching user bookings:", err);
     res.status(500).json({ message: "Failed to retrieve bookings" });
+  }
+};
+
+module.exports.generateReceiptPdf = async (req, res) => {
+  try {
+    const bookingId = req.query.bookingId;
+  
+
+    if (!bookingId) {
+      return res.status(406).json({ message: "Please Provide Booking ID" });
+    }
+
+    const booking = await TrainBookingModel.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        message: "Oh! no, We Didn't Get Your Travel Memory to Write It in File",
+      });
+    }
+    // this is finale
+    const ticketData = {
+      trainName: booking.trainName,
+      trainNumber: booking.trainNumber,
+      from: booking.from,
+      to: booking.to,
+      date: new Date(booking.journeyDate).toDateString(),
+      coach: booking.coachType,
+      fare: booking.fare,
+      phone: booking.phone,
+      email: booking.email,
+      passengers: booking.passengerNames.map((name, index) => ({
+        name,
+        seat: booking.seatNumbers[index] || "N/A",
+      })),
+    };
+
+    const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Train Ticket</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 10px;
+        font-size: 12px;
+        color: #333;
+      }
+      .ticket {
+        border: 1px dashed #444;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #fff;
+      }
+      .mainHeading {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #08111a;
+        text-align: center;
+      }
+      .title {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #2c3e50;
+      }
+      .info {
+        margin-bottom: 6px;
+      }
+      .passengers {
+        margin-top: 10px;
+      }
+      .passengers p {
+        margin: 2px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mainHeading">Train Ticket</div>
+    <div class="ticket">
+      <div class="title">${ticketData.trainName} (${
+      ticketData.trainNumber
+    })</div>
+      <div class="info"><strong>Route:</strong> ${ticketData.from} ➝ ${
+      ticketData.to
+    }</div>
+      <div class="info"><strong>Date:</strong> ${ticketData.date}</div>
+      <div class="info"><strong>Coach:</strong> ${ticketData.coach}</div>
+      <div class="info"><strong>Fare:</strong> ₹${ticketData.fare}</div>
+      <div class="info"><strong>Phone:</strong> ${ticketData.phone}</div>
+      <div class="info"><strong>Email:</strong> ${ticketData.email}</div>
+      <div class="passengers">
+        <strong>Passengers:</strong>
+        ${ticketData.passengers
+          .map(
+            (p, i) =>
+              `<p>${i + 1}. ${p.name} - Seat: <strong>${p.seat}</strong></p>`
+          )
+          .join("")}
+      </div>
+    </div>
+  </body>
+</html>
+`;
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      width: "5in",
+      height: "3.5in",
+      printBackground: true,
+      margin: {
+        top: "10px",
+        bottom: "10px",
+        left: "15px",
+        right: "15px",
+      },
+    });
+
+    await browser.close();
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": 'attachment; filename="ticket.pdf"',
+      "Content-Length": pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to generate PDF" });
+  }
+};
+
+// send Ticket To MAil
+exports.mailTrainTicket = async (req, res) => {
+  try {
+    const bookingId = req.query.bookingId;
+
+    if (!bookingId) {
+      return res.status(406).json({ message: "Please Provide Booking ID" });
+    }
+    const booking = await TrainBookingModel.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        message: "Oh! no, We Didn't Sent Your Travel Memory to Mail",
+      });
+    }
+
+    const ticketData = {
+      trainName: booking.trainName,
+      trainNumber: booking.trainNumber,
+      from: booking.from,
+      to: booking.to,
+      date: new Date(booking.journeyDate).toDateString(),
+      coach: booking.coachType,
+      fare: booking.fare,
+      phone: booking.phone,
+      email: booking.email,
+      passengers: booking.passengerNames.map((name, i) => ({
+        name,
+        seat: booking.seatNumbers[i] || "N/A",
+      })),
+    };
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            font-size: 12px;
+          }
+          .ticket {
+            border: 1px dashed #444;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+          }
+          .mainHeading {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #08111a;
+            text-align: center;
+          }
+          .passengers p {
+            margin: 2px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="mainHeading">Train Ticket</div>
+        <div class="ticket">
+          <p><strong>${ticketData.trainName} (${
+      ticketData.trainNumber
+    })</strong></p>
+          <p><strong>From:</strong> ${ticketData.from}</p>
+          <p><strong>To:</strong> ${ticketData.to}</p>
+          <p><strong>Date:</strong> ${ticketData.date}</p>
+          <p><strong>Coach:</strong> ${ticketData.coach}</p>
+          <p><strong>Fare:</strong> ₹${ticketData.fare}</p>
+          <p><strong>Phone:</strong> ${ticketData.phone}</p>
+          <p><strong>Email:</strong> ${ticketData.email}</p>
+          <div class="passengers">
+            <strong>Passengers:</strong>
+            ${ticketData.passengers
+              .map((p, i) => `<p>${i + 1}. ${p.name} - Seat: ${p.seat}</p>`)
+              .join("")}
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      width: "5in",
+      height: "3.5in",
+      printBackground: true,
+    });
+
+    await browser.close();
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Train Booking" <${process.env.MAIL_USER}>`,
+      to: booking.email,
+      subject: "Your Train Ticket",
+      text: "Attached is your train ticket.",
+      attachments: [
+        {
+          filename: `Ticket-${ticketData.trainNumber}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
+    });
+
+    res.status(200).json({ message: "Ticket emailed successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to send ticket via email" });
   }
 };
