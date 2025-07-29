@@ -2,17 +2,36 @@ const UserModel = require("../../models/UserModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const validateEmail = require("../../Middleware/validateEmail");
+const PhoneNumberValidator = require("../../Middleware/PhoneNumberValidator");
+const generateJWE = require("../../Middleware/GenerateToken");
 
 module.exports.Signup = async (request, response) => {
-  const { name, email, phone, password } = request.body;
+  let { name, email, phone, password } = request.body;
   console.log("signup request body", name, email, password, phone);
   if (!name || !email || !phone || !password) {
     return response.status(406).json({ message: "All Fields Are Required" });
   }
 
-  const existingPhoneUser = await UserModel.findOne({
-    $or: [{ phone }, { email }],
-  });
+  const result = PhoneNumberValidator(phone);
+
+  if (!result.isValid) {
+    return response.status(406).json({ message: "Invalid phone number" });
+  }
+
+  const isEmailValid = await validateEmail(email);
+  if (!isEmailValid) {
+    return response
+      .status(406)
+      .json({ message: "Email does not appear to be valid." });
+  }
+
+  console.log("Before formatted phone from signup ");
+  console.log(phone);
+  phone = result.formatted; // formate number
+  console.log("After formatted phone from signup ");
+  console.log(phone);
+
+  const existingPhoneUser = await UserModel.findOne({ phone });
 
   if (existingPhoneUser) {
     return response
@@ -28,13 +47,6 @@ module.exports.Signup = async (request, response) => {
       .json({ message: "This Mail User Already Exists" });
   }
 
-  const isEmailValid = await validateEmail(email);
-  if (!isEmailValid) {
-    return response
-      .status(406)
-      .json({ message: "Email does not appear to be valid." });
-  }
-
   try {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -48,13 +60,11 @@ module.exports.Signup = async (request, response) => {
     });
     await newUser.save();
     console.log("New User is Created");
-    const data = {
-      user: {
-        id: newUser.id,
-      },
-    };
-    const token = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: "7d" });
-    console.log("Token is generated and sending response to frontend");
+    
+    console.log("Call going to JWE From Signup");
+    const token = await generateJWE(newUser._id.toString());
+    console.log("Data Receive From JWE in Signup");
+
     return response.status(200).json({
       message: "Registration is Successfully Completed",
       token: token,
@@ -69,13 +79,35 @@ module.exports.Signup = async (request, response) => {
 };
 
 module.exports.Login = async (request, response) => {
-  const { email, phone, password } = request.body;
+  let { email, phone, password } = request.body;
 
   console.log("Login request body", email ? email : phone, password);
 
   if ((!email && !phone) || !password) {
-    return response.status(406).json({ message: "All Fields Are Required" });
+    return response.status(203).json({ message: "All Fields Are Required" });
   }
+  if (phone) {
+    //if phone then
+    const result = PhoneNumberValidator(phone);
+    if (!result.isValid) {
+      return response.status(203).json({ message: "Invalid phone number" });
+    }
+    console.log("Before formatted phone from signup ");
+    console.log(phone);
+    phone = result.formatted; // formate number
+    console.log("After formatted phone from signup ");
+    console.log(phone);
+  }
+
+  if (email) {
+    const isEmailValid = await validateEmail(email);
+    if (!isEmailValid) {
+      return response
+        .status(203)
+        .json({ message: "Email does not appear to be valid." });
+    }
+  }
+
   try {
     let existingUser = null;
     if (phone) {
@@ -108,19 +140,13 @@ module.exports.Login = async (request, response) => {
         .status(203)
         .json({ message: "You are not General User to access this resource" });
     }
-    const data = {
-      user: {
-        id: existingUser.id,
-      },
-    };
-
-    const token = jwt.sign(data, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    console.log("Call going to JWE From login");
+    const token = await generateJWE(existingUser._id.toString());
+    console.log("Data Receive From JWE in Login");
 
     return response.status(200).json({
       message: "User Logged In successfully",
-      token,
+      token: token,
       userId: existingUser._id,
       username: existingUser.name,
     });

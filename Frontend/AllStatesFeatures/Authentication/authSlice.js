@@ -125,9 +125,7 @@ export const loginUser = (payload) => async (dispatch) => {
     // user is Admin
     if (status === 203) {
       dispatch(loginFailure(data?.message || "Login failed. Try again."));
-      return toast.error(
-        "You are not authorized or General User to access this page"
-      );
+      return toast.error(data?.message || "Login failed. Try again.");
     }
   } catch (error) {
     dispatch(

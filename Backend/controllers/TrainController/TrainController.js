@@ -4,6 +4,7 @@ const TrainModel = require("../../models/TrainModel");
 const puppeteer = require("puppeteer");
 const nodemailer = require("nodemailer");
 const validateEmail = require("../../Middleware/validateEmail");
+const PhoneNumberValidator = require("../../Middleware/PhoneNumberValidator");
 
 const getDistance = (train, from, to) => {
   const stationDistances = Object.fromEntries(train.stationDistances);
@@ -108,17 +109,45 @@ module.exports.bookTrain = async (req, res) => {
     return res.status(400).json({ message: "Missing booking data" });
   }
 
+  console.log("before userEmail Email is Form Booking :", email);
+
   // Fallback to user info from UserModel
-  let userEmail = email;
-  let userPhone = phone;
+  let userEmail = email ? email : null;
+  let userPhone = phone ? phone : null;
 
   if ((!email || !phone) && userId) {
     const user = await UserModel.findById(userId);
-    if (user) {
-      userEmail = email || user.email;
-      userPhone = phone || user.phone;
+
+    //if user not found
+    if (!user) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
+
+    if (!email && user) {
+      userEmail = user.email;
+    }
+    if (!phone && user) {
+      userPhone = user.phone;
     }
   }
+
+  console.log("After userEmail Email is Form Booking :", userEmail);
+
+  console.log("user phone before validate :", userPhone);
+
+  const result = PhoneNumberValidator(userPhone);
+
+  console.log("user phone After validate :", userPhone);
+
+  if (!result.isValid) {
+    return res.status(406).json({ message: "Invalid phone number" });
+  }
+  console.log("Before formatted phone from signup ");
+  console.log(userPhone);
+  userPhone = result.formatted; // formate number
+  console.log("After formatted phone from signup ");
+  console.log(userPhone);
+
   const isEmailValid = await validateEmail(userEmail);
 
   if (!isEmailValid) {
@@ -216,7 +245,7 @@ module.exports.bookTrain = async (req, res) => {
 module.exports.getUserBookings = async (req, res) => {
   try {
     const userId = req.header("userId");
- 
+
     if (!userId) {
       return res.status(406).json({ message: "Please Provide Parameters" });
     }
@@ -239,7 +268,6 @@ module.exports.getUserBookings = async (req, res) => {
 module.exports.generateReceiptPdf = async (req, res) => {
   try {
     const bookingId = req.query.bookingId;
-  
 
     if (!bookingId) {
       return res.status(406).json({ message: "Please Provide Booking ID" });

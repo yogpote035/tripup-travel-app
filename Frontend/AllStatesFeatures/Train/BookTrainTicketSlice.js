@@ -26,12 +26,7 @@ const bookingSlice = createSlice({
       state.booking = null;
       state.error = action.payload;
     },
-    clearBookingError: (state) => {
-      state.error = null;
-    },
-    clearBookingData: (state) => {
-      state.booking = null;
-    },
+
     // for booking seat
     getBookingRequest: (state) => {
       state.loading = true;
@@ -46,12 +41,6 @@ const bookingSlice = createSlice({
       state.loading = false;
       state.booking = null;
       state.error = action.payload;
-    },
-    clearGetBookingError: (state) => {
-      state.error = null;
-    },
-    clearGetBookingData: (state) => {
-      state.booking = null;
     },
     // download receipt
 
@@ -99,7 +88,7 @@ export const bookTrainSeats = (bookingData, navigate) => async (dispatch) => {
       bookingData,
       {
         headers: {
-          token: localStorage.getItem("token"),
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       }
     );
@@ -121,7 +110,7 @@ export const getUserTrainBookings = () => async (dispatch) => {
       `${import.meta.env.VITE_API_BASE_URL}/train/train-bookings`,
       {
         headers: {
-          token: localStorage.getItem("token"),
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
           userId: localStorage.getItem("userId"),
         },
       }
@@ -153,7 +142,7 @@ export const downloadTicket = (bookingId) => async (dispatch) => {
         },
         responseType: "blob",
         headers: {
-          token: localStorage.getItem("token"),
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       }
     );
@@ -197,7 +186,7 @@ export const MailTicketPdf = (bookingId) => async (dispatch) => {
           bookingId,
         },
         headers: {
-          token: localStorage.getItem("token"),
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       }
     );
