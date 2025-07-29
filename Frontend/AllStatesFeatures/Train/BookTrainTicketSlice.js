@@ -80,37 +80,42 @@ export const {
 
 export default bookingSlice.reducer;
 //for booking train seat
-export const bookTrainSeats = (bookingData, navigate) => async (dispatch) => {
-  dispatch(bookingRequest());
-  try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/train/train-book-seat`,
-      bookingData,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    dispatch(bookingSuccess(response.data.booking));
-    navigate("/train-bookings");
-    toast.success(response.data.message || "Booking successful!");
-  } catch (error) {
-    const msg = error.response?.data?.message || "Booking failed";
-    dispatch(bookingFailure(msg));
-    toast.error(msg);
-  }
-};
+export const bookTrainSeats =
+  (bookingData, navigate) => async (dispatch, getState) => {
+    dispatch(bookingRequest());
+    const token = getState().auth.token;
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/train/train-book-seat`,
+        bookingData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+          },
+        }
+      );
+      dispatch(bookingSuccess(response.data.booking));
+      navigate("/train-bookings");
+      toast.success(response.data.message || "Booking successful!");
+    } catch (error) {
+      const msg = error.response?.data?.message || "Booking failed";
+      dispatch(bookingFailure(msg));
+      toast.error(msg);
+    }
+  };
 
 // for get all booking's of current user
-export const getUserTrainBookings = () => async (dispatch) => {
+export const getUserTrainBookings = () => async (dispatch, getState) => {
   dispatch(getBookingRequest());
+  const token = getState().auth.token;
+
   try {
     const response = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/train/train-bookings`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
           userId: localStorage.getItem("userId"),
         },
       }
@@ -131,8 +136,10 @@ export const getUserTrainBookings = () => async (dispatch) => {
 };
 
 // for download ticket in form of pdf
-export const downloadTicket = (bookingId) => async (dispatch) => {
+export const downloadTicket = (bookingId) => async (dispatch, getState) => {
   dispatch(getDownloadRequest());
+  const token = getState().auth.token;
+
   try {
     const response = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/train/train-bookings-receipt`,
@@ -142,7 +149,7 @@ export const downloadTicket = (bookingId) => async (dispatch) => {
         },
         responseType: "blob",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
         },
       }
     );
@@ -176,8 +183,10 @@ export const downloadTicket = (bookingId) => async (dispatch) => {
 };
 
 // for Mail ticket in form of pdf
-export const MailTicketPdf = (bookingId) => async (dispatch) => {
+export const MailTicketPdf = (bookingId) => async (dispatch, getState) => {
   dispatch(getDownloadRequest()); //states not  need here ,i used for timepass message
+  const token = getState().auth.token;
+
   try {
     const response = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/train/train-bookings-receipt-mail`,
@@ -186,7 +195,7 @@ export const MailTicketPdf = (bookingId) => async (dispatch) => {
           bookingId,
         },
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
         },
       }
     );

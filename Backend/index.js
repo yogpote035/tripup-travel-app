@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
@@ -30,6 +30,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", require("./routes/AuthenticationRoutes"));
 app.use("/api/train", require("./routes/TrainRoutes"));
+app.use("/api/user", require("./routes/UserInfoRoute"));
 
 app.listen(PORT, () => {
   console.log(`Server listening on PORT ${PORT} ⛳`);

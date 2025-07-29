@@ -14,6 +14,7 @@ import TrainPage from "./components/Train/TrainPage.jsx";
 import TrainSeatBooking from "./components/Train/TrainSeatBooking.jsx";
 import MyTrainBookings from "./components/Train/MyTrainBookings.jsx";
 import ProtectedRoutes from "./General/ProtectedRoutes.jsx";
+import ViewProfile from "./components/UserProfile/ViewProfile.jsx";
 
 function App() {
   return (
@@ -97,6 +98,15 @@ function App() {
               element={
                 <ProtectedRoutes>
                   <h1 className="text-rose-400 mt-10">Flight Bookings</h1>
+                </ProtectedRoutes>
+              }
+            />
+            {/* Profile Route */}
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoutes>
+                  <ViewProfile />
                 </ProtectedRoutes>
               }
             />
