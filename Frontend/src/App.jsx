@@ -15,6 +15,7 @@ import TrainSeatBooking from "./components/Train/TrainSeatBooking.jsx";
 import MyTrainBookings from "./components/Train/MyTrainBookings.jsx";
 import ProtectedRoutes from "./General/ProtectedRoutes.jsx";
 import ViewProfile from "./components/UserProfile/ViewProfile.jsx";
+import BusPage from "./components/Bus/BusPage.jsx";
 
 function App() {
   return (
@@ -67,10 +68,7 @@ function App() {
 
             {/* Separate Call for Search From Here {without Protection} */}
             <Route path="/train" element={<TrainPage />} />
-            <Route
-              path="/bus"
-              element={<h1 className="text-rose-400 mt-10">Bus</h1>}
-            />
+            <Route path="/bus" element={<BusPage />} />
             <Route
               path="/flight"
               element={<h1 className="text-rose-400 mt-10">Flight</h1>}

@@ -31,6 +31,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", require("./routes/AuthenticationRoutes"));
 app.use("/api/train", require("./routes/TrainRoutes"));
 app.use("/api/user", require("./routes/UserInfoRoute"));
+app.use("/api/bus", require("./routes/BusRoutes"));
 
 app.listen(PORT, () => {
   console.log(`Server listening on PORT ${PORT} ⛳`);
