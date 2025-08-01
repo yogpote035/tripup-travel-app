@@ -16,6 +16,8 @@ import MyTrainBookings from "./components/Train/MyTrainBookings.jsx";
 import ProtectedRoutes from "./General/ProtectedRoutes.jsx";
 import ViewProfile from "./components/UserProfile/ViewProfile.jsx";
 import BusPage from "./components/Bus/BusPage.jsx";
+import BusSeatSelect from "./components/Bus/BusSeatSelect.jsx";
+import BusBookingForm from "./components/Bus/BusBookingForm.jsx";
 
 function App() {
   return (
@@ -57,11 +59,31 @@ function App() {
             />
 
             {/* Seat Booking Routes */}
+            {/* train */}
             <Route
               path="/train-seat-book"
               element={
                 <ProtectedRoutes>
                   <TrainSeatBooking />
+                </ProtectedRoutes>
+              }
+            />
+            {/* Bus */}
+            {/* Select Seat */}
+            <Route
+              path="/bus-seat/:id"
+              element={
+                <ProtectedRoutes>
+                  <BusSeatSelect />
+                </ProtectedRoutes>
+              }
+            />
+            {/* book seat form */}
+            <Route
+              path="/bus-seat-book"
+              element={
+                <ProtectedRoutes>
+                  <BusBookingForm />
                 </ProtectedRoutes>
               }
             />

@@ -1,23 +1,19 @@
 import { useSelector } from "react-redux";
+import Loading from "../../General/Loading";
+import { useNavigate } from "react-router-dom";
 
 const ListBuses = () => {
   const { buses, loading, error } = useSelector((state) => state.bus);
+  const navigate = useNavigate();
 
-  if (loading) {
-    return <p className="text-center text-blue-400 mt-6">Loading buses...</p>;
-  }
-
-  if (error) {
-    return <p className="text-center text-red-400 mt-6">{error}</p>;
-  }
-
-  if (buses.length === 0) {
+  if (loading) return <Loading message="Fetching Buses...." />;
+  if (error) return <p className="text-center text-red-400 mt-6">{error}</p>;
+  if (buses.length === 0)
     return (
-      <p className="text-center text-gray-400 mt-6">
+      <p className="text-center text-gray-400 mt-6 mb-6">
         No buses available for the selected route.
       </p>
     );
-  }
 
   return (
     <div className="mt-6 max-w-4xl mx-auto px-4">
@@ -34,7 +30,9 @@ const ListBuses = () => {
               </p>
             </div>
             <div className="text-right mt-3 md:mt-0">
-              <p className="text-lg font-semibold text-green-400">₹{bus.fare}</p>
+              <p className="text-lg font-semibold text-green-400">
+                ₹{bus.fare}
+              </p>
               <p className="text-sm text-gray-400">
                 {bus.availableSeats} seats left
               </p>
@@ -59,7 +57,20 @@ const ListBuses = () => {
           </div>
 
           <div className="mt-4">
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition">
+            <button
+              onClick={() =>
+                navigate(`/bus-seat/${bus.busId}`, {
+                  state: {
+                    bus,
+                    seats: bus?.seats || 0,
+                    journeyDate: bus.journeyDate,
+                    source: bus.source,
+                    destination: bus.destination,
+                  },
+                })
+              }
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition"
+            >
               View Seats
             </button>
           </div>

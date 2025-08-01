@@ -4,6 +4,7 @@ import trainReducer from "../AllStatesFeatures/Train/AllTrainsSlice";
 import bookingReducer from "../AllStatesFeatures/Train/BookTrainTicketSlice";
 import userProfileReducer from "../AllStatesFeatures/UserProfile/userProfileSlice";
 import busReducer from "../AllStatesFeatures/Bus/AllBusSlice";
+import BookBusReducer from "../AllStatesFeatures/Bus/BookBusTicketSlice";
 let Store = {}; //initialize because export default
 export default Store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export default Store = configureStore({
     bookTrainTicket: bookingReducer, //book train seat
     userProfile: userProfileReducer, // user profile
     bus: busReducer, // get All Buses
+    BookBusTicket: BookBusReducer, // get All Buses
   },
 });
