@@ -27,13 +27,13 @@ const busBookingSlice = createSlice({
       state.error = action.payload;
     },
 
-    getBookingRequest: (state) => {
+    getAllBookingRequest: (state) => {
       state.loading = true;
       state.error = null;
     },
     getAllBookingSuccess: (state, action) => {
       state.loading = false;
-      //   state.booking = Array.isArray(action.payload) ? action.payload : [];
+      state.booking = Array.isArray(action.payload) ? action.payload : [];
       state.error = null;
     },
     getBookingFailure: (state, action) => {
@@ -61,7 +61,7 @@ export const {
   bookingRequest,
   bookingSuccess,
   bookingFailure,
-  getBookingRequest,
+  getAllBookingRequest,
   getAllBookingSuccess,
   getBookingFailure,
   getDownloadRequest,
@@ -85,6 +85,7 @@ export const bookBusSeats =
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+            userId: localStorage.getItem("userId"),
           },
         }
       );
@@ -128,7 +129,7 @@ export const bookBusSeats =
   };
 
 export const getUserBusBookings = () => async (dispatch, getState) => {
-  dispatch(getBookingRequest());
+  dispatch(getAllBookingRequest());
   const token = getState().auth.token;
 
   try {

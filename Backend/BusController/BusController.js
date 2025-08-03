@@ -1,5 +1,7 @@
 const BusModel = require("../models/BusModel");
 const BusBookingModel = require("../models/BusBookingModel");
+const puppeteer = require("puppeteer");
+const nodemailer = require("nodemailer");
 
 function parseTimeString(timeStr) {
   if (!timeStr || typeof timeStr !== "string") {
@@ -59,6 +61,7 @@ function getStationData(mapOrObj, station) {
 
 module.exports.findBus = async (req, res) => {
   const { source, destination, date } = req.query;
+  console.log("Request Query For Find Bus: ", source, destination, date);
 
   try {
     if (!source || !destination || !date) {
@@ -66,7 +69,7 @@ module.exports.findBus = async (req, res) => {
     }
 
     const dayOfWeek = new Date(date).toLocaleDateString("en-US", {
-      weekday: "short",
+      weekday: "long",
     });
 
     const buses = await BusModel.find({
@@ -80,7 +83,7 @@ module.exports.findBus = async (req, res) => {
         $in: [new RegExp(`^${dayOfWeek}$`, "i")],
       },
     });
-    console.log("Before Filter Bus");
+    console.log("Before Filter Bus: ", buses.length);
     if (!buses.length) {
       return res.status(204).json({ message: "No Bus Found" });
     }
@@ -135,7 +138,7 @@ module.exports.findBus = async (req, res) => {
         };
       })
       .filter(Boolean);
-    console.log("After Filter Bus");
+    console.log("After Filter Bus: ",filtered.length);
     if (!filtered.length) {
       return res.status(204).json({ message: "No Bus Found" });
     }
@@ -161,7 +164,8 @@ module.exports.bookBusSeats = async (req, res) => {
     !journeyDate ||
     !source ||
     !destination ||
-    passengers.length === 0
+    passengers.length === 0 ||
+    !req.header("userId")
   ) {
     return res.status(406).json({ message: "Missing required booking fields" });
   }
@@ -223,6 +227,7 @@ module.exports.bookBusSeats = async (req, res) => {
 
     const booking = await BusBookingModel.create({
       bus: bus._id,
+      userId: req.header("userId"),
       journeyDate,
       source,
       destination,
@@ -236,5 +241,267 @@ module.exports.bookBusSeats = async (req, res) => {
   } catch (error) {
     console.error("Error during booking:", error);
     return res.status(500).json({ message: "Server error during booking" });
+  }
+};
+
+module.exports.getMyBusBookings = async (req, res) => {
+  try {
+    const bookings = await BusBookingModel.find({
+      userId: req.header("userId"),
+    })
+      .populate("bus", "busNumber company")
+      .sort({ bookingDate: -1 });
+
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error("Fetch Bookings Error:", error);
+    res.status(500).json({ message: "Failed to fetch bookings" });
+  }
+};
+
+module.exports.downloadTicket = async (req, res) => {
+  const { bookingId } = req.query;
+
+  try {
+    if (!bookingId) {
+      return res.status(400).json({ message: "Booking ID is required" });
+    }
+
+    const booking = await BusBookingModel.findById(bookingId).populate("bus");
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Bus Ticket</title>
+    <style>
+      body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            font-size: 12px;
+          }
+          .ticket {
+            border: 1px dashed #444;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+          }
+      .header {
+        text-align: center;
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+      .section {
+        margin-bottom: 5px;
+      }
+      .label {
+        font-weight: bold;
+        color: #333;
+      }
+      ul {
+        margin: 5px 0 0 15px;
+        padding: 0;
+      }
+      li {
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+  <div class="header">🚌 Bus Ticket</div>
+    <div class="ticket">
+      <div class="section"><span class="label">Bus:</span> ${
+        booking.bus.company
+      } (${booking.bus.busNumber})</div>
+      <div class="section"><span class="label">Route:</span> ${
+        booking.source
+      } ➝ ${booking.destination}</div>
+      <div class="section"><span class="label">Date:</span> ${new Date(
+        booking.journeyDate
+      ).toDateString()}</div>
+      <div class="section"><span class="label">Fare:</span> ₹${
+        booking.totalFare
+      } (₹${booking.farePerSeat}/seat)</div>
+      <div class="section">
+        <span class="label">Passengers:</span>
+        <ul>
+          ${booking.passengers
+            .map(
+              (p, i) =>
+                `<li>${i + 1}. ${p.name} - Seat ${p.seatNumber} (${
+                  p.gender
+                })</li>`
+            )
+            .join("")}
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>
+`;
+
+    const browser = await puppeteer.launch({ headless: "new" });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      width: "5in", // Small receipt-like width
+      height: "3.5in", // Custom height
+      printBackground: true,
+      margin: {
+        top: "10px",
+        bottom: "10px",
+        left: "15px",
+        right: "15px",
+      },
+    });
+
+    await browser.close();
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename=bus-ticket-${bookingId}.pdf`,
+      "Content-Length": pdfBuffer.length,
+    });
+
+    return res.send(pdfBuffer);
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    return res.status(500).json({ message: "Failed to generate PDF" });
+  }
+};
+
+module.exports.mailTicket = async (req, res) => {
+  const { bookingId } = req.query;
+
+  try {
+    const booking = await BusBookingModel.findById(bookingId).populate("bus");
+
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    // Generate PDF
+    const html = `
+     <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Bus Ticket</title>
+    <style>
+      body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            font-size: 12px;
+          }
+          .ticket {
+            border: 1px dashed #444;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+          }
+      .header {
+        text-align: center;
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+      .section {
+        margin-bottom: 5px;
+      }
+      .label {
+        font-weight: bold;
+        color: #333;
+      }
+      ul {
+        margin: 5px 0 0 15px;
+        padding: 0;
+      }
+      li {
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+  <div class="header">🚌 Bus Ticket</div>
+    <div class="ticket">
+      <div class="section"><span class="label">Bus:</span> ${
+        booking.bus.company
+      } (${booking.bus.busNumber})</div>
+      <div class="section"><span class="label">Route:</span> ${
+        booking.source
+      } ➝ ${booking.destination}</div>
+      <div class="section"><span class="label">Date:</span> ${new Date(
+        booking.journeyDate
+      ).toDateString()}</div>
+      <div class="section"><span class="label">Fare:</span> ₹${
+        booking.totalFare
+      } (₹${booking.farePerSeat}/seat)</div>
+      <div class="section">
+        <span class="label">Passengers:</span>
+        <ul>
+          ${booking.passengers
+            .map(
+              (p, i) =>
+                `<li>${i + 1}. ${p.name} - Seat ${p.seatNumber} (${
+                  p.gender
+                })</li>`
+            )
+            .join("")}
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>
+    `;
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(html);
+
+    const pdfBuffer = await page.pdf({
+      width: "5in", // Small receipt-like width
+      height: "3.5in", // Custom height
+      printBackground: true,
+      margin: {
+        top: "10px",
+        bottom: "10px",
+        left: "15px",
+        right: "15px",
+      },
+    });
+    await browser.close();
+
+    // Email config
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.MAIL_USER,
+      to: booking.passengers[0].email,
+      subject: "Your Bus Ticket",
+      text: "Find your ticket attached.",
+      attachments: [
+        {
+          filename: `ticket-${bookingId}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: "Ticket emailed successfully!" });
+  } catch (err) {
+    console.error("Mail error:", err);
+    res.status(500).json({ message: "Failed to send email" });
   }
 };

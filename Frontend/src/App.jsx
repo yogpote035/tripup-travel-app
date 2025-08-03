@@ -18,6 +18,7 @@ import ViewProfile from "./components/UserProfile/ViewProfile.jsx";
 import BusPage from "./components/Bus/BusPage.jsx";
 import BusSeatSelect from "./components/Bus/BusSeatSelect.jsx";
 import BusBookingForm from "./components/Bus/BusBookingForm.jsx";
+import MyBusBookings from "./components/Bus/MyBusBookings.jsx";
 
 function App() {
   return (
@@ -109,7 +110,7 @@ function App() {
               path="/bus-bookings"
               element={
                 <ProtectedRoutes>
-                  <h1 className="text-rose-400 mt-10">Bus Booking</h1>
+                  <MyBusBookings />
                 </ProtectedRoutes>
               }
             />

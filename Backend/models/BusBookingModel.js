@@ -10,6 +10,11 @@ const BusBookingSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  userId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "UserModel",
+    required: true,
+  },
   source: String,
   destination: String,
   distance: Number,
