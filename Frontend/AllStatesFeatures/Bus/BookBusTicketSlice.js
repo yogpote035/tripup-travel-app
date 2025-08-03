@@ -75,8 +75,7 @@ export const bookBusSeats =
   (bookingData, navigate) => async (dispatch, getState) => {
     dispatch(bookingRequest());
     const token = getState().auth.token;
-    console.log("From Bus Seat Book");
-    console.log("Payload is : ", bookingData);
+
 
     try {
       const response = await axios.post(
@@ -89,7 +88,6 @@ export const bookBusSeats =
           },
         }
       );
-      console.log("Backend Call is Done");
       if (response.status === 406) {
         const msg = response.data?.message || "Missing required booking fields";
         dispatch(bookingFailure(msg));
@@ -120,7 +118,6 @@ export const bookBusSeats =
         toast.success(response.data.message || "Bus Booking successful!");
         navigate("/bus-bookings");
       }
-      console.log(response.data);
     } catch (error) {
       const msg = error.response?.data?.message || "Booking failed";
       dispatch(bookingFailure(msg));
@@ -153,7 +150,8 @@ export const getUserBusBookings = () => async (dispatch, getState) => {
 
 export const downloadBusTicket = (bookingId) => async (dispatch, getState) => {
   dispatch(getDownloadRequest());
-  const token = getState().auth.token;
+
+  const token = getState().auth.token || localStorage.getItem("token");
 
   try {
     const response = await axios.get(
@@ -162,35 +160,41 @@ export const downloadBusTicket = (bookingId) => async (dispatch, getState) => {
         params: { bookingId },
         responseType: "blob",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
 
-    const contentDisposition = response.headers["content-disposition"];
+    // ✅ Extract filename from Content-Disposition header
+    const disposition = response.headers["content-disposition"];
     let filename = "ticket.pdf";
 
-    if (contentDisposition?.includes("filename=")) {
-      const match = contentDisposition.match(/filename="?(.+?)"?$/);
-      if (match) filename = match[1];
+    if (disposition && disposition.includes("filename")) {
+      const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/);
+      if (match && match[1]) {
+        filename = decodeURIComponent(match[1]);
+      }
     }
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    // ✅ Trigger download
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = filename;
     link.click();
     link.remove();
-    window.URL.revokeObjectURL(url);
+    URL.revokeObjectURL(url);
 
     dispatch(getDownloadSuccess());
     toast.success("Ticket downloaded!");
   } catch (error) {
-    const errMsg = error.response?.data?.message || "Failed to download ticket";
-    dispatch(getDownloadFailure(errMsg));
-    toast.error(errMsg);
+    const message = error.response?.data?.message || "Failed to download ticket";
+    dispatch(getDownloadFailure(message));
+    toast.error(message);
   }
 };
+
 
 export const mailBusTicketPdf = (bookingId) => async (dispatch, getState) => {
   dispatch(getDownloadRequest());

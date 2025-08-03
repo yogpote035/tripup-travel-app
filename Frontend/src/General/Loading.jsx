@@ -1,15 +1,16 @@
 const Loading = ({ message = "Loading..." }) => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       {/* Spinner */}
-      <div
-        className="w-30 h-30 border-[9px] border-gray-600 border-t-yellow-500 rounded-full animate-[spin_.9s_linear_infinite]"
-      ></div>
-
-      {/* Message */}
-      <p className="mt-6 text-lg text-white font-medium tracking-wide">
-        {message}
-      </p>
+      <div>
+        <div className="flex justify-center items-center">
+          <div className="w-20 h-20 border-[6px] border-gray-300 border-t-yellow-500 rounded-full animate-spin"></div>
+        </div>
+        {/* Message */}
+        <p className="ml-4 mt-6 text-center text-white font-medium text-lg">
+          {message}
+        </p>
+      </div>
     </div>
   );
 };

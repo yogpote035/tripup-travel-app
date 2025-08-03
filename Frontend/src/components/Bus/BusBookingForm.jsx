@@ -47,8 +47,6 @@ const BusBookingForm = () => {
       destination: bus.destination,
       passengers: passengers,
     };
-    console.log("payload");
-    console.log(bookingPayload);
     dispatch(bookBusSeats(bookingPayload, navigate));
   };
 

@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { RiSteering2Line } from "react-icons/ri";
 import { MdOutlineAirlineSeatReclineNormal } from "react-icons/md";
 import { MdAirlineSeatFlat, MdAirlineSeatReclineNormal } from "react-icons/md";
+import { FaSquarePersonConfined, FaPersonThroughWindow } from "react-icons/fa6";
 
 const BusSeatSelect = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
@@ -174,7 +175,7 @@ const BusSeatSelect = () => {
                           disabled={row[2].isBooked}
                           onClick={() => toggleSeat(row[2].seatNumber)}
                         >
-                          <MdAirlineSeatFlat />
+                          <FaPersonThroughWindow />
                         </button>
                         <span className="text-xs text-gray-500 mt-1">
                           {row[2].isBooked ? "Sold" : `₹${bus.fare}`}
@@ -204,7 +205,7 @@ const BusSeatSelect = () => {
                           disabled={seat.isBooked}
                           onClick={() => toggleSeat(seat.seatNumber)}
                         >
-                          <MdAirlineSeatFlat />
+                          <FaPersonThroughWindow />
                         </button>
                         <span className="text-xs text-gray-500 mt-1">
                           {seat.isBooked ? "Sold" : `₹${bus.fare}`}
@@ -246,7 +247,7 @@ const BusSeatSelect = () => {
                           disabled={row[2].isBooked}
                           onClick={() => toggleSeat(row[2].seatNumber)}
                         >
-                          <MdAirlineSeatFlat />
+                          <FaPersonThroughWindow />
                         </button>
                         <span className="text-xs text-gray-500 mt-1">
                           {row[2].isBooked ? "Sold" : `₹${bus.fare}`}
@@ -276,7 +277,7 @@ const BusSeatSelect = () => {
                           disabled={seat.isBooked}
                           onClick={() => toggleSeat(seat.seatNumber)}
                         >
-                          <MdAirlineSeatFlat />
+                          <FaPersonThroughWindow />
                         </button>
                         <span className="text-xs text-gray-500 mt-1">
                           {seat.isBooked ? "Sold" : `₹${bus.fare}`}
