@@ -97,7 +97,7 @@ const Navbar = () => {
         className={`fixed top-0 right-0 h-full w-44 bg-gray-800 shadow-lg z-50 transition-transform duration-300
         ${sidebarOpen ? "translate-x-0" : "translate-x-full"}`}
       >
-        <div className="flex items-center justify-between px-4 pt-6 pb-9 border-b">
+        <div className="flex items-center justify-between px-4 pt-6 pb-5 border-b">
           <h2 className="text-xl font-bold text-white">Menu</h2>
           <button
             onClick={toggleSidebar}
@@ -149,10 +149,7 @@ const Navbar = () => {
               <Link to="/login" className="flex items-center gap-2 text-white">
                 <FaSignInAlt /> Login
               </Link>
-              <Link
-                to="/signup"
-                className="flex items-center gap-2 text-white"
-              >
+              <Link to="/signup" className="flex items-center gap-2 text-white">
                 <FaUserPlus /> Sign Up
               </Link>
             </>
