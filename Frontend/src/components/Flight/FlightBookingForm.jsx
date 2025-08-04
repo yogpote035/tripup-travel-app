@@ -61,7 +61,7 @@ const FlightBookingForm = () => {
   if (!state) {
     return (
       <div className="text-white p-6">
-        ❌ Invalid flight selection. Please go back and select a flight.
+        Invalid flight selection. Please go back and select a flight.
       </div>
     );
   }
