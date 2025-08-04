@@ -32,6 +32,7 @@ app.use("/api/auth", require("./routes/AuthenticationRoutes"));
 app.use("/api/train", require("./routes/TrainRoutes"));
 app.use("/api/user", require("./routes/UserInfoRoute"));
 app.use("/api/bus", require("./routes/BusRoutes"));
+app.use("/api/flight", require("./routes/FlightRoutes"));
 
 app.listen(PORT, () => {
   console.log(`Server listening on PORT ${PORT} ⛳`);

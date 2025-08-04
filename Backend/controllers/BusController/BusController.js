@@ -1,5 +1,5 @@
-const BusModel = require("../models/BusModel");
-const BusBookingModel = require("../models/BusBookingModel");
+const BusModel = require("../../models/BusModel");
+const BusBookingModel = require("../../models/BusBookingModel");
 const puppeteer = require("puppeteer");
 const nodemailer = require("nodemailer");
 

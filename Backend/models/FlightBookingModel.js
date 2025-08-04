@@ -4,6 +4,7 @@ const passengerSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
+    trim: true,
   },
   gender: {
     type: String,
@@ -13,6 +14,7 @@ const passengerSchema = new mongoose.Schema({
   seatNumber: {
     type: String,
     required: true,
+    uppercase: true,
   },
   email: {
     type: String,
@@ -22,33 +24,42 @@ const passengerSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
-    match: /^[6-9]\d{9}$/,
+    match: /^[6-9]\d{9}$/, // Indian phone number format
   },
 });
 
 const flightBookingSchema = new mongoose.Schema({
-  flight: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Flight",
-    required: true,
-  },
-  journeyDate: {
-    type: Date,
-    required: true,
-  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "UserModel",
     required: true,
   },
+  flight: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "FlightModel",
+    required: true,
+  },
+
+  journeyDate: {
+    type: Date,
+    required: true,
+  },
+  bookingDate: {
+    type: Date,
+    default: Date.now,
+  },
+
   from: {
     type: String,
     required: true,
+    trim: true,
   },
   to: {
     type: String,
     required: true,
+    trim: true,
   },
+
   farePerSeat: {
     type: Number,
     required: true,
@@ -59,17 +70,13 @@ const flightBookingSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
+
   passengers: {
     type: [passengerSchema],
     required: true,
-    validate: [val => val.length >= 1, "At least one passenger is required."],
+    validate: [(val) => val.length >= 1, "At least one passenger is required."],
   },
-  bookingDate: {
-    type: Date,
-    default: Date.now,
-    required: true,
-  }
 });
 
-const FlightBookingModel = mongoose.model("FlightBooking", flightBookingSchema);
+const FlightBookingModel = mongoose.model("FlightBookingModel", flightBookingSchema);
 module.exports = FlightBookingModel;

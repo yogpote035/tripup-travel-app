@@ -19,6 +19,10 @@ import BusPage from "./components/Bus/BusPage.jsx";
 import BusSeatSelect from "./components/Bus/BusSeatSelect.jsx";
 import BusBookingForm from "./components/Bus/BusBookingForm.jsx";
 import MyBusBookings from "./components/Bus/MyBusBookings.jsx";
+import FlightSearch from "./components/Flight/FlightSearch.jsx";
+import FlightSeatSelection from "./components/Flight/FlightSeatSelection.jsx";
+import FlightBookingForm from "./components/Flight/FlightBookingForm.jsx";
+import MyFlightBookings from "./components/Flight/MyFlightBookings.jsx";
 
 function App() {
   return (
@@ -69,7 +73,7 @@ function App() {
                 </ProtectedRoutes>
               }
             />
-            {/* Bus */}
+            {/* Bus Seat Book*/}
             {/* Select Seat */}
             <Route
               path="/bus-seat/:id"
@@ -88,14 +92,30 @@ function App() {
                 </ProtectedRoutes>
               }
             />
+            {/* Flight Seat Book */}
+            {/* Select Seat */}
+            <Route
+              path="/flight-seat/:id"
+              element={
+                <ProtectedRoutes>
+                  <FlightSeatSelection />
+                </ProtectedRoutes>
+              }
+            />
+            {/* book seat form */}
+            <Route
+              path="/flight-seat-book"
+              element={
+                <ProtectedRoutes>
+                  <FlightBookingForm />
+                </ProtectedRoutes>
+              }
+            />
 
             {/* Separate Call for Search From Here {without Protection} */}
             <Route path="/train" element={<TrainPage />} />
             <Route path="/bus" element={<BusPage />} />
-            <Route
-              path="/flight"
-              element={<h1 className="text-rose-400 mt-10">Flight</h1>}
-            />
+            <Route path="/flight" element={<FlightSearch />} />
 
             {/*Get Booking Routes */}
             <Route
@@ -118,7 +138,7 @@ function App() {
               path="/flight-bookings"
               element={
                 <ProtectedRoutes>
-                  <h1 className="text-rose-400 mt-10">Flight Bookings</h1>
+                  <MyFlightBookings />
                 </ProtectedRoutes>
               }
             />
@@ -144,8 +164,8 @@ function App() {
         </main>
         <Footer />
         <ToastContainer
-          position="top-right"
-          autoClose={2000}
+          position="top-center"
+          autoClose={1500}
           hideProgressBar={false}
           newestOnTop={false}
           closeOnClick
@@ -153,7 +173,8 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="light"
+          theme="dark"
+          style={{ top: "70px" }}
         />
       </div>
     </>

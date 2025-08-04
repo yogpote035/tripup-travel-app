@@ -9,7 +9,7 @@ const {
   getMyBusBookings,
   downloadTicket,
   mailTicket,
-} = require("../../BusController/BusController");
+} = require("../../controllers/BusController/BusController");
 
 router.get("/bus-between", findBus);
 router.post("/book-bus-seat", verifyJWE, bookBusSeats);
