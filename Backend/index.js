@@ -9,12 +9,28 @@ if (process.env.NODE_ENV !== "production") {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://tripup-travel-app-eight.vercel.app",
+  "https://tripup-travel-app-smartyatris-projects.vercel.app",
+  "https://tripup-travel-app-git-main-smartyatris-projects.vercel.app",
+  "https://tripup-travel-jx596oczk-smartyatris-projects.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
