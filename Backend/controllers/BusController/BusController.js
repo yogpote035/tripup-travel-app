@@ -459,7 +459,16 @@ module.exports.mailTicket = async (req, res) => {
 </html>
     `;
 
-    const browser = await puppeteer.launch();
+const browser = await puppeteer.launch({
+  headless: true,
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--single-process",
+    "--no-zygote"
+  ]
+});
     const page = await browser.newPage();
     await page.setContent(html);
 
