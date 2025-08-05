@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 const FlightSearch = () => {
   const dispatch = useDispatch();
-  const { flights, from, to, loading, error } = useSelector(
+  const { flights, from, to, loading, error, date } = useSelector(
     (state) => state.flight
   );
   const navigate = useNavigate();
@@ -163,7 +163,7 @@ const FlightSearch = () => {
                       navigate(`/flight-seat/${flight._id}`, {
                         state: {
                           flight: flight,
-                          journeyDate: selectedDate,
+                          journeyDate: date,
                           source: from,
                           destination: to,
                         },

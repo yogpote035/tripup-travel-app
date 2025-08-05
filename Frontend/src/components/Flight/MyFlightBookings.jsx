@@ -1,6 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyFlightBookings } from "../../../AllStatesFeatures/Flight/BookFlightSeatSlice";
+import {
+  downloadFlightTicket,
+  mailFlightTicket,
+} from "../../../AllStatesFeatures/Flight/AllFlightSlice";
 import Loading from "../../General/Loading";
 
 const MyFlightBookings = () => {
@@ -13,6 +17,17 @@ const MyFlightBookings = () => {
     (state) => state.BookFlightTicket
   );
 
+  const [actionMsg, setActionMsg] = useState("");
+
+  const {
+    loading: loadingAll,
+    error: errorAll,
+  } = useSelector((state) => state.flight);
+
+  if (loadingAll) {
+    return <Loading message={`${actionMsg}`} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 mt-10 mb-10 text-white p-6">
       <div className="max-w-5xl mx-auto">
@@ -20,8 +35,11 @@ const MyFlightBookings = () => {
           🛫 My Flight Bookings
         </h2>
 
-        {loading && <Loading message="Fetching bookings..." />}
-        {error && <p className="text-red-400">{error}</p>}
+        {loading && <Loading message="Fetching Your Flight bookings..." />}
+
+        {(error || errorAll) && (
+          <p className="text-red-400">{error || errorAll}</p>
+        )}
 
         {!loading && booking?.length === 0 && (
           <p className="text-gray-400">You have no flight bookings.</p>
@@ -70,10 +88,22 @@ const MyFlightBookings = () => {
                 </ul>
               </div>
               <div className="flex gap-4">
-                <button className="mt-3 bg-yellow-500 text-black px-4 py-1 rounded hover:bg-yellow-600">
+                <button
+                  onClick={() => {
+                    dispatch(downloadFlightTicket(booking._id));
+                    setActionMsg("Wait, Your Ticket is Getting Ready...");
+                  }}
+                  className="mt-3 bg-yellow-500 text-black px-4 py-1 rounded hover:bg-yellow-600"
+                >
                   📥 Download Ticket
                 </button>
-                <button className="mt-3 bg-orange-500 text-black px-4 py-1 rounded hover:bg-yellow-600">
+                <button
+                  onClick={() => {
+                    dispatch(mailFlightTicket(booking._id));
+                    setActionMsg("Wait, You get Your Ticket on Mail Shortly...");
+                  }}
+                  className="mt-3 bg-orange-500 text-black px-4 py-1 rounded hover:bg-yellow-600"
+                >
                   📥 Mail Ticket
                 </button>
               </div>
