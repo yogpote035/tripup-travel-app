@@ -1,7 +1,7 @@
 // components/ViewProfile.jsx
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { GetUserProfile } from "../../../AllStatesFeatures/UserProfile/userProfileSlice";
+import { GetUserProfile } from "../../../AllStatesFeatures/UserProfile/UserProfileSlice";
 import Loading from "../../General/Loading";
 import { useNavigate } from "react-router-dom";
 
