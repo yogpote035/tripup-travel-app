@@ -24,6 +24,6 @@
     "libphonenumber-js": "^1.12.10",
     "mongoose": "^8.16.4",
     "nodemailer": "^7.0.5",
-    "puppeteer": "^24.15.0"
+    "puppeteer": "^21.11.0"
   }
 }
