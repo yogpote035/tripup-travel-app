@@ -1,6 +1,5 @@
 const FlightModel = require("../../models/FlightModel");
 const FlightBookingModel = require("../../models/FlightBookingModel");
-const puppeteer = require("puppeteer");
 const nodemailer = require("nodemailer");
 
 module.exports.getFlightsBetweenAirports = async (req, res) => {
@@ -218,6 +217,7 @@ module.exports.downloadFlightTicket = async (req, res) => {
     if (process.env.NODE_ENV === "production") {
       puppeteer = require("puppeteer-core");
       const chromium = require("@sparticuz/chromium");
+
       browser = await puppeteer.launch({
         args: chromium.args,
         executablePath: await chromium.executablePath(),
@@ -348,6 +348,7 @@ module.exports.MailFlightTicket = async (req, res) => {
     if (process.env.NODE_ENV === "production") {
       puppeteer = require("puppeteer-core");
       const chromium = require("@sparticuz/chromium");
+
       browser = await puppeteer.launch({
         args: chromium.args,
         executablePath: await chromium.executablePath(),

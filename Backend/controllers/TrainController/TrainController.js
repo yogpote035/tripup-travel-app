@@ -1,7 +1,6 @@
 const TrainBookingModel = require("../../models/TrainBookingModel");
 const UserModel = require("../../models/UserModel");
 const TrainModel = require("../../models/TrainModel");
-const puppeteer = require("puppeteer");
 const nodemailer = require("nodemailer");
 const validateEmail = require("../../Middleware/validateEmail");
 const PhoneNumberValidator = require("../../Middleware/PhoneNumberValidator");
@@ -373,6 +372,7 @@ module.exports.generateReceiptPdf = async (req, res) => {
     if (process.env.NODE_ENV === "production") {
       puppeteer = require("puppeteer-core");
       const chromium = require("@sparticuz/chromium");
+
       browser = await puppeteer.launch({
         args: chromium.args,
         executablePath: await chromium.executablePath(),
@@ -411,6 +411,7 @@ module.exports.generateReceiptPdf = async (req, res) => {
 
     res.send(pdfBuffer);
   } catch (err) {
+    console.error("error is: ", err);
     res.status(500).json({ message: "Failed to generate PDF" });
   }
 };
@@ -505,6 +506,7 @@ exports.mailTrainTicket = async (req, res) => {
     if (process.env.NODE_ENV === "production") {
       puppeteer = require("puppeteer-core");
       const chromium = require("@sparticuz/chromium");
+
       browser = await puppeteer.launch({
         args: chromium.args,
         executablePath: await chromium.executablePath(),
