@@ -17,20 +17,21 @@ const allowedOrigins = [
   "https://tripup-travel-jx596oczk-smartyatris-projects.vercel.app",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: function (origin, callback) {
+    console.log("🔍 CORS Origin Check:", origin);
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      console.error("❌ CORS Rejected:", origin);
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
 
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // ✅ Enable preflight requests
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -44,12 +45,22 @@ app.get("/", (req, res) => {
   res.json("Welcome to TripUp Backend Development! 🚀");
 });
 
+console.log("Mounting Auth Routes...");
 app.use("/api/auth", require("./routes/AuthenticationRoutes"));
+
+console.log("Mounting Train Routes...");
 app.use("/api/train", require("./routes/TrainRoutes"));
+
+console.log("Mounting User Routes...");
 app.use("/api/user", require("./routes/UserInfoRoute"));
+
+console.log("Mounting Bus Routes...");
 app.use("/api/bus", require("./routes/BusRoutes"));
+
+console.log("Mounting Flight Routes...");
 app.use("/api/flight", require("./routes/FlightRoutes"));
 
+// ✅ Server Listening
 app.listen(PORT, () => {
   console.log(`Server listening on PORT ${PORT} ⛳`);
 });
