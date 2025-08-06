@@ -10,6 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^138.0.2",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
@@ -24,6 +25,7 @@
     "libphonenumber-js": "^1.12.10",
     "mongoose": "^8.16.4",
     "nodemailer": "^7.0.5",
-    "puppeteer": "^21.11.0"
+    "puppeteer": "^24.16.0",
+    "puppeteer-core": "^24.16.0"
   }
 }

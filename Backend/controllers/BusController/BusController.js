@@ -346,10 +346,24 @@ module.exports.downloadTicket = async (req, res) => {
 </html>
 `;
 
-    const browser = await puppeteer.launch({
-      headless: "new", // use new headless mode
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    let puppeteer, browser;
+
+    if (process.env.NODE_ENV === "production") {
+      puppeteer = require("puppeteer-core");
+      const chromium = require("@sparticuz/chromium");
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+    } else {
+      puppeteer = require("puppeteer");
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox"],
+      });
+    }
+
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
 
@@ -462,10 +476,24 @@ module.exports.mailTicket = async (req, res) => {
 </html>
     `;
 
-    const browser = await puppeteer.launch({
-      headless: "new", // use new headless mode
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    let puppeteer, browser;
+
+    if (process.env.NODE_ENV === "production") {
+      puppeteer = require("puppeteer-core");
+      const chromium = require("@sparticuz/chromium");
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+    } else {
+      puppeteer = require("puppeteer");
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox"],
+      });
+    }
+
     const page = await browser.newPage();
     await page.setContent(html);
 
