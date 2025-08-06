@@ -188,44 +188,44 @@ export const downloadFlightTicket =
     }
   };
 
-export const mailFlightTicket =
-  (bookingId) => async (dispatch, getState) => {
-    dispatch(getMailRequest());
+export const mailFlightTicket = (bookingId) => async (dispatch, getState) => {
+  dispatch(getMailRequest());
 
-    const token = getState().auth.token || localStorage.getItem("token");
-    if (!bookingId) {
-      return toast.error("Booking Id is Missing");
-    }
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/flight/mail-flight-ticket`,
-        {
-          params: { bookingId },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 204) {
-        const msg = response.data?.message || "Missing Required Parameters";
-        dispatch(getMailFailure(msg));
-        toast.error(msg);
-        return;
+  const token = getState().auth.token || localStorage.getItem("token");
+  if (!bookingId) {
+    return toast.error("Booking Id is Missing");
+  }
+  try {
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_BASE_URL}/flight/mail-flight-ticket`,
+      {
+        params: { bookingId },
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
-      if (response.status === 208) {
-        const msg = response.data?.message || "Booking Not Found";
-        dispatch(getMailFailure(msg));
-        toast.error(msg);
-        return;
-      }
+    );
 
-      dispatch(getMailSuccess());
-      toast.success("Flight ticket emailed successfully!");
-    } catch (error) {
-      const errMsg =
-        error.response?.data?.message || "Failed to send flight ticket email";
-      dispatch(getMailFailure(errMsg));
-      toast.error(errMsg);
+    if (response.status === 204) {
+      const msg = response.data?.message || "Missing Required Parameters";
+      dispatch(getMailFailure(msg));
+      toast.error(msg);
+      return;
     }
-  };
+    if (response.status === 208) {
+      const msg = response.data?.message || "Booking Not Found";
+      dispatch(getMailFailure(msg));
+      toast.error(msg);
+      return;
+    }
+
+    dispatch(getMailSuccess());
+    toast.success("Flight ticket emailed successfully!");
+  } catch (error) {
+    const errMsg =
+      error.response?.data?.message || "Failed to send flight ticket email";
+    dispatch(getMailFailure(errMsg));
+    toast.error(errMsg);
+  }
+};

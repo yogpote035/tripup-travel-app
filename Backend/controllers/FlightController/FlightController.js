@@ -213,15 +213,15 @@ module.exports.downloadFlightTicket = async (req, res) => {
       </html>
     `;
 
-const browser = await puppeteer.launch({
-  headless: true,
-  args: ["--no-sandbox", "--disable-setuid-sandbox"],
-});
+    const browser = await puppeteer.launch({
+      headless: "new", // use new headless mode
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
     const pdfBuffer = await page.pdf({
-      width: "7.5in", // Custom size similar to email layout
+      width: "7.5in",
       height: "7.2in",
       printBackground: true,
       margin: {

@@ -76,7 +76,6 @@ export const bookBusSeats =
     dispatch(bookingRequest());
     const token = getState().auth.token;
 
-
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/bus/book-bus-seat`,
@@ -170,7 +169,9 @@ export const downloadBusTicket = (bookingId) => async (dispatch, getState) => {
     let filename = "ticket.pdf";
 
     if (disposition && disposition.includes("filename")) {
-      const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/);
+      const match = disposition.match(
+        /filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/
+      );
       if (match && match[1]) {
         filename = decodeURIComponent(match[1]);
       }
@@ -189,12 +190,12 @@ export const downloadBusTicket = (bookingId) => async (dispatch, getState) => {
     dispatch(getDownloadSuccess());
     toast.success("Ticket downloaded!");
   } catch (error) {
-    const message = error.response?.data?.message || "Failed to download ticket";
+    const message =
+      error.response?.data?.message || "Failed to download ticket";
     dispatch(getDownloadFailure(message));
     toast.error(message);
   }
 };
-
 
 export const mailBusTicketPdf = (bookingId) => async (dispatch, getState) => {
   dispatch(getDownloadRequest());
@@ -205,6 +206,7 @@ export const mailBusTicketPdf = (bookingId) => async (dispatch, getState) => {
       `${import.meta.env.VITE_API_BASE_URL}/bus/mail-bus-ticket`,
       {
         params: { bookingId },
+        responseType: "blob",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token") || token}`,
         },

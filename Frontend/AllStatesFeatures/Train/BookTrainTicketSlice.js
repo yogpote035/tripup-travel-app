@@ -194,6 +194,7 @@ export const MailTicketPdf = (bookingId) => async (dispatch, getState) => {
         params: {
           bookingId,
         },
+        responseType: "blob",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token") || token}`,
         },
