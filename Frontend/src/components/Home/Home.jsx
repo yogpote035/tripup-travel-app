@@ -14,7 +14,7 @@ const Home = () => {
 
   const services = [
     {
-      icon: <FaTrain className="text-4xl text-blue-400" />,
+      icon: <FaTrain className="text-4xl text-yellow-500" />,
       title: "Train Booking",
       description: "Reserve your seats on Indian Railways. Easy and secure!",
       path: "/train",
@@ -35,17 +35,17 @@ const Home = () => {
 
   const features = [
     {
-      icon: <FaBook className="text-xl text-blue-400" />,
+      icon: <FaBook className="text-xl text-yellow-500" />,
       title: "Manage Bookings",
       desc: "View your past, upcoming, and canceled journeys in one place.",
     },
     {
-      icon: <FaMapMarkedAlt className="text-xl text-blue-400" />,
+      icon: <FaMapMarkedAlt className="text-xl text-yellow-500" />,
       title: "Full Itinerary",
       desc: "Track all your trip segments including stopovers and transfers.",
     },
     {
-      icon: <FaCameraRetro className="text-xl text-blue-400" />,
+      icon: <FaCameraRetro className="text-xl text-yellow-500" />,
       title: "Travel Diary",
       desc: "Save pictures and notes to remember your travel experiences.",
     },
@@ -62,12 +62,12 @@ const Home = () => {
           Your one-stop platform for booking tickets, planning itineraries, and
           recording your travel moments — via Train, Bus, or Flight.
         </p>
-        {/* <Link
-          to="/"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition"
+        <Link
+          to="/itinerary"
+          className="bg-white hover:bg-white text-black px-6 py-3 rounded-lg text-lg font-medium transition"
         >
-          Book Your Journey
-        </Link> */}
+          Create Your Plan
+        </Link>
       </section>
 
       {/* Services (Mode Selection) */}

@@ -57,7 +57,7 @@ const ViewProfile = () => {
               onClick={() => navigate("/train-bookings")}
               className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
             >
-              See All
+              See All Bookings
             </button>
           </div>{" "}
           {/* Total Bus */}
@@ -69,10 +69,10 @@ const ViewProfile = () => {
               </span>
             </p>
             <button
-              onClick={() => navigate("/train-bookings")}
+              onClick={() => navigate("/bus-bookings")}
               className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
             >
-              See All
+              See All Bookings
             </button>
           </div>{" "}
           {/* Total Flight */}
@@ -84,10 +84,10 @@ const ViewProfile = () => {
               </span>
             </p>
             <button
-              onClick={() => navigate("/train-bookings")}
+              onClick={() => navigate("/flight-bookings")}
               className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
             >
-              See All
+              See All Bookings
             </button>
           </div>{" "}
           {/* total plans */}
@@ -99,10 +99,10 @@ const ViewProfile = () => {
               </span>
             </p>
             <button
-              onClick={() => navigate("/train-bookings")}
+              // onClick={() => navigate("/train-bookings")}
               className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
             >
-              See All
+              See All Plans
             </button>
           </div>{" "}
           {/* total Post */}
@@ -114,10 +114,10 @@ const ViewProfile = () => {
               </span>
             </p>
             <button
-              onClick={() => navigate("/train-bookings")}
+              // onClick={() => navigate("/train-bookings")}
               className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
             >
-              See All
+              See All Posts
             </button>
           </div>
         </div>
