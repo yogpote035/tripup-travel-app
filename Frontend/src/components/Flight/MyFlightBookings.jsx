@@ -7,6 +7,7 @@ import {
 } from "../../../AllStatesFeatures/Flight/AllFlightSlice";
 import Loading from "../../General/Loading";
 import { HiDownload, HiOutlineMail } from "react-icons/hi";
+import { useLocation } from "react-router-dom";
 
 const MyFlightBookings = () => {
   const dispatch = useDispatch();
@@ -15,6 +16,10 @@ const MyFlightBookings = () => {
   useEffect(() => {
     dispatch(fetchMyFlightBookings());
   }, [dispatch]);
+
+  const { pathname } = useLocation();
+
+  window.scrollTo(0, 0); //only once 1st time scroll to top
 
   const { booking, loading, error } = useSelector(
     (state) => state.BookFlightTicket
@@ -94,7 +99,9 @@ const MyFlightBookings = () => {
                 <button
                   onClick={() => {
                     dispatch(mailFlightTicket(booking._id));
-                    setActionMsg("Wait, You’ll get your ticket by email shortly...");
+                    setActionMsg(
+                      "Wait, You’ll get your ticket by email shortly..."
+                    );
                   }}
                   className="flex items-center gap-2 bg-orange-500 text-black text-sm px-3 py-1 rounded hover:bg-orange-600"
                 >
