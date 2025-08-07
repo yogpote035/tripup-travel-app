@@ -53,7 +53,7 @@ const MyFlightBookings = () => {
       setShowConfirm(false);
       setTimeout(() => {
         fetchBooking();
-      }, 1000);
+      }, 1500);
     } catch (err) {
       alert("Failed to cancel ticket.");
     }
