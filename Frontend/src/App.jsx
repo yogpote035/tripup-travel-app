@@ -29,8 +29,8 @@ function App() {
     <>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <div className="mb-10"></div>
         <main className="flex-grow bg-gray-900">
+          <div className="mb-13"></div>
           <Routes>
             <Route exact path="/" element={<Home />} />
             <Route exact path="/login" element={<Login />} />
@@ -161,11 +161,13 @@ function App() {
               }
             />
           </Routes>
+          <div className="mt-13"></div>
         </main>
+
         <Footer />
         <ToastContainer
-          position="top-center"
-          autoClose={1500}
+          position="top-right"
+          autoClose={2000}
           hideProgressBar={false}
           newestOnTop={false}
           closeOnClick
@@ -173,8 +175,9 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="dark"
-          style={{ top: "70px" }}
+          theme="light"
+          style={{ top: "73px", right: "2px" }}
+          toastClassName="!rounded-none !bg-gray-800 !text-white"
         />
       </div>
     </>

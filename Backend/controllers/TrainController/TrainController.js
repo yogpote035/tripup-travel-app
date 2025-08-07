@@ -387,7 +387,10 @@ module.exports.generateReceiptPdf = async (req, res) => {
     }
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, {
+      waitUntil: "domcontentloaded",
+      timeout: 0,
+    });
 
     const pdfBuffer = await page.pdf({
       width: "5in",
@@ -521,7 +524,10 @@ exports.mailTrainTicket = async (req, res) => {
     }
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, {
+      waitUntil: "domcontentloaded",
+      timeout: 0,
+    });
 
     const pdfBuffer = await page.pdf({
       width: "5in",

@@ -116,7 +116,7 @@ const SearchTrain = ({ onDateChange }) => {
       <div className="flex flex-col sm:flex-row gap-3 items-center">
         <div className="w-full">
           <label className="block mb-1 text-white font-medium">
-            Date of Journey (Optional)
+            Date of Journey
           </label>
           <input
             type="date"

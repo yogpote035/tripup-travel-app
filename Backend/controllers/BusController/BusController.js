@@ -313,7 +313,7 @@ module.exports.downloadTicket = async (req, res) => {
     </style>
   </head>
   <body>
-  <div class="header">🚌 Bus Ticket</div>
+  <div class="header"> Bus Ticket</div>
     <div class="ticket">
       <div class="section"><span class="label">Bus:</span> ${
         booking.bus.company
@@ -345,28 +345,30 @@ module.exports.downloadTicket = async (req, res) => {
 </html>
 `;
 
-   let puppeteer, browser;
+    let puppeteer, browser;
 
-if (process.env.NODE_ENV === "production") {
-  puppeteer = require("puppeteer-core");
-  const chromium = require("@sparticuz/chromium");
+    if (process.env.NODE_ENV === "production") {
+      puppeteer = require("puppeteer-core");
+      const chromium = require("@sparticuz/chromium");
 
-  browser = await puppeteer.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-  });
-} else {
-  puppeteer = require("puppeteer");
-  browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox"],
-  });
-}
-
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+    } else {
+      puppeteer = require("puppeteer");
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox"],
+      });
+    }
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, {
+      waitUntil: "domcontentloaded",
+      timeout: 0,
+    });
 
     const pdfBuffer = await page.pdf({
       width: "5in", // Small receipt-like width
@@ -445,7 +447,7 @@ module.exports.mailTicket = async (req, res) => {
     </style>
   </head>
   <body>
-  <div class="header">🚌 Bus Ticket</div>
+  <div class="header"> Bus Ticket</div>
     <div class="ticket">
       <div class="section"><span class="label">Bus:</span> ${
         booking.bus.company
@@ -477,28 +479,30 @@ module.exports.mailTicket = async (req, res) => {
 </html>
     `;
 
-   let puppeteer, browser;
+    let puppeteer, browser;
 
-if (process.env.NODE_ENV === "production") {
-  puppeteer = require("puppeteer-core");
-  const chromium = require("@sparticuz/chromium");
+    if (process.env.NODE_ENV === "production") {
+      puppeteer = require("puppeteer-core");
+      const chromium = require("@sparticuz/chromium");
 
-  browser = await puppeteer.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-  });
-} else {
-  puppeteer = require("puppeteer");
-  browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox"],
-  });
-}
-
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+    } else {
+      puppeteer = require("puppeteer");
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox"],
+      });
+    }
 
     const page = await browser.newPage();
-    await page.setContent(html);
+    await page.setContent(html, {
+      waitUntil: "domcontentloaded",
+      timeout: 0,
+    });
 
     const pdfBuffer = await page.pdf({
       width: "5in", // Small receipt-like width

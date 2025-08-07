@@ -8,9 +8,14 @@ import { useNavigate } from "react-router-dom";
 const ViewProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { profile, totalBookings, loading, error } = useSelector(
-    (state) => state.userProfile
-  );
+  const {
+    profile,
+    totalFlightBookings,
+    totalBusBookings,
+    totalTrainBookings,
+    loading,
+    error,
+  } = useSelector((state) => state.userProfile);
 
   useEffect(() => {
     dispatch(GetUserProfile());
@@ -40,12 +45,72 @@ const ViewProfile = () => {
             <p className="font-semibold text-white">Joined:</p>
             <p>{new Date(profile.createdAt).toLocaleDateString()}</p>
           </div>
-
+          {/* Total Train */}
           <div className="flex justify-between items-center border border-blue-300 px-4 py-3 rounded-md shadow-inner">
             <p className="text-base font-medium text-white">
-              Total Bookings:{" "}
+              Total Train Bookings:{" "}
               <span className="font-bold text-lg text-yellow-300 ml-1">
-                {totalBookings || 0}
+                {totalTrainBookings || 0}
+              </span>
+            </p>
+            <button
+              onClick={() => navigate("/train-bookings")}
+              className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
+            >
+              See All
+            </button>
+          </div>{" "}
+          {/* Total Bus */}
+          <div className="flex justify-between items-center border border-blue-300 px-4 py-3 rounded-md shadow-inner">
+            <p className="text-base font-medium text-white">
+              Total Bus Bookings:{" "}
+              <span className="font-bold text-lg text-yellow-300 ml-1">
+                {totalBusBookings || 0}
+              </span>
+            </p>
+            <button
+              onClick={() => navigate("/train-bookings")}
+              className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
+            >
+              See All
+            </button>
+          </div>{" "}
+          {/* Total Flight */}
+          <div className="flex justify-between items-center border border-blue-300 px-4 py-3 rounded-md shadow-inner">
+            <p className="text-base font-medium text-white">
+              Total Flight Bookings:{" "}
+              <span className="font-bold text-lg text-yellow-300 ml-1">
+                {totalFlightBookings || 0}
+              </span>
+            </p>
+            <button
+              onClick={() => navigate("/train-bookings")}
+              className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
+            >
+              See All
+            </button>
+          </div>{" "}
+          {/* total plans */}
+          <div className="flex justify-between items-center border border-blue-300 px-4 py-3 rounded-md shadow-inner">
+            <p className="text-base font-medium text-white">
+              Total Travel Plans:{" "}
+              <span className="font-bold text-lg text-yellow-300 ml-1">
+                {"Pending"}
+              </span>
+            </p>
+            <button
+              onClick={() => navigate("/train-bookings")}
+              className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
+            >
+              See All
+            </button>
+          </div>{" "}
+          {/* total Post */}
+          <div className="flex justify-between items-center border border-blue-300 px-4 py-3 rounded-md shadow-inner">
+            <p className="text-base font-medium text-white">
+              Total Post:{" "}
+              <span className="font-bold text-lg text-yellow-300 ml-1">
+                {"Pending"}
               </span>
             </p>
             <button

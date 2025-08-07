@@ -65,7 +65,7 @@ const MyTrainBookings = () => {
                   <button
                     type="button"
                     onClick={() => dispatch(downloadTicket(b._id))}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 hover:font-bold text-sm text-black rounded-md shadow-sm transition"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 text-sm text-black rounded-md shadow-sm transition"
                   >
                     <IoMdDownload className="text-lg" />
                     <span>Download Ticket</span>
@@ -74,7 +74,7 @@ const MyTrainBookings = () => {
                   <button
                     type="button"
                     onClick={() => dispatch(MailTicketPdf(b._id))}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 hover:font-bold text-sm text-black rounded-md shadow-sm transition"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 text-sm text-black rounded-md shadow-sm transition"
                   >
                     <SiGmail className="text-base text-red-500" />
                     <span>Mail Ticket</span>

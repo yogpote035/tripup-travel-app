@@ -175,7 +175,7 @@ module.exports.downloadFlightTicket = async (req, res) => {
           </style>
         </head>
         <body>
-          <h1>🛫 Flight Ticket - TripUp</h1>
+          <h1> Flight Ticket - TripUp</h1>
           <p><strong>Airline:</strong> ${booking.flight.airline}</p>
           <p><strong>Flight Number:</strong> ${booking.flight.flightNumber}</p>
           <p><strong>From:</strong> ${booking.from}</p>
@@ -188,7 +188,7 @@ module.exports.downloadFlightTicket = async (req, res) => {
           ).toDateString()}</p>
           <p><strong>Total Fare:</strong> ₹${booking.totalFare}</p>
 
-          <h2>🧑‍🤝‍🧑 Passenger Details</h2>
+          <h2> Passenger Details</h2>
           <table>
             <thead>
               <tr>
@@ -232,7 +232,10 @@ module.exports.downloadFlightTicket = async (req, res) => {
     }
 
     const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    await page.setContent(htmlContent, {
+      waitUntil: "domcontentloaded",
+      timeout: 0,
+    });
 
     const pdfBuffer = await page.pdf({
       width: "7.5in",
@@ -306,7 +309,7 @@ module.exports.MailFlightTicket = async (req, res) => {
           </style>
         </head>
         <body>
-          <h1>🛫 Flight Ticket - TripUp</h1>
+          <h1> Flight Ticket - TripUp</h1>
           <p><strong>Airline:</strong> ${booking.flight.airline}</p>
           <p><strong>Flight Number:</strong> ${booking.flight.flightNumber}</p>
           <p><strong>From:</strong> ${booking.from}</p>
@@ -319,7 +322,7 @@ module.exports.MailFlightTicket = async (req, res) => {
           ).toDateString()}</p>
           <p><strong>Total Fare:</strong> ₹${booking.totalFare}</p>
 
-          <h2>🧑‍🤝‍🧑 Passenger Details</h2>
+          <h2> Passenger Details</h2>
           <table>
             <thead>
               <tr>
@@ -363,7 +366,10 @@ module.exports.MailFlightTicket = async (req, res) => {
     }
 
     const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    await page.setContent(htmlContent, {
+      waitUntil: "domcontentloaded",
+      timeout: 0,
+    });
 
     const pdfBuffer = await page.pdf({
       width: "7.5in",
@@ -379,7 +385,7 @@ module.exports.MailFlightTicket = async (req, res) => {
 
     await browser.close();
 
-    // 📧 Send email
+    //  Send email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
