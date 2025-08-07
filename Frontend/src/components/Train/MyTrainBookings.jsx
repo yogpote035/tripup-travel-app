@@ -59,7 +59,6 @@ const MyTrainBookings = () => {
 
     try {
       dispatch(cancelTrainTicket(selectedBookingId));
-      console.log("Cancelled:", selectedBookingId);
       setShowConfirm(false);
       setTimeout(() => {
         fetchBooking();

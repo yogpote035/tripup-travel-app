@@ -49,7 +49,6 @@ const MyFlightBookings = () => {
     setActionMsg("Cancelling your ticket...");
     try {
       dispatch(cancelFlightTicket(selectedBookingId));
-      console.log("Cancelled:", selectedBookingId);
       setShowConfirm(false);
       setTimeout(() => {
         fetchBooking();

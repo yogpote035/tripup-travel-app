@@ -46,7 +46,6 @@ const MyBusBookings = () => {
 
     setActionMsg("Cancelling your ticket...");
     try {
-      console.log("Cancelled:", selectedBookingId);
       dispatch(cancelBusTicket(selectedBookingId));
 
       setShowConfirm(false);
