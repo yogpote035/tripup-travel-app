@@ -234,6 +234,7 @@ module.exports.bookBusSeats = async (req, res) => {
       farePerSeat: Math.round(farePerSeat),
       totalFare,
       passengers,
+      status: "booked", //caus an error check
     });
 
     return res.status(200).json({ message: "Booking successful" });
@@ -326,7 +327,11 @@ module.exports.downloadTicket = async (req, res) => {
       ).toDateString()}</div>
       <div class="section"><span class="label">Fare:</span> ₹${
         booking.totalFare
-      } (₹${booking.farePerSeat}/seat)</div>
+      } (₹${booking.farePerSeat}/seat)</div> 
+       <div class="section"><span class="label">Status:</span> ${
+         booking.status
+       }</div>
+
       <div class="section">
         <span class="label">Passengers:</span>
         <ul>
@@ -460,7 +465,10 @@ module.exports.mailTicket = async (req, res) => {
       ).toDateString()}</div>
       <div class="section"><span class="label">Fare:</span> ₹${
         booking.totalFare
-      } (₹${booking.farePerSeat}/seat)</div>
+      } (₹${booking.farePerSeat}/seat)</div> 
+       <div class="section"><span class="label">Status:</span> ${
+         booking.status
+       }</div>
       <div class="section">
         <span class="label">Passengers:</span>
         <ul>
@@ -544,5 +552,43 @@ module.exports.mailTicket = async (req, res) => {
   } catch (err) {
     console.error("Mail error:", err);
     res.status(500).json({ message: "Failed to send email" });
+  }
+};
+
+module.exports.cancelBusBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    if (!bookingId) {
+      return res.status(400).json({ message: "Booking ID is required" });
+    }
+
+    const booking = await BusBookingModel.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    const bus = await BusModel.findById(booking.bus);
+    if (!bus) {
+      return res.status(404).json({ message: "Bus not found" });
+    }
+
+    booking.passengers.forEach((passenger) => {
+      const seat = bus.seats.find((s) => s.seatNumber === passenger.seatNumber);
+      if (seat) {
+        seat.isBooked = false;
+        seat.passengerName = null;
+        seat.bookingTime = null;
+      }
+    });
+
+    await bus.save();
+
+    booking.status = "cancelled";
+    await booking.save(); //for storing History we don't delete it
+
+    return res.status(200).json({ message: "Booking cancelled successfully" });
+  } catch (error) {
+    console.error("Cancel booking error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };

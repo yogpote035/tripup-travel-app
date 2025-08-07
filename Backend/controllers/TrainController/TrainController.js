@@ -175,7 +175,7 @@ module.exports.bookTrain = async (req, res) => {
     // Seat Allocation
     let seatToBook = [];
 
-    // If only one → random
+    // If only one --> random
     if (passengerNames.length === 1) {
       seatToBook.push(
         availableSeats[Math.floor(Math.random() * availableSeats.length)]
@@ -194,7 +194,7 @@ module.exports.bookTrain = async (req, res) => {
         }
       }
 
-      // Fallback: pick first N available
+      // pick first N available
       if (seatToBook.length === 0) {
         seatToBook = availableSeats.slice(0, passengerNames.length);
       }
@@ -230,6 +230,7 @@ module.exports.bookTrain = async (req, res) => {
       fare,
       email: userEmail,
       phone: userPhone,
+      status: "booked", //caus an error check
     });
 
     return res.status(201).json({
@@ -290,6 +291,7 @@ module.exports.generateReceiptPdf = async (req, res) => {
       fare: booking.fare,
       phone: booking.phone,
       email: booking.email,
+      status: booking.status,
       passengers: booking.passengerNames.map((name, index) => ({
         name,
         seat: booking.seatNumbers[index] || "N/A",
@@ -353,6 +355,7 @@ module.exports.generateReceiptPdf = async (req, res) => {
       <div class="info"><strong>Fare:</strong> ₹${ticketData.fare}</div>
       <div class="info"><strong>Phone:</strong> ${ticketData.phone}</div>
       <div class="info"><strong>Email:</strong> ${ticketData.email}</div>
+      <div class="info"><strong>Status:</strong> ${ticketData.status}</div>
       <div class="passengers">
         <strong>Passengers:</strong>
         ${ticketData.passengers
@@ -394,7 +397,7 @@ module.exports.generateReceiptPdf = async (req, res) => {
 
     const pdfBuffer = await page.pdf({
       width: "5in",
-      height: "3.5in",
+      height: "4in",
       printBackground: true,
       margin: {
         top: "10px",
@@ -445,6 +448,7 @@ exports.mailTrainTicket = async (req, res) => {
       fare: booking.fare,
       phone: booking.phone,
       email: booking.email,
+      status: booking.status,
       passengers: booking.passengerNames.map((name, i) => ({
         name,
         seat: booking.seatNumbers[i] || "N/A",
@@ -493,6 +497,7 @@ exports.mailTrainTicket = async (req, res) => {
           <p><strong>Fare:</strong> ₹${ticketData.fare}</p>
           <p><strong>Phone:</strong> ${ticketData.phone}</p>
           <p><strong>Email:</strong> ${ticketData.email}</p>
+          <p><strong>Status:</strong> ${ticketData.status}</p>
           <div class="passengers">
             <strong>Passengers:</strong>
             ${ticketData.passengers
@@ -531,7 +536,7 @@ exports.mailTrainTicket = async (req, res) => {
 
     const pdfBuffer = await page.pdf({
       width: "5in",
-      height: "3.5in",
+      height: "4in",
       printBackground: true,
     });
 
@@ -561,5 +566,57 @@ exports.mailTrainTicket = async (req, res) => {
     res.status(200).json({ message: "Ticket emailed successfully!" });
   } catch (error) {
     res.status(500).json({ message: "Failed to send ticket via email" });
+  }
+};
+
+module.exports.cancelTrainTicket = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    if (!bookingId) {
+      return res.status(400).json({ message: "Booking ID is required" });
+    }
+
+    const booking = await TrainBookingModel.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    const train = await TrainModel.findOne({
+      trainNumber: booking.trainNumber,
+    });
+    if (!train) {
+      return res.status(404).json({ message: "Train not found" });
+    }
+
+    // Find coach
+    const coach = train.coaches.find((c) => c.coachType === booking.coachType);
+    if (!coach) {
+      return res.status(404).json({ message: "Coach not found in train" });
+    }
+
+    // Un-mark the booked seats
+    booking.seatNumbers.forEach((seatNum, index) => {
+      const seat = coach.seats.find((s) => s.seatNumber === seatNum);
+      if (seat) {
+        seat.isBooked = false;
+        seat.passengerName = null;
+        seat.bookingTime = null;
+      }
+    });
+
+    // Update available Seats
+    coach.availableSeats += booking.seatNumbers.length;
+
+    await train.save();
+
+    booking.status = "cancelled";
+    await booking.save();
+
+    return res
+      .status(200)
+      .json({ message: "Train booking cancelled successfully" });
+  } catch (error) {
+    console.error("Cancel train ticket error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };

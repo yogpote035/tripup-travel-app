@@ -211,3 +211,32 @@ export const MailTicketPdf = (bookingId) => async (dispatch, getState) => {
     dispatch(getDownloadFailure(errMsg));
   }
 };
+
+// for Cancel Ticket
+export const cancelTrainTicket = (bookingId) => async (dispatch, getState) => {
+  dispatch(getDownloadRequest()); //states not  need here ,i used for timepass message
+  const token = getState().auth.token;
+
+  try {
+    const response = await axios.put(
+      `${import.meta.env.VITE_API_BASE_URL}/train/cancel-train-ticket`,
+      {
+        bookingId: bookingId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+        },
+      }
+    );
+
+    // Optional success message
+    dispatch(getDownloadSuccess());
+    toast.success("Ticket Cancelled!");
+  } catch (error) {
+    const errMsg =
+      error.response?.data?.message || "Failed to Cancel Your ticket";
+    toast.error(errMsg);
+    dispatch(getDownloadFailure(errMsg));
+  }
+};

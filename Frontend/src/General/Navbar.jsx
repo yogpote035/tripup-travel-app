@@ -132,10 +132,10 @@ const Navbar = () => {
                 <FaUser /> View Profile
               </Link>
               <Link
-                to="/ticket-history"
+                to="/recent-activity"
                 className="flex items-center gap-2 text-white"
               >
-                <FaTicketAlt /> Ticket History
+                <FaTicketAlt /> Recent Activity
               </Link>
               <button
                 onClick={handleLogout}

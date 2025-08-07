@@ -10,7 +10,7 @@ const BusBookingSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  userId:{
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "UserModel",
     required: true,
@@ -37,6 +37,11 @@ const BusBookingSchema = new mongoose.Schema({
   bookingDate: {
     type: Date,
     default: Date.now,
+  },
+  status: {
+    type: String,
+    enum: ["booked", "cancelled"],
+    default: "booked",
   },
 });
 

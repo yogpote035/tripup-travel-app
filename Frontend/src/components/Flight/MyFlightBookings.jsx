@@ -4,20 +4,33 @@ import { fetchMyFlightBookings } from "../../../AllStatesFeatures/Flight/BookFli
 import {
   downloadFlightTicket,
   mailFlightTicket,
+  cancelFlightTicket,
 } from "../../../AllStatesFeatures/Flight/AllFlightSlice";
 import Loading from "../../General/Loading";
 import { HiDownload, HiOutlineMail } from "react-icons/hi";
-import { useLocation } from "react-router-dom";
+import { MdCancel } from "react-icons/md";
+import { toast } from "react-toastify";
 
 const MyFlightBookings = () => {
   const dispatch = useDispatch();
   const [actionMsg, setActionMsg] = useState("");
 
-  useEffect(() => {
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  function fetchBooking() {
     dispatch(fetchMyFlightBookings());
+  }
+  useEffect(() => {
+    fetchBooking();
   }, [dispatch]);
 
-  const { pathname } = useLocation();
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setShowConfirm(false);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   window.scrollTo(0, 0); //only once 1st time scroll to top
 
@@ -29,6 +42,22 @@ const MyFlightBookings = () => {
   );
 
   if (loadingAll) return <Loading message={actionMsg} />;
+
+  const handleCancel = async () => {
+    if (!selectedBookingId) return toast.warn("Booking Id Missing");
+
+    setActionMsg("Cancelling your ticket...");
+    try {
+      dispatch(cancelFlightTicket(selectedBookingId));
+      console.log("Cancelled:", selectedBookingId);
+      setShowConfirm(false);
+      setTimeout(() => {
+        fetchBooking();
+      }, 1000);
+    } catch (err) {
+      alert("Failed to cancel ticket.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 mt-10 mb-10">
@@ -72,6 +101,16 @@ const MyFlightBookings = () => {
                 <p className="text-sm text-gray-400">
                   Seats: {booking.passengers.length}
                 </p>
+                {booking.status === "cancelled" ? (
+                  <p className="text-sm text-red-500">
+                    Booking Status:{" "}
+                      {booking.status || "N/A"}
+                  </p>
+                ) : (
+                  <p className="text-sm text-green-400">
+                    Booking Status: {booking.status || "N/A"}
+                  </p>
+                )}
 
                 <div className="mt-2 text-sm text-gray-300">
                   <p className="font-semibold">Passengers:</p>
@@ -92,9 +131,9 @@ const MyFlightBookings = () => {
                     dispatch(downloadFlightTicket(booking._id));
                     setActionMsg("Wait, Your Ticket is Getting Ready...");
                   }}
-                  className="flex items-center gap-2 bg-yellow-500 text-black text-sm px-3 py-1 rounded hover:bg-yellow-600"
+                  className="flex items-center gap-2 bg-yellow-500  text-white text-sm px-3 py-1 rounded hover:bg-yellow-600"
                 >
-                  <HiDownload className="text-lg" /> Download
+                  <HiDownload className="text-lg" /> Download Ticket
                 </button>
                 <button
                   onClick={() => {
@@ -103,15 +142,61 @@ const MyFlightBookings = () => {
                       "Wait, You’ll get your ticket by email shortly..."
                     );
                   }}
-                  className="flex items-center gap-2 bg-orange-500 text-black text-sm px-3 py-1 rounded hover:bg-orange-600"
+                  className="flex items-center gap-2 bg-orange-500  text-white text-sm px-3 py-1 rounded hover:bg-orange-600"
                 >
-                  <HiOutlineMail className="text-lg" /> Mail
+                  <HiOutlineMail className="text-lg" /> Mail Ticket
                 </button>
+                {booking.status === "booked" && (
+                  <button
+                    onClick={() => {
+                      setSelectedBookingId(booking._id);
+                      setShowConfirm(true);
+                    }}
+                    className="flex items-center gap-2 bg-red-600 text-white text-sm px-3 py-1 rounded hover:bg-red-500 outline-none focus:outline-none"
+                  >
+                    <MdCancel className="text-xl" />
+                    Cancel Ticket
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
       </div>
+      {showConfirm && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowConfirm(false)} // Click outside = close
+        >
+          <div
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md text-black dark:text-white p-6 rounded-xl shadow-2xl border border-white/20 w-full max-w-sm"
+            onClick={(e) => e.stopPropagation()} // Prevent inner click from closing
+          >
+            <h3 className="text-lg font-semibold mb-2">
+              Cancel Flight Ticket?
+            </h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              Are you sure you want to cancel this ticket? This action cannot be
+              undone.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded"
+              >
+                No
+              </button>
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

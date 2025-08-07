@@ -99,6 +99,7 @@ module.exports.bookFlight = async (req, res) => {
       farePerSeat,
       totalFare,
       passengers,
+      status: "booked", //caus an error check
     });
 
     await newBooking.save();
@@ -187,6 +188,7 @@ module.exports.downloadFlightTicket = async (req, res) => {
             booking.bookingDate
           ).toDateString()}</p>
           <p><strong>Total Fare:</strong> ₹${booking.totalFare}</p>
+          <p><strong>Status:</strong> ${booking.status}</p>
 
           <h2> Passenger Details</h2>
           <table>
@@ -321,6 +323,7 @@ module.exports.MailFlightTicket = async (req, res) => {
             booking.bookingDate
           ).toDateString()}</p>
           <p><strong>Total Fare:</strong> ₹${booking.totalFare}</p>
+          <p><strong>Status:</strong> ${booking.status}</p>
 
           <h2> Passenger Details</h2>
           <table>
@@ -415,5 +418,52 @@ module.exports.MailFlightTicket = async (req, res) => {
     res
       .status(500)
       .json({ message: "Failed to mail ticket", error: err.message });
+  }
+};
+
+module.exports.cancelFlightBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    if (!bookingId) {
+      return res.status(400).json({ message: "Booking ID is required" });
+    }
+
+    const booking = await FlightBookingModel.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    const flight = await FlightModel.findById(booking.flight);
+    if (!flight) {
+      return res.status(404).json({ message: "Flight not found" });
+    }
+
+    // Un-mark booked seats
+    booking.passengers.forEach((passenger) => {
+      const seat = flight.seats.find(
+        (s) => s.seatNumber === passenger.seatNumber
+      );
+      if (seat) {
+        seat.isBooked = false;
+        seat.passengerName = null;
+        seat.bookingTime = null;
+      }
+    });
+
+    // Update seats
+    flight.availableSeats += booking.passengers.length;
+
+    await flight.save();
+
+    // Update booking status instead of deleting bcz i went user history
+    booking.status = "cancelled";
+    await booking.save();
+
+    return res
+      .status(200)
+      .json({ message: "Flight booking cancelled successfully" });
+  } catch (error) {
+    console.error("Cancel flight booking error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };

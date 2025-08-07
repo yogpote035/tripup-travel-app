@@ -23,13 +23,17 @@ import FlightSearch from "./components/Flight/FlightSearch.jsx";
 import FlightSeatSelection from "./components/Flight/FlightSeatSelection.jsx";
 import FlightBookingForm from "./components/Flight/FlightBookingForm.jsx";
 import MyFlightBookings from "./components/Flight/MyFlightBookings.jsx";
+import PrivacyPolicy from "./components/PrivacyPolicy/PrivacyPolicy.jsx";
+import TermsAndConditions from "./components/TermsAndConditions/TermsAndConditions.jsx";
+import ContactUs from "./components/ContactUs/ContactUs.jsx";
+import RecentActivity from "./components/RecentActivity/RecentActivity.jsx";
 
 function App() {
   return (
     <>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-          <div className="mb-13"></div>
+        <div className="mb-13"></div>
         <main className="flex-grow bg-gray-900">
           <Routes>
             <Route exact path="/" element={<Home />} />
@@ -116,6 +120,10 @@ function App() {
             <Route path="/train" element={<TrainPage />} />
             <Route path="/bus" element={<BusPage />} />
             <Route path="/flight" element={<FlightSearch />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/recent-activity" element={<RecentActivity />} />
 
             {/*Get Booking Routes */}
             <Route

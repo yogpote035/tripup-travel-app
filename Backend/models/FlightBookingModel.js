@@ -76,7 +76,15 @@ const flightBookingSchema = new mongoose.Schema({
     required: true,
     validate: [(val) => val.length >= 1, "At least one passenger is required."],
   },
+  status: {
+    type: String,
+    enum: ["booked", "cancelled"],
+    default: "booked",
+  },
 });
 
-const FlightBookingModel = mongoose.model("FlightBookingModel", flightBookingSchema);
+const FlightBookingModel = mongoose.model(
+  "FlightBookingModel",
+  flightBookingSchema
+);
 module.exports = FlightBookingModel;

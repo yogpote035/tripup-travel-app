@@ -221,3 +221,29 @@ export const mailBusTicketPdf = (bookingId) => async (dispatch, getState) => {
     toast.error(errMsg);
   }
 };
+
+export const cancelBusTicket = (bookingId) => async (dispatch, getState) => {
+  dispatch(getDownloadRequest());
+  const token = getState().auth.token;
+
+  try {
+    const response = await axios.put(
+      `${import.meta.env.VITE_API_BASE_URL}/bus/cancel-bus-ticket`,
+      {
+        bookingId: bookingId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+        },
+      }
+    );
+
+    dispatch(getDownloadSuccess());
+    toast.success("Ticket Cancelled successfully!");
+  } catch (error) {
+    const errMsg = error.response?.data?.message || "Failed to Cancelled ticket";
+    dispatch(getDownloadFailure(errMsg));
+    toast.error(errMsg);
+  }
+};
