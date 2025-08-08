@@ -20,7 +20,7 @@
 ### 📅 2. Smart Itinerary Planner
 
 - Input destination, travel dates, and interests (e.g. nature, food, heritage).
-- Auto-generates a day-wise itinerary.
+- Generate a day-wise itinerary.
 - Google Maps API for route mapping.
 - OpenWeather API for weather forecasting.
 - Drag-and-drop interface to reorder days/places.
