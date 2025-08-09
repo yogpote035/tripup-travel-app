@@ -134,7 +134,10 @@ const Itinerary = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       Plan Created At:{" "}
-                      {format(new Date(itinerary.createdAt), "dd-M-yyyy")}
+                      {format(
+                        new Date(itinerary.createdAt),
+                        "dd MMM yyyy, hh:mm a"
+                      )}
                     </div>
                   </div>
                 </div>
@@ -182,7 +185,10 @@ const Itinerary = () => {
                       Day {dayObj.day}:{" "}
                       <span className="text-gray-500">
                         {" "}
-                        {format(new Date(dayObj.date), "dd-M-yyyy")}
+                        {format(
+                          new Date(dayObj.date),
+                          "EEEE, dd MMM yyyy"
+                        )}
                       </span>
                     </h4>
                     <ul className="list-disc ml-6 space-y-1 text-gray-700">
