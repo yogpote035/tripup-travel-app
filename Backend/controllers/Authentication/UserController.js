@@ -100,12 +100,12 @@ module.exports.Login = async (request, response) => {
   }
 
   if (email) {
-    const isEmailValid = await validateEmail(email);
-    if (!isEmailValid) {
-      return response
-        .status(203)
-        .json({ message: "Email does not appear to be valid." });
-    }
+    // const isEmailValid = await validateEmail(email);
+    // if (!isEmailValid) {
+    //   return response
+    //     .status(203)
+    //     .json({ message: "Email does not appear to be valid." });
+    // }
   }
 
   try {

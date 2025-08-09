@@ -27,6 +27,7 @@ import PrivacyPolicy from "./components/PrivacyPolicy/PrivacyPolicy.jsx";
 import TermsAndConditions from "./components/TermsAndConditions/TermsAndConditions.jsx";
 import ContactUs from "./components/ContactUs/ContactUs.jsx";
 import RecentActivity from "./components/RecentActivity/RecentActivity.jsx";
+import ItineraryForm from "./components/Itinerary/ItineraryForm.jsx";
 
 function App() {
   return (
@@ -66,7 +67,16 @@ function App() {
                 </ProtectedRoutes>
               }
             />
-
+            {/* Itinerary */}
+            <Route
+              exact
+              path="/itinerary-fill"
+              element={
+                <ProtectedRoutes>
+                  <ItineraryForm />
+                </ProtectedRoutes>
+              }
+            />
             {/* Seat Booking Routes */}
             {/* train */}
             <Route

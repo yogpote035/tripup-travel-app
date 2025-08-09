@@ -10,6 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@google/genai": "^1.13.0",
+    "@google/generative-ai": "^0.24.1",
     "@sparticuz/chromium": "^138.0.2",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
