@@ -51,7 +51,10 @@ const Itinerary = () => {
     try {
       await dispatch(DeleteItinerary(selectedId));
       setShowConfirm(false);
-      dispatch(getAllItinerary());
+
+      setTimeout(() => {
+        getAllItineraryFunction();
+      }, 1300);
     } catch (err) {
       alert("Failed to Delete Itinerary.");
     }
