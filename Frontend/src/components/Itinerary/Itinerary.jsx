@@ -16,6 +16,7 @@ import {
 } from "../../../AllStatesFeatures/Itinerary/AllItinerarySlice";
 import Loading from "../../General/Loading";
 import { toast } from "react-toastify";
+import { format } from "date-fns";
 
 const Itinerary = () => {
   const dispatch = useDispatch();
@@ -106,8 +107,9 @@ const Itinerary = () => {
                   </h2>
                   <div className="text-gray-600 flex flex-wrap gap-4 items-center text-sm">
                     <div className="flex items-center gap-2">
-                      <Calendar size={16} /> {itinerary.startDate} –{" "}
-                      {itinerary.endDate}
+                      <Calendar size={16} />{" "}
+                      {format(new Date(itinerary.startDate), "dd-M-yyyy")} –{" "}
+                      {format(new Date(itinerary.endDate), "dd-M-yyyy")}
                     </div>
                     <div className="flex items-center gap-2">
                       <Users size={16} /> {itinerary.tripType}
@@ -129,6 +131,10 @@ const Itinerary = () => {
                     )}
                     <div className="flex items-center gap-2">
                       <Wallet size={16} /> {itinerary.budget}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      Plan Created At:{" "}
+                      {format(new Date(itinerary.createdAt), "dd-M-yyyy")}
                     </div>
                   </div>
                 </div>
@@ -174,7 +180,10 @@ const Itinerary = () => {
                   >
                     <h4 className="text-lg font-semibold text-gray-800 mb-2">
                       Day {dayObj.day}:{" "}
-                      <span className="text-gray-500">{dayObj.date}</span>
+                      <span className="text-gray-500">
+                        {" "}
+                        {format(new Date(dayObj.date), "dd-M-yyyy")}
+                      </span>
                     </h4>
                     <ul className="list-disc ml-6 space-y-1 text-gray-700">
                       {dayObj.activities?.map((activity, i) => (
