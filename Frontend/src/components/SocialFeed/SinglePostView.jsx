@@ -52,18 +52,12 @@ export default function SinglePostView() {
     }
   }, [id, dispatch]);
 
-  // 0 when index when post changes
+  // for 0 when index when post changes
   useEffect(() => {
     setCurrentImage(0);
   }, [posts]);
   // for conform dialog exit or close
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setShowConfirm(false);
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
+
   // right left key
   useEffect(() => {
     const handleKeyDown = (e) => {
