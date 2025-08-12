@@ -15,7 +15,7 @@ export default function EditPost() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { posts, loading } = useSelector((state) => state.socialFeed);
+  const { singlePost:posts, loading } = useSelector((state) => state.socialFeed);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -64,7 +64,7 @@ export default function EditPost() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-800 to-gray-900 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-600 to-gray-700 p-4">
       <form
         onSubmit={handleSubmit}
         className="bg-gray-800  mt-10 mb-10 text-gray-300 w-full max-w-2xl rounded-xl shadow-lg p-6 sm:p-8 space-y-6"
