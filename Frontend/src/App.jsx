@@ -9,7 +9,6 @@ import Home from "./components/Home/Home.jsx";
 import Footer from "./General/Footer.jsx";
 import Bookings from "./components/Booking/Booking.jsx";
 import Itinerary from "./components/Itinerary/Itinerary.jsx";
-import Diary from "./components/Diary/Diary.jsx";
 import TrainPage from "./components/Train/TrainPage.jsx";
 import TrainSeatBooking from "./components/Train/TrainSeatBooking.jsx";
 import MyTrainBookings from "./components/Train/MyTrainBookings.jsx";
@@ -28,6 +27,10 @@ import TermsAndConditions from "./components/TermsAndConditions/TermsAndConditio
 import ContactUs from "./components/ContactUs/ContactUs.jsx";
 import RecentActivity from "./components/RecentActivity/RecentActivity.jsx";
 import ItineraryForm from "./components/Itinerary/ItineraryForm.jsx";
+import CreatePost from "./components/SocialFeed/CreatePost.jsx";
+import PostsFeed from "./components/SocialFeed/PostsFeed.jsx";
+import SinglePostView from "./components/SocialFeed/SinglePostView.jsx";
+import EditPost from "./components/SocialFeed/EditPost.jsx";
 
 function App() {
   return (
@@ -60,10 +63,10 @@ function App() {
             />
             <Route
               exact
-              path="/diary"
+              path="/post"
               element={
                 <ProtectedRoutes>
-                  <Diary />
+                  <PostsFeed />
                 </ProtectedRoutes>
               }
             />
@@ -122,6 +125,34 @@ function App() {
               element={
                 <ProtectedRoutes>
                   <FlightBookingForm />
+                </ProtectedRoutes>
+              }
+            />
+
+            {/* Social Feed */}
+            <Route
+              path="/create-post"
+              element={
+                <ProtectedRoutes>
+                  <CreatePost />
+                </ProtectedRoutes>
+              }
+            />
+            {/* Single Post View */}
+            <Route
+              path="/post/:id"
+              element={
+                <ProtectedRoutes>
+                  <SinglePostView />
+                </ProtectedRoutes>
+              }
+            />
+            {/* Update Post View */}
+            <Route
+              path="/post/update/:id"
+              element={
+                <ProtectedRoutes>
+                  <EditPost />
                 </ProtectedRoutes>
               }
             />

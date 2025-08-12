@@ -63,6 +63,9 @@ app.use("/api/flight", require("./routes/FlightRoutes"));
 console.log("Mounting Itinerary Routes...");
 app.use("/api/itinerary", require("./routes/Itinerary"));
 
+console.log("Mounting Social Feed Routes...");
+app.use("/api/posts", require("./routes/SocialFeedRoutes"));
+
 // ✅ Server Listening
 app.listen(PORT, () => {
   console.log(`Server listening on PORT ${PORT} ⛳`);

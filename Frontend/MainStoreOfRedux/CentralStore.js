@@ -8,6 +8,7 @@ import BookBusReducer from "../AllStatesFeatures/Bus/BookBusTicketSlice";
 import flightReducer from "../AllStatesFeatures/Flight/AllFlightSlice";
 import flightBookingReducer from "../AllStatesFeatures/Flight/BookFlightSeatSlice";
 import itineraryReducer from "../AllStatesFeatures/Itinerary/AllItinerarySlice";
+import SocialMediaReducer from "../AllStatesFeatures/SocialFeed/SocialFeedSlice";
 let Store = {}; //initialize because export default
 export default Store = configureStore({
   reducer: {
@@ -20,5 +21,6 @@ export default Store = configureStore({
     flight: flightReducer, // search all flight
     BookFlightTicket: flightBookingReducer,
     itinerary: itineraryReducer, //for all itinerary and add ,delete
+    socialFeed: SocialMediaReducer,
   },
 });

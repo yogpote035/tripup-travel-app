@@ -71,8 +71,8 @@ const Navbar = () => {
             <Link to="/itinerary" className="text-white font-medium">
               Itinerary
             </Link>
-            <Link to="/diary" className="text-white font-medium">
-              Diary
+            <Link to="/post" className="text-white font-medium">
+              Post
             </Link>
           </div>
 
@@ -116,8 +116,8 @@ const Navbar = () => {
             <Link to="/itinerary" className="block text-white">
               📍 Itinerary
             </Link>
-            <Link to="/diary" className="block text-white">
-              📸 Diary
+            <Link to="/post" className="block text-white">
+              📸 Post
             </Link>
             <hr />
           </div>
