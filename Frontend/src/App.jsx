@@ -61,15 +61,7 @@ function App() {
                 </ProtectedRoutes>
               }
             />
-            <Route
-              exact
-              path="/post"
-              element={
-                <ProtectedRoutes>
-                  <PostsFeed />
-                </ProtectedRoutes>
-              }
-            />
+            <Route exact path="/post" element={<PostsFeed />} />
             {/* Itinerary */}
             <Route
               exact
@@ -139,14 +131,7 @@ function App() {
               }
             />
             {/* Single Post View */}
-            <Route
-              path="/post/:id"
-              element={
-                <ProtectedRoutes>
-                  <SinglePostView />
-                </ProtectedRoutes>
-              }
-            />
+            <Route path="/post/:id" element={<SinglePostView />} />
             {/* Update Post View */}
             <Route
               path="/post/update/:id"

@@ -41,7 +41,7 @@ export default function SinglePostView() {
   } = useSelector((state) => state.socialFeed);
   const currentUser =
     localStorage.getItem("userId") ||
-    useSelector((state) => state.auth.user.userId);
+    useSelector((state) => state?.auth?.user?.userId);
   const navigate = useNavigate();
   // Track current image index for gallery
   const [currentImage, setCurrentImage] = useState(0);
@@ -235,13 +235,15 @@ export default function SinglePostView() {
       </p>
 
       {/* Likes & Comments */}
+
       <div className="flex items-center gap-6">
         <button
           onClick={() => {
             dispatch(toggleLike(posts._id));
           }}
+          disabled={!currentUser}
           className={`bg-gray-800  hover:bg-gray-700
-           outline-none focus:outline-none px-4 py-2 flex items-center gap-2 rounded-lg transition`}
+           outline-none focus:outline-none px-4 py-2 flex items-center gap-2 rounded-lg transition ${!currentUser ? "cursor-not-allowed opacity-50" : ""}`}
         >
           {like?.liked ? (
             <FaHeart color="red" size={15} />
@@ -251,6 +253,7 @@ export default function SinglePostView() {
           {like?.likesCount} <>Likes</>
         </button>
       </div>
+
       {showConfirm && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
@@ -285,63 +288,65 @@ export default function SinglePostView() {
       )}
 
       {/* Comment Input */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-3">Comments</h2>
-        <form
-          onSubmit={(e) => {
-            if (!commentText.trim()) return;
-            console.log("text from main: ", commentText);
-            dispatch(addComment(posts._id, commentText));
-            setCommentText("");
-          }}
-          className="flex gap-2"
-        >
-          <input
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Write a comment..."
-            className="flex-1 p-2 rounded border border-gray-700 bg-gray-800 text-white outline-none"
-          />
-          <button
-            type="submit"
-            onClick={(e) => {
-              setActionMsg("Adding your comment...");
+      {currentUser && (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-3">Comments</h2>
+          <form
+            onSubmit={(e) => {
+              if (!commentText.trim()) return;
+              console.log("text from main: ", commentText);
+              dispatch(addComment(posts._id, commentText));
+              setCommentText("");
             }}
-            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded"
+            className="flex gap-2"
           >
-            Post
-          </button>
-        </form>
-
-        {/* Comment List */}
-        <div className="mt-4 space-y-4">
-          {comments?.map((comment) => (
-            <div
-              key={comment._id}
-              className="bg-gray-800 p-3 rounded flex justify-between"
+            <input
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Write a comment..."
+              className="flex-1 p-2 rounded border border-gray-700 bg-gray-800 text-white outline-none"
+            />
+            <button
+              type="submit"
+              onClick={(e) => {
+                setActionMsg("Adding your comment...");
+              }}
+              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded"
             >
-              <div>
-                <div className="text-sm flex items-center justify-end text-gray-400">
-                  <p> {comment.user.name} At:&nbsp; </p>
-                  <p> {format(comment.createdAt, "dd-MMM-yyyy")}</p>
+              Post
+            </button>
+          </form>
+
+          {/* Comment List */}
+          <div className="mt-4 space-y-4">
+            {comments?.map((comment) => (
+              <div
+                key={comment._id}
+                className="bg-gray-800 p-3 rounded flex justify-between"
+              >
+                <div>
+                  <div className="text-sm flex items-center justify-end text-gray-400">
+                    <p> {comment.user.name} At:&nbsp; </p>
+                    <p> {format(comment.createdAt, "dd-MMM-yyyy")}</p>
+                  </div>
+                  <p>{comment.text}</p>
                 </div>
-                <p>{comment.text}</p>
+                {comment.user.id === currentUser && (
+                  <button
+                    onClick={() => {
+                      dispatch(deleteComment(posts._id, comment._id, navigate));
+                      setActionMsg("Deleting your comment...");
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Delete size={25} />
+                  </button>
+                )}
               </div>
-              {comment.user.id === currentUser && (
-                <button
-                  onClick={() => {
-                    dispatch(deleteComment(posts._id, comment._id, navigate));
-                    setActionMsg("Deleting your comment...");
-                  }}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Delete size={25} />
-                </button>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

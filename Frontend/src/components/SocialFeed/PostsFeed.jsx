@@ -13,7 +13,9 @@ import Loading from "../../General/Loading";
 export default function PostsFeed() {
   const dispatch = useDispatch();
   const [mode, setMode] = useState("all");
-
+  const currentUser =
+    useSelector((state) => state?.auth?.user?.userId) ||
+    localStorage.getItem("userId");
   const { posts, loading, error } = useSelector((state) => state.socialFeed);
 
   // Fetch posts depending on mode
@@ -48,32 +50,36 @@ export default function PostsFeed() {
             >
               All Posts
             </button>
-            <button
-              onClick={() => setMode("mine")}
-              className={`flex-1 px-5 py-2 rounded-full transition ${
-                mode === "mine"
-                  ? "bg-orange-500 text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              My Posts
-            </button>
+            {currentUser && (
+              <button
+                onClick={() => setMode("mine")}
+                className={`flex-1 px-5 py-2 rounded-full transition ${
+                  mode === "mine"
+                    ? "bg-orange-500 text-white"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                My Posts
+              </button>
+            )}
           </div>
         </div>
 
         {/* Right: Create Post */}
         {/* Right: Create Post */}
-        <Link
-          to="/create-post"
-          className="mt-4 md:mt-0 flex items-center justify-center gap-2
+        {currentUser && (
+          <Link
+            to="/create-post"
+            className="mt-4 md:mt-0 flex items-center justify-center gap-2
              w-full sm:w-auto h-12 px-4
              bg-orange-500 hover:bg-orange-600 text-white 
              rounded-lg shadow transition-all duration-200
              font-medium"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Create Post</span>
-        </Link>
+          >
+            <Plus className="w-5 h-5" />
+            <span>Create Post</span>
+          </Link>
+        )}
       </div>
 
       {/* Loading & Errors */}
@@ -110,7 +116,9 @@ export default function PostsFeed() {
                 <div className="p-4">
                   <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
                   <p className="text-gray-400 text-sm flex items-center gap-2 mb-3">
-                  <MapPin size={15}/>{post.location} &nbsp;|<Calendar size={18}/>{" "}
+                    <MapPin size={15} />
+                    {post.location} &nbsp;|
+                    <Calendar size={18} />{" "}
                     {format(new Date(post.travelDate), "dd MMM yyyy")}
                   </p>
                   <p className="text-sm text-gray-300 line-clamp-3">
