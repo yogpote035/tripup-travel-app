@@ -28,7 +28,6 @@ import { toast } from "react-toastify";
 export default function SinglePostView() {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const formRef = useRef(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [actionMsg, setActionMsg] = useState("");
@@ -251,9 +250,6 @@ export default function SinglePostView() {
           )}{" "}
           {like?.likesCount} <>Likes</>
         </button>
-        <button className="bg-gray-800 flex items-center gap-2 outline-none focus:outline-none hover:bg-gray-700 px-4 py-2 rounded-lg transition">
-          <FaComment size={15} /> {posts?.comments?.length || 0} Comments
-        </button>
       </div>
       {showConfirm && (
         <div
@@ -308,6 +304,9 @@ export default function SinglePostView() {
           />
           <button
             type="submit"
+            onClick={(e) => {
+              setActionMsg("Adding your comment...");
+            }}
             className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded"
           >
             Post
@@ -332,6 +331,7 @@ export default function SinglePostView() {
                 <button
                   onClick={() => {
                     dispatch(deleteComment(posts._id, comment._id, navigate));
+                    setActionMsg("Deleting your comment...");
                   }}
                   className="text-red-500 hover:text-red-700"
                 >
