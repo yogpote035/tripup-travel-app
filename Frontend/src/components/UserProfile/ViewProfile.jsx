@@ -13,6 +13,8 @@ const ViewProfile = () => {
     totalFlightBookings,
     totalBusBookings,
     totalTrainBookings,
+    totalPosts,
+    totalPlans,
     loading,
     error,
   } = useSelector((state) => state.userProfile);
@@ -95,11 +97,11 @@ const ViewProfile = () => {
             <p className="text-base font-medium text-white">
               Total Travel Plans:{" "}
               <span className="font-bold text-lg text-yellow-300 ml-1">
-                {"Pending"}
+                {totalPlans || 0}
               </span>
             </p>
             <button
-              // onClick={() => navigate("/train-bookings")}
+              onClick={() => navigate("/itinerary")}
               className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
             >
               See All Plans
@@ -110,11 +112,11 @@ const ViewProfile = () => {
             <p className="text-base font-medium text-white">
               Total Post:{" "}
               <span className="font-bold text-lg text-yellow-300 ml-1">
-                {"Pending"}
+                {totalPosts || 0}
               </span>
             </p>
             <button
-              // onClick={() => navigate("/train-bookings")}
+              onClick={() => navigate("/post")}
               className="bg-white text-black py-1 px-3 rounded hover:bg-gray-200 transition font-medium"
             >
               See All Posts

@@ -8,6 +8,8 @@ const initialState = {
   totalTrainBookings: 0,
   totalBusBookings: 0,
   totalFlightBookings: 0,
+  totalPosts: 0,
+  totalPlans: 0,//itineraries
 };
 
 const UserProfileSlice = createSlice({
@@ -23,6 +25,8 @@ const UserProfileSlice = createSlice({
       state.totalTrainBookings = action.payload.totalTrainBookings;
       state.totalBusBookings = action.payload.totalBusBookings;
       state.totalFlightBookings = action.payload.totalFlightBookings;
+      state.totalPlans = action.payload.totalPlans;
+      state.totalPosts = action.payload.totalPosts;
     },
     profileFailure: (state, action) => {
       state.loading = false;
