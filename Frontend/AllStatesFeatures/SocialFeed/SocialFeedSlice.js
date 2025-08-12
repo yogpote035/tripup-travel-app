@@ -5,7 +5,13 @@ import { toast } from "react-toastify";
 const initialState = {
   loading: false,
   error: null,
-  posts: [],
+  posts: [],         // list of all posts
+  singlePost: null,  // currently viewed post
+  comments: [],      // comments for singlePost
+  like: {
+    likesCount: 0,
+    liked: false,
+  },
 };
 
 const postSlice = createSlice({
@@ -15,7 +21,6 @@ const postSlice = createSlice({
     // Create Post
     createPostRequest: (state) => {
       state.loading = true;
-
       state.error = null;
     },
     createPostSuccess: (state, action) => {
@@ -24,7 +29,6 @@ const postSlice = createSlice({
     },
     createPostFailure: (state, action) => {
       state.loading = false;
-
       state.error = action.payload;
     },
 
@@ -35,13 +39,28 @@ const postSlice = createSlice({
     },
     getAllPostSuccess: (state, action) => {
       state.loading = false;
-
       state.posts = action.payload || [];
     },
     getAllPostFailure: (state, action) => {
       state.loading = false;
-
       state.error = action.payload;
+    },
+
+    // Get Single Post
+    getSinglePostRequest: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    getSinglePostSuccess: (state, action) => {
+      state.loading = false;
+      state.error = null;
+      const post = action.payload;
+      state.singlePost = post;
+      state.comments = post.comments || [];
+      state.like.likesCount = post.likes.length;
+      state.like.liked = post.likes.some(
+        (like) => like._id === localStorage.getItem("userId")
+      );
     },
 
     // Delete Post
@@ -57,6 +76,7 @@ const postSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
+
     // Update Post
     updatePostRequest: (state) => {
       state.loading = true;
@@ -73,17 +93,20 @@ const postSlice = createSlice({
 
     // Like/Unlike Post
     toggleLikeSuccess: (state, action) => {
-      const updatedPost = action.payload;
-      state.posts = state.posts.map((post) =>
-        post._id === updatedPost._id ? updatedPost : post
-      );
+      state.like.likesCount = action.payload.likesCount;
+      state.like.liked = action.payload.liked;
     },
 
-    // Add Comment
-    addCommentSuccess: (state, action) => {
-      const updatedPost = action.payload;
-      state.posts = state.posts.map((post) =>
-        post._id === updatedPost._id ? updatedPost : post
+    // Add or Delete Comment
+    addAndDeleteComment: (state, action) => {
+      state.loading = false;
+      state.error = null;
+      const { comments, updatedPost } = action.payload;
+      state.comments = comments;
+      state.singlePost = updatedPost;
+      state.like.likesCount = updatedPost.likes.length;
+      state.like.liked = updatedPost.likes.some(
+        (like) => like._id === localStorage.getItem("userId")
       );
     },
   },
@@ -96,11 +119,13 @@ export const {
   getAllPostRequest,
   getAllPostSuccess,
   getAllPostFailure,
+  getSinglePostRequest,
+  getSinglePostSuccess,
   deletePostRequest,
   deletePostSuccess,
   deletePostFailure,
   toggleLikeSuccess,
-  addCommentSuccess,
+  addAndDeleteComment,
   updatePostRequest,
   updatePostSuccess,
   updatePostFailure,
@@ -108,13 +133,12 @@ export const {
 
 export default postSlice.reducer;
 
-// Create Post
+
 export const createPost =
   (formData, navigate) => async (dispatch, getState) => {
     dispatch(createPostRequest());
     try {
       const token = getState().auth.token || localStorage.getItem("token");
-
       const res = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/posts`,
         formData,
@@ -125,10 +149,9 @@ export const createPost =
           },
         }
       );
-
       dispatch(createPostSuccess(res.data.post));
-      navigate("/post");
       toast.success("Post created successfully!");
+      navigate("/post");
     } catch (error) {
       const errMsg = error.response?.data?.message || "Something went wrong!";
       dispatch(createPostFailure(errMsg));
@@ -136,7 +159,6 @@ export const createPost =
     }
   };
 
-// Get All Posts
 export const getAllPosts = () => async (dispatch, getState) => {
   dispatch(getAllPostRequest());
   try {
@@ -151,7 +173,7 @@ export const getAllPosts = () => async (dispatch, getState) => {
     toast.error(errMsg);
   }
 };
-// Get All Posts
+
 export const getMyPosts = () => async (dispatch, getState) => {
   dispatch(getAllPostRequest());
   try {
@@ -169,11 +191,12 @@ export const getMyPosts = () => async (dispatch, getState) => {
     toast.error(errMsg);
   }
 };
+
 export const getSinglePost = (id) => async (dispatch, getState) => {
   if (!id) {
     return toast.warn("Post id is Required");
   }
-  dispatch(getAllPostRequest());
+  dispatch(getSinglePostRequest());
   try {
     const token = localStorage.getItem("token") || getState().auth.token;
     const res = await axios.get(
@@ -182,7 +205,7 @@ export const getSinglePost = (id) => async (dispatch, getState) => {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    dispatch(getAllPostSuccess(res.data));
+    dispatch(getSinglePostSuccess(res.data));
   } catch (error) {
     const errMsg = error.response?.data?.message || "Failed to fetch post";
     dispatch(getAllPostFailure(errMsg));
@@ -190,14 +213,12 @@ export const getSinglePost = (id) => async (dispatch, getState) => {
   }
 };
 
-// update post
 export const updatePost =
   ({ id, formData, navigate }) =>
   async (dispatch, getState) => {
     dispatch(updatePostRequest());
     try {
       const token = getState().auth.token || localStorage.getItem("token");
-
       const res = await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/posts/${id}`,
         formData,
@@ -208,13 +229,12 @@ export const updatePost =
           },
         }
       );
-
       dispatch(updatePostSuccess());
       toast.success(res.data.message || "Post updated successfully!");
       if (res.data.id || id) {
         navigate(`/post/${id}`);
       } else {
-        navigate("/posts");
+        navigate("/post");
       }
     } catch (error) {
       const errMsg = error.response?.data?.message || "Something went wrong!";
@@ -223,13 +243,11 @@ export const updatePost =
     }
   };
 
-// Delete Post
 export const deletePost = (id, navigate) => async (dispatch, getState) => {
   if (!id) {
     return toast.warning("Id is Missing For Deletion");
   }
   dispatch(deletePostRequest());
-
   try {
     const token = getState().auth.token || localStorage.getItem("token");
     const { data } = await axios.delete(
@@ -238,7 +256,6 @@ export const deletePost = (id, navigate) => async (dispatch, getState) => {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-
     dispatch(deletePostSuccess());
     toast.success(data.message || "Post deleted successfully!");
     navigate("/post");
@@ -249,7 +266,6 @@ export const deletePost = (id, navigate) => async (dispatch, getState) => {
   }
 };
 
-// Toggle Like
 export const toggleLike = (postId) => async (dispatch, getState) => {
   try {
     const token = getState().auth.token || localStorage.getItem("token");
@@ -266,20 +282,45 @@ export const toggleLike = (postId) => async (dispatch, getState) => {
   }
 };
 
-// Add Comment
 export const addComment = (postId, text) => async (dispatch, getState) => {
   try {
+    const username =
+      localStorage.getItem("username") || getState().auth?.user?.username;
+    dispatch(getSinglePostRequest());
     const token = getState().auth.token || localStorage.getItem("token");
     const res = await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}/posts/${postId}/comments`,
-      { text },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
+      { text, username },
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-    dispatch(addCommentSuccess(res.data));
+    dispatch(addAndDeleteComment(res.data));
     toast.success("Comment added!");
   } catch (error) {
-    toast.error("Failed to add comment");
+    dispatch(
+      getAllPostFailure(error.response?.data?.message || "Error adding comment")
+    );
+    toast.error(error.response?.data?.message || "Error adding comment");
   }
 };
+
+export const deleteComment =
+  (postId, commentId) => async (dispatch, getState) => {
+    try {
+      dispatch(getSinglePostRequest());
+      const token = getState().auth.token || localStorage.getItem("token");
+      const res = await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/posts/${postId}/comments/${commentId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      dispatch(addAndDeleteComment(res.data));
+      toast.success("Comment deleted!");
+    } catch (error) {
+      dispatch(
+        getAllPostFailure(
+          error.response?.data?.message || "Error deleting comment"
+        )
+      );
+      toast.error(error.response?.data?.message || "Error deleting comment");
+    }
+  };
+    

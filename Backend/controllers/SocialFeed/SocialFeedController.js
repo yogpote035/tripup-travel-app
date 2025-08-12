@@ -153,63 +153,113 @@ module.exports.deletePost = async (req, res) => {
   res.json({ message: "Post deleted" });
 };
 
-// Like / Unlike post
 module.exports.toggleLike = async (req, res) => {
-  console.log("Request in single toggle Post");
+  try {
+    console.log("Request Receive in Toggle Like");
+    const post = await PostModel.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-  const post = await PostModel.findById(req.params.id);
-  if (!post) return res.status(404).json({ message: "Post not found" });
+    const userId = req.user.userId;
+    const alreadyLiked = post.likes.includes(userId);
 
-  const userId = req.user.userId;
-  const index = post.likes.indexOf(userId);
+    if (alreadyLiked) {
+      post.likes = post.likes.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+    } else {
+      post.likes.push(userId);
+    }
 
-  if (index === -1) {
-    post.likes.push(userId);
-  } else {
-    post.likes.splice(index, 1);
+    await post.save();
+    console.log("Post is Liked: ", !alreadyLiked);
+    res.json({
+      likesCount: post.likes.length,
+      liked: !alreadyLiked,
+    });
+  } catch (error) {
+    console.error("Error in toggleLike:", error);
+    res.status(500).json({ message: "Error toggling like" });
   }
-
-  await post.save();
-  res.json(post);
 };
-
-// Bookmark / Unbookmark post
-module.exports.toggleBookmark = async (req, res) => {
-  console.log("Request in single Bookmark Post");
-
-  const post = await PostModel.findById(req.params.id);
-  if (!post) return res.status(404).json({ message: "Post not found" });
-
-  const userId = req.user.userId;
-  const index = post.bookmarks.indexOf(userId);
-
-  if (index === -1) {
-    post.bookmarks.push(userId);
-  } else {
-    post.bookmarks.splice(index, 1);
-  }
-
-  await post.save();
-  res.json(post);
-};
-
-// Add comment
+// Add Comment
 module.exports.addComment = async (req, res) => {
-  console.log("Request in single Post Comment");
+  console.log("Request Receive in Add Comment");
+  try {
+    const { text, username } = req.body;
+    console.log("request body: ", req.body);
+    if (!text) {
+      return res.status(400).json({ message: "Comment text is required" });
+    }
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
 
-  const post = await PostModel.findById(req.params.id);
-  if (!post) return res.status(404).json({ message: "Post not found" });
+    const post = await PostModel.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
 
-  const comment = {
-    user: {
-      id: req.user.userId,
-      name: req.user.name,
-    },
-    text: req.body.text,
-  };
+    const newComment = {
+      user: {
+        id: req.user.userId,
+        name: username,
+      },
+      text,
+    };
 
-  post.comments.push(comment);
-  await post.save();
+    post.comments.unshift(newComment);
+    const updatedPost = await post.save();
 
-  res.status(201).json(post);
+    res.status(200).json({
+      message: "Comment added successfully",
+      comments: updatedPost.comments,
+      updatedPost: updatedPost,
+    });
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    res.status(500).json({ message: "Error adding comment" });
+  }
+};
+
+// Delete Comment
+module.exports.deleteComment = async (req, res) => {
+  console.log("Request Receive in Delete Comment");
+
+  try {
+    const { postId, commentId } = req.params;
+
+    // First fetch post for auth check
+    const post = await PostModel.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const comment = post.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    // Allow only if comment owner and post owner is same then delete
+    if (
+      comment.user.id.toString() !== req.user.userId.toString() &&
+      post.author.id.toString() !== req.user.userId.toString()
+    ) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      postId,
+      { $pull: { comments: { _id: commentId } } },
+      { new: true }
+    );
+
+    res.json({
+      message: "Comment deleted successfully",
+      comments: updatedPost.comments,
+      updatedPost: updatedPost,
+    });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    res.status(500).json({ message: "Error deleting comment" });
+  }
 };

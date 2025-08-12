@@ -1,9 +1,14 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { FaHeart, FaRegHeart, FaComment } from "react-icons/fa";
+
 import {
   getSinglePost,
   deletePost,
+  toggleLike,
+  addComment,
+  deleteComment,
 } from "../../../AllStatesFeatures/SocialFeed/SocialFeedSlice";
 import Loading from "../../General/Loading";
 import {
@@ -13,6 +18,8 @@ import {
   Trash,
   Calendar,
   MapPin,
+  Heart,
+  Delete,
 } from "lucide-react"; // Lucide icons
 import { format, parseISO } from "date-fns";
 import { useRef } from "react";
@@ -25,7 +32,14 @@ export default function SinglePostView() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [actionMsg, setActionMsg] = useState("");
-  const { posts, loading, error } = useSelector((state) => state.socialFeed);
+  const [commentText, setCommentText] = useState("");
+  const {
+    singlePost: posts,
+    loading,
+    error,
+    like,
+    comments,
+  } = useSelector((state) => state.socialFeed);
   const currentUser =
     localStorage.getItem("userId") ||
     useSelector((state) => state.auth.user.userId);
@@ -38,11 +52,11 @@ export default function SinglePostView() {
     }
   }, [id, dispatch]);
 
-  // Reset index when post changes
+  // 0 when index when post changes
   useEffect(() => {
     setCurrentImage(0);
   }, [posts]);
-
+  // for conform dialog exit or close
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") setShowConfirm(false);
@@ -50,6 +64,24 @@ export default function SinglePostView() {
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
+  // right left key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "ArrowLeft") {
+        prevImage();
+      } else if (e.key === "ArrowRight") {
+        nextImage();
+      } else if (e.key === "Escape") {
+        setShowConfirm(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [posts, currentImage]); // include posts & currentImage so it updates
+
   const handleDelete = async () => {
     if (!selectedId) return toast.warn("Itinerary Id Missing");
 
@@ -65,7 +97,7 @@ export default function SinglePostView() {
   if (loading) {
     return (
       <Loading
-        message={actionMsg || "Fetching All Itineraries...."}
+        message={actionMsg || "Searching For Post...."}
         color="border-t-red-500"
       />
     );
@@ -211,11 +243,22 @@ export default function SinglePostView() {
 
       {/* Likes & Comments */}
       <div className="flex items-center gap-6">
-        <button className="bg-orange-500  outline-none focus:outline-none hover:bg-orange-600 px-4 py-2 rounded-lg transition">
-          ❤️ {posts?.likes?.length || 0} Likes
+        <button
+          onClick={() => {
+            dispatch(toggleLike(posts._id));
+          }}
+          className={`bg-gray-800  hover:bg-gray-700
+           outline-none focus:outline-none px-4 py-2 flex items-center gap-2 rounded-lg transition`}
+        >
+          {like?.liked ? (
+            <FaHeart color="red" size={15} />
+          ) : (
+            <FaRegHeart size={15} />
+          )}{" "}
+          {like?.likesCount} <>Likes</>
         </button>
-        <button className="bg-gray-800  outline-none focus:outline-none hover:bg-gray-700 px-4 py-2 rounded-lg transition">
-          💬 {posts?.comments?.length || 0} Comments
+        <button className="bg-gray-800 flex items-center gap-2 outline-none focus:outline-none hover:bg-gray-700 px-4 py-2 rounded-lg transition">
+          <FaComment size={15} /> {posts?.comments?.length || 0} Comments
         </button>
       </div>
       {showConfirm && (
@@ -250,6 +293,61 @@ export default function SinglePostView() {
           </div>
         </div>
       )}
+
+      {/* Comment Input */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-3">Comments</h2>
+        <form
+          onSubmit={(e) => {
+            if (!commentText.trim()) return;
+            console.log("text from main: ", commentText);
+            dispatch(addComment(posts._id, commentText));
+            setCommentText("");
+          }}
+          className="flex gap-2"
+        >
+          <input
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Write a comment..."
+            className="flex-1 p-2 rounded border border-gray-700 bg-gray-800 text-white outline-none"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded"
+          >
+            Post
+          </button>
+        </form>
+
+        {/* Comment List */}
+        <div className="mt-4 space-y-4">
+          {comments?.map((comment) => (
+            <div
+              key={comment._id}
+              className="bg-gray-800 p-3 rounded flex justify-between"
+            >
+              <div>
+                <div className="text-sm flex items-center justify-end text-gray-400">
+                  <p> {comment.user.name} At:&nbsp; </p>
+                  <p> {format(comment.createdAt, "dd-MMM-yyyy")}</p>
+                </div>
+                <p>{comment.text}</p>
+              </div>
+              {comment.user.id === currentUser && (
+                <button
+                  onClick={() => {
+                    dispatch(deleteComment(posts._id, comment._id, navigate));
+                  }}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Delete size={25} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
