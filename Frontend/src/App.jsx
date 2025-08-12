@@ -149,7 +149,6 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/contact" element={<ContactUs />} />
-            <Route path="/recent-activity" element={<RecentActivity />} />
 
             {/*Get Booking Routes */}
             <Route
@@ -182,6 +181,14 @@ function App() {
               element={
                 <ProtectedRoutes>
                   <ViewProfile />
+                </ProtectedRoutes>
+              }
+            />
+            <Route
+              path="/recent-activity"
+              element={
+                <ProtectedRoutes>
+                  <RecentActivity />
                 </ProtectedRoutes>
               }
             />

@@ -28,60 +28,66 @@ const passengerSchema = new mongoose.Schema({
   },
 });
 
-const flightBookingSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "UserModel",
-    required: true,
-  },
-  flight: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "FlightModel",
-    required: true,
-  },
+const flightBookingSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserModel",
+      required: true,
+    },
+    flight: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "FlightModel",
+      required: true,
+    },
 
-  journeyDate: {
-    type: Date,
-    required: true,
-  },
-  bookingDate: {
-    type: Date,
-    default: Date.now,
-  },
+    journeyDate: {
+      type: Date,
+      required: true,
+    },
+    bookingDate: {
+      type: Date,
+      default: Date.now,
+    },
 
-  from: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  to: {
-    type: String,
-    required: true,
-    trim: true,
-  },
+    from: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    to: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-  farePerSeat: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
-  totalFare: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
+    farePerSeat: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    totalFare: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
 
-  passengers: {
-    type: [passengerSchema],
-    required: true,
-    validate: [(val) => val.length >= 1, "At least one passenger is required."],
+    passengers: {
+      type: [passengerSchema],
+      required: true,
+      validate: [
+        (val) => val.length >= 1,
+        "At least one passenger is required.",
+      ],
+    },
+    status: {
+      type: String,
+      enum: ["booked", "cancelled"],
+      default: "booked",
+    },
   },
-  status: {
-    type: String,
-    enum: ["booked", "cancelled"],
-    default: "booked",
-  },
-});
+  { timestamps: true }
+);
 
 const FlightBookingModel = mongoose.model(
   "FlightBookingModel",

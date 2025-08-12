@@ -1,7 +1,9 @@
 import React from "react";
 
 const ContactUs = () => {
-    window.scrollTo(0, 0); //only once 1st time scroll to top
+  React.useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top only on mount
+  }, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-6">
@@ -11,31 +13,47 @@ const ContactUs = () => {
         </h1>
 
         <p className="mb-4">
-          If you have any questions, concerns, or need support, feel free to reach out to us.
+          If you have any questions, project collaborations, or need support,
+          feel free to reach out.
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <h2 className="text-lg font-semibold">Email</h2>
-            <a
-              href="mailto:support@example.com"
-              className="text-blue-500 hover:underline"
-            >
-              support@example.com
-            </a>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold">Phone</h2>
-            <p className="text-gray-700 dark:text-gray-300">+91-9876543210</p>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold">Address</h2>
-            <p className="text-gray-700 dark:text-gray-300">
-              TripUp Headquarters<br />
-              123 Aviation Street<br />
-              New Delhi, India – 110001
+            <h2 className="text-xl font-semibold text-blue-500">👨‍💻 Developer Info</h2>
+            <p className="mt-2"><strong>Name:</strong> Yogesh Pote</p>
+            <p><strong>Education:</strong> B.Sc. Computer Science</p>
+            <p><strong>Tech Stack:</strong> MERN, Java, DSA, C++, PHP, MySQL, T-SQL, OOPs</p>
+            <p>
+              <strong>Email:</strong>{" "}
+              <a
+                href="mailto:yogpote035@gmail.com"
+                className="text-blue-500 hover:underline"
+              >
+                yogpote035@gmail.com
+              </a>
+            </p>
+            <p><strong>Contact:</strong> +91 8999390368</p>
+            <p>
+              <strong>Portfolio:</strong>{" "}
+              <a
+                href="https://yogpote035.github.io/Portfolio-Website/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                Visit Portfolio
+              </a>
+            </p>
+            <p>
+              <strong>GitHub:</strong>{" "}
+              <a
+                href="https://github.com/yogpote035"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                @yogpote035
+              </a>
             </p>
           </div>
         </div>

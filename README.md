@@ -21,10 +21,7 @@
 
 - Input destination, travel dates, and interests (e.g. nature, food, heritage).
 - Generate a day-wise itinerary.
-- Google Maps API for route mapping.
-- OpenWeather API for weather forecasting.
-- Drag-and-drop interface to reorder days/places.
-- Save, edit, and revisit plans anytime.
+- Save, and revisit plans anytime.
 
 ### 🌍 3. Travel Diary (Social Feed)
 
@@ -73,18 +70,14 @@
 
 ## 🌐 External APIs (Optional / Recommended)
 
-| API Name           | Purpose                        |
-|--------------------|--------------------------------|
-| Google Maps API    | Distance, directions, mapping  |
-| OpenWeather API    | Real-time weather forecast     |
-| Cloudinary         | Store and serve images         |
-| IRCTC via RapidAPI | Real train info                |
-| Amadeus API        | Real flight availability       |
+| API Name          | Purpose                |
+| ----------------- | ---------------------- |
+| Google Gemini API | Plan                   |
+| Cloudinary        | Store and serve images |
 
 ---
 
-## 📁 Folder Structure
-
+## 📁 Folder Structure(Example)
 
 ```
 TrupUp/
@@ -105,7 +98,6 @@ TrupUp/
 └── README.md
 ```
 
-
 ---
 
 ## 💾 Dummy Datasets Used
@@ -122,7 +114,9 @@ TrupUp/
   "days": ["Mon", "Wed", "Fri"]
 }
 ```
+
 ### 2. `station.json`
+
 ```
 {
   "city": "Pune",
@@ -133,7 +127,9 @@ TrupUp/
   }
 }
 ```
+
 ### 3. `flight.json`
+
 ```
 {
   "flightNumber": "AI850",
@@ -147,7 +143,9 @@ TrupUp/
   "price": 4200
 }
 ```
+
 ### 4. `bus.json`
+
 ```
 {
   "busNumber": "MH14-BUS3012",
@@ -165,10 +163,10 @@ TrupUp/
 
 ## 👨‍💻 Developer Info
 
-- **👨‍💻 Name:** Yogesh Pote  
-- **🎓 Education:** B.Sc. Computer Science (Final Year, 2026)  
-- **💻 Tech Stack:** MERN, Java, DSA, C++, PHP, MySQL, T-SQL, OOPs  
-- **📫 Email:** [yogpote035@gmail.com](mailto:yogpote035@gmail.com)  
-- **📱 Contact:** +91 8999390368  
-- **🌐 Portfolio:** [https://yogpote035.github.io/Portfolio-Website/](https://yogpote035.github.io/Portfolio-Website/)  
+- **👨‍💻 Name:** Yogesh Pote
+- **🎓 Education:** B.Sc. Computer Science (Final Year, 2026)
+- **💻 Tech Stack:** MERN, Java, DSA, C++, PHP, MySQL, T-SQL, OOPs
+- **📫 Email:** [yogpote035@gmail.com](mailto:yogpote035@gmail.com)
+- **📱 Contact:** +91 8999390368
+- **🌐 Portfolio:** [https://yogpote035.github.io/Portfolio-Website/](https://yogpote035.github.io/Portfolio-Website/)
 - **📂 GitHub:** [@yogpote035](https://github.com/yogpote035)
