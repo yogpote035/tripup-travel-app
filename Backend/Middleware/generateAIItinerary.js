@@ -12,8 +12,15 @@ async function generateAIItinerary(
   budget
 ) {
   if (
-    !destination || !startDate || !endDate || !startTime || !endTime ||
-    !interests || !tripType || !transportMode || !budget
+    !destination ||
+    !startDate ||
+    !endDate ||
+    !startTime ||
+    !endTime ||
+    !interests ||
+    !tripType ||
+    !transportMode ||
+    !budget
   ) {
     throw new Error("Missing required itinerary parameters.");
   }
@@ -51,19 +58,20 @@ Only return the JSON. No explanation, no intro text.
 `;
 
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${GEMINI_API_KEY}`;
+  // const url = https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY};
   try {
     const response = await axios.post(url, {
       contents: [
         {
           role: "user",
-          parts: [{ text: prompt }]
-        }
-      ]
+          parts: [{ text: prompt }],
+        },
+      ],
     });
 
-    const textResponse = response.data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const textResponse =
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!textResponse) throw new Error("Empty response from Gemini");
 
