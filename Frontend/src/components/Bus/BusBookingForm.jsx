@@ -39,7 +39,6 @@ const BusBookingForm = () => {
       toast.warning("Please complete all passenger details.");
       return;
     }
-    console.log(passengers);
     const bookingPayload = {
       busNumber: bus.busNumber,
       journeyDate: bus.journeyDate,

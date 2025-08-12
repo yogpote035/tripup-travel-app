@@ -294,7 +294,6 @@ export default function SinglePostView() {
           <form
             onSubmit={(e) => {
               if (!commentText.trim()) return;
-              console.log("text from main: ", commentText);
               dispatch(addComment(posts._id, commentText));
               setCommentText("");
             }}
