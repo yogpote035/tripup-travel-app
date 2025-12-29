@@ -20,7 +20,7 @@ const allowedOrigins = [
 const corsOptions = {
   origin: function (origin, callback) {
     console.log("🔍 CORS Origin Check:", origin);
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin)) { // change here
       return callback(null, true);
     } else {
       console.error("❌ CORS Rejected:", origin);
@@ -66,7 +66,7 @@ app.use("/api/itinerary", require("./routes/Itinerary"));
 console.log("Mounting Social Feed Routes...");
 app.use("/api/posts", require("./routes/SocialFeedRoutes"));
 
-// ✅ Server Listening
+//  Server Listening
 app.listen(PORT, () => {
   console.log(`Server listening on PORT ${PORT} ⛳`);
 });
