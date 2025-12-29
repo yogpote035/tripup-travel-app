@@ -18,6 +18,7 @@ export default function PostsFeed() {
     localStorage.getItem("userId");
   const { posts, loading, error } = useSelector((state) => state.socialFeed);
 
+  const isAuthenticated = useSelector((state) => state?.auth?.isAuthenticated);
   // Fetch posts depending on mode
   useEffect(() => {
     if (mode === "all") {
@@ -50,7 +51,7 @@ export default function PostsFeed() {
             >
               All Posts
             </button>
-            {currentUser && (
+            {isAuthenticated && (
               <button
                 onClick={() => setMode("mine")}
                 className={`flex-1 px-5 py-2 rounded-full transition ${
@@ -67,7 +68,7 @@ export default function PostsFeed() {
 
         {/* Right: Create Post */}
         {/* Right: Create Post */}
-        {currentUser && (
+        {isAuthenticated && (
           <Link
             to="/create-post"
             className="mt-4 md:mt-0 flex items-center justify-center gap-2

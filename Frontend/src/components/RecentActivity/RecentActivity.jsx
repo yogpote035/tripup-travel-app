@@ -63,7 +63,7 @@ const RecentActivity = () => {
                   {activity.title}
                 </p>
                 <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {format(new Date(activity.createdAt),"dd MMM yyyy, hh:mm a")}
+                  {format(new Date(activity?.createdAt),"dd MMM yyyy, hh:mm a")}
                 </span>
               </div>
             </li>
