@@ -3,8 +3,11 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const initialState = {
-  user: null,
-  isAuthenticated: false,
+  user: localStorage.getItem("token") && localStorage.getItem("userId") && localStorage.getItem("username") ? {
+    userId: localStorage.getItem("userID"),
+    username: localStorage.getItem("username"),
+  } : null,
+  isAuthenticated: localStorage.getItem("token") && localStorage.getItem("userId") && localStorage.getItem("username") ? true : false,
   loading: false,
   error: null,
   token: null,
@@ -71,6 +74,7 @@ const authSlice = createSlice({
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
       localStorage.removeItem("token");
+      localStorage.clear();
     },
 
     clearErrors: (state) => {
