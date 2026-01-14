@@ -2,13 +2,22 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFlightsBetweenAirports } from "../../../AllStatesFeatures/Flight/AllFlightSlice";
 import Loading from "../../General/Loading";
-import { MdFlightTakeoff, MdFlightLand, MdCalendarToday } from "react-icons/md";
-import { FaCalendarAlt } from "react-icons/fa";
-
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { 
+  PlaneTakeoff, 
+  PlaneLanding, 
+  Calendar,
+  Search,
+  Plane,
+  Clock,
+  IndianRupee,
+  ArrowRight,
+  Armchair,
+  AlertCircle
+} from "lucide-react";
 
 const FlightSearch = () => {
   const dispatch = useDispatch();
@@ -27,7 +36,7 @@ const FlightSearch = () => {
       return toast.info("Please fill all fields");
     }
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // reset time to midnight for accurate comparison
+    today.setHours(0, 0, 0, 0);
 
     if (selectedDate < today) {
       return toast.info("Please select today or a future date.");
@@ -42,122 +51,191 @@ const FlightSearch = () => {
       })
     );
   };
+
   const CustomDateInput = React.forwardRef(
-    (
-      { value, onClick },
-      ref //special function bcz icon is not render,date picker only render date
-    ) => (
+    ({ value, onClick }, ref) => (
       <div
         className="relative cursor-pointer w-full"
         onClick={onClick}
         ref={ref}
       >
-        <FaCalendarAlt className="absolute top-3 left-3 text-gray-400" />
+        <Calendar size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-500" />
         <input
           value={value}
           required
           onChange={() => {}}
           placeholder="Select travel date"
           readOnly
-          className="pl-10 w-full p-2 rounded bg-gray-700 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-400"
+          className="pl-10 pr-4 py-3 w-full rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all cursor-pointer"
         />
       </div>
     )
   );
 
   return (
-    <div className="min-h-screen mt-10 bg-gray-900 text-white p-6">
-      <div className="max-w-4xl mx-auto bg-gray-800 p-6 rounded-md shadow-md">
-        <h2 className="text-2xl font-bold text-yellow-400 mb-6 flex items-center gap-3">
-          <MdFlightTakeoff className="text-3xl" />
-          Search Flights
-        </h2>
-
-        {/* 🔎 Form Section */}
-        <form
-          onSubmit={handleSearch}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-        >
-          <div className="relative">
-            <MdFlightTakeoff className="absolute top-3 left-3 text-gray-400" />
-            <input
-              type="text"
-              value={source}
-              required
-              onChange={(e) => setSource(e.target.value)}
-              placeholder="From (e.g. Mumbai)"
-              className="pl-10 w-full p-2 rounded bg-gray-700 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-400"
-            />
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-white p-6 mt-10 mb-10">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-xl shadow-lg">
+              <Plane size={28} className="text-white" strokeWidth={2.5} />
+            </div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+              Search Flights
+            </h2>
           </div>
+          <p className="text-gray-400 ml-14">Find the best flights for your journey</p>
+        </div>
 
-          <div className="relative">
-            <MdFlightLand className="absolute top-3 left-3 text-gray-400" />
-            <input
-              type="text"
-              required
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              placeholder="To (e.g. Delhi)"
-              className="pl-10 w-full p-2 rounded bg-gray-700 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-400"
-            />
-          </div>
+        {/* Search Card */}
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl shadow-xl p-6 mb-8">
+          <form onSubmit={handleSearch} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* From Input */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-300">
+                  From
+                </label>
+                <div className="relative">
+                  <PlaneTakeoff size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-500" />
+                  <input
+                    type="text"
+                    value={source}
+                    required
+                    onChange={(e) => setSource(e.target.value)}
+                    placeholder="e.g. Mumbai"
+                    className="pl-10 pr-4 py-3 w-full rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  />
+                </div>
+              </div>
 
-          {/* <div className="relative"> */}
-          <DatePicker
-            selected={selectedDate}
-            onChange={setSelectedDate}
-            required
-            dateFormat="yyyy-MM-dd"
-            placeholderText="Select travel date"
-            customInput={<CustomDateInput />} //bcz icon is not render like other
-          />
-          {/* </div> */}
+              {/* To Input */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-300">
+                  To
+                </label>
+                <div className="relative">
+                  <PlaneLanding size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-500" />
+                  <input
+                    type="text"
+                    required
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    placeholder="e.g. Delhi"
+                    className="pl-10 pr-4 py-3 w-full rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  />
+                </div>
+              </div>
 
-          <div className="md:col-span-3">
+              {/* Date Picker */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-300">
+                  Travel Date
+                </label>
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={setSelectedDate}
+                  required
+                  dateFormat="yyyy-MM-dd"
+                  placeholderText="Select travel date"
+                  customInput={<CustomDateInput />}
+                />
+              </div>
+            </div>
+
+            {/* Search Button */}
             <button
               type="submit"
-              className="mt-2 w-full md:w-auto bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-6 py-2 rounded"
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2"
             >
-              🔍 Search Flights
+              <Search size={20} strokeWidth={2} />
+              Search Flights
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
 
+        {/* Loading State */}
         {loading && <Loading message="Fetching flights..." />}
 
-        {error && <p className="text-red-400 mt-4">{error}</p>}
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 flex items-center gap-3">
+            <AlertCircle size={20} className="text-red-400" />
+            <p className="text-red-400">{error}</p>
+          </div>
+        )}
 
+        {/* Flight Results */}
         {!loading && flights?.length > 0 && (
-          <div className="mt-6 space-y-4">
-            <h3 className="text-xl font-semibold text-white">
-              Available Flights
-            </h3>
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/30 rounded-xl p-4">
+              <Plane size={24} className="text-purple-400" strokeWidth={2} />
+              <div>
+                <h3 className="text-xl font-semibold text-white">Available Flights</h3>
+                <p className="text-sm text-gray-400">{flights.length} flight{flights.length !== 1 ? 's' : ''} found</p>
+              </div>
+            </div>
+
             {flights.map((flight, index) => (
               <div
                 key={index}
-                className="bg-gray-700 rounded-md p-4 border border-gray-600 hover:shadow-md transition-shadow"
+                className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 hover:border-gray-600 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
               >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h4 className="text-lg font-bold">{flight.airline}</h4>
-                    <p className="text-sm text-gray-300">
-                      {flight.flightNumber}
-                    </p>
-                    <p className="text-sm mt-1">
-                      {flight.from} ➝ {flight.to}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-yellow-400">
-                      ₹{flight.price.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-300">{flight.duration}</p>
-                    <p className="text-sm text-gray-400">
-                      {flight.departureTime} - {flight.arrivalTime}
-                    </p>
+                {/* Flight Header */}
+                <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border-b border-gray-700 p-5">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-purple-500/20 p-2 rounded-lg">
+                        <Plane size={20} className="text-purple-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-bold text-white">{flight.airline}</h4>
+                        <p className="text-sm text-gray-400">{flight.flightNumber}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1 text-2xl font-bold text-purple-400">
+                        <IndianRupee size={20} strokeWidth={2.5} />
+                        <span>{flight.price.toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4">
+
+                <div className="p-5">
+                  {/* Flight Route */}
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <PlaneTakeoff size={16} className="text-gray-400" />
+                        <span className="text-sm text-gray-400">{flight.from}</span>
+                      </div>
+                      <p className="text-2xl font-bold text-white">{flight.departureTime}</p>
+                    </div>
+
+                    <div className="flex-1 flex flex-col items-center px-4">
+                      <div className="flex items-center gap-1 text-gray-400 text-sm mb-2">
+                        <Clock size={14} />
+                        <span>{flight.duration}</span>
+                      </div>
+                      <div className="w-full max-w-[120px] relative">
+                        <div className="h-1 bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-400 rounded-full"></div>
+                        <div className="absolute -top-1 left-0 w-3 h-3 bg-purple-400 rounded-full"></div>
+                        <div className="absolute -top-1 right-0 w-3 h-3 bg-purple-400 rounded-full"></div>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 text-right">
+                      <div className="flex items-center justify-end gap-2 mb-2">
+                        <span className="text-sm text-gray-400">{flight.to}</span>
+                        <PlaneLanding size={16} className="text-gray-400" />
+                      </div>
+                      <p className="text-2xl font-bold text-white">{flight.arrivalTime}</p>
+                    </div>
+                  </div>
+
+                  {/* Book Button */}
                   <button
                     onClick={() =>
                       navigate(`/flight-seat/${flight._id}`, {
@@ -169,9 +247,11 @@ const FlightSearch = () => {
                         },
                       })
                     }
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition"
+                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 px-4 rounded-xl transition-all font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.02]"
                   >
+                    <Armchair size={20} strokeWidth={2} />
                     Book Seats
+                    <ArrowRight size={20} strokeWidth={2} />
                   </button>
                 </div>
               </div>
@@ -179,11 +259,15 @@ const FlightSearch = () => {
           </div>
         )}
 
-        {/* 🛑 No Flights Found */}
+        {/* No Flights Found */}
         {!loading && flights?.length === 0 && from && to && (
-          <p className="text-gray-400 mt-4">
-            No flights found from {from} to {to}.
-          </p>
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-12 text-center">
+            <Plane size={64} className="text-gray-600 mx-auto mb-4" strokeWidth={1.5} />
+            <p className="text-gray-400 text-lg mb-2">No flights found</p>
+            <p className="text-gray-500 text-sm">
+              No flights available from {from} to {to} on the selected date
+            </p>
+          </div>
         )}
       </div>
     </div>

@@ -31,13 +31,14 @@ import CreatePost from "./components/SocialFeed/CreatePost.jsx";
 import PostsFeed from "./components/SocialFeed/PostsFeed.jsx";
 import SinglePostView from "./components/SocialFeed/SinglePostView.jsx";
 import EditPost from "./components/SocialFeed/EditPost.jsx";
+import PageNotFound from "./General/PageNotFound.jsx";
 
 function App() {
   return (
     <>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <div className="mb-13"></div>
+        <div className="mb-10"></div>
         <main className="flex-grow bg-gray-900">
           <Routes>
             <Route exact path="/" element={<Home />} />
@@ -193,16 +194,9 @@ function App() {
               }
             />
             {/* For Non Existing Route */}
-            <Route
-              path="*"
-              element={
-                <h1 className="text-center text-3xl text-red-600 mt-10">
-                  404 - Page Not Found
-                </h1>
-              }
-            />
+            <Route path="*" element={<PageNotFound />} />
           </Routes>
-          <div className="mt-13"></div>
+          <div className="mt-10"></div>
         </main>
 
         <Footer />
