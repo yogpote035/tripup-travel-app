@@ -57,8 +57,9 @@ Return a JSON array where each object has:
 Only return the JSON. No explanation, no intro text.
 `;
 
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${GEMINI_API_KEY}`;
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY2;
+  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
   // const url = https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY};
   try {
     const response = await axios.post(url, {
