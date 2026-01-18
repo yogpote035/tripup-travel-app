@@ -21,8 +21,8 @@ module.exports.Signup = async (request, response) => {
   const isEmailValid = await validateEmail(email);
   if (!isEmailValid) {
     return response
-      .status(400)
-      .json({ message: "Email,Entered Email is not valid for Communication." });
+      .status(406)
+      .json({ message: "Email does not appear to be valid." });
   }
 
   console.log("Before formatted phone from signup ");
@@ -35,7 +35,7 @@ module.exports.Signup = async (request, response) => {
 
   if (existingPhoneUser) {
     return response
-      .status(409)
+      .status(208)
       .json({ message: "This Phone Number User Already Exists" });
   }
 
@@ -43,7 +43,7 @@ module.exports.Signup = async (request, response) => {
 
   if (existingEmailUser) {
     return response
-      .status(409)
+      .status(208)
       .json({ message: "This Mail User Already Exists" });
   }
 
@@ -60,7 +60,7 @@ module.exports.Signup = async (request, response) => {
     });
     await newUser.save();
     console.log("New User is Created");
-
+    
     console.log("Call going to JWE From Signup");
     const token = await generateJWE(newUser._id.toString());
     console.log("Data Receive From JWE in Signup");
@@ -84,13 +84,13 @@ module.exports.Login = async (request, response) => {
   console.log("Login request body", email ? email : phone, password);
 
   if ((!email && !phone) || !password) {
-    return response.status(400).json({ message: "All Fields Are Required" });
+    return response.status(203).json({ message: "All Fields Are Required" });
   }
   if (phone) {
     //if phone then
     const result = PhoneNumberValidator(phone);
     if (!result.isValid) {
-      return response.status(400).json({ message: "Invalid phone number" });
+      return response.status(203).json({ message: "Invalid phone number" });
     }
     console.log("Before formatted phone from signup ");
     console.log(phone);
@@ -114,7 +114,7 @@ module.exports.Login = async (request, response) => {
       existingUser = await UserModel.findOne({ phone });
       if (!existingUser) {
         return response
-          .status(404)
+          .status(204)
           .json({ message: "User of This Phone Number Is Not Found" });
       }
     }
@@ -123,7 +123,7 @@ module.exports.Login = async (request, response) => {
       existingUser = await UserModel.findOne({ email });
       if (!existingUser) {
         return response
-          .status(404)
+          .status(204)
           .json({ message: "User of This Email Is Not Found" });
       }
     }
@@ -132,12 +132,12 @@ module.exports.Login = async (request, response) => {
 
     if (!passwordCompare) {
       return response
-        .status(400)
+        .status(208)
         .json({ message: "Wrong password , check your credentials" });
     }
     if (existingUser.role === "admin") {
       return response
-        .status(400)
+        .status(203)
         .json({ message: "You are not General User to access this resource" });
     }
     console.log("Call going to JWE From login");
@@ -154,28 +154,5 @@ module.exports.Login = async (request, response) => {
     return response
       .status(500)
       .json({ message: `Something Went Wrong : ${error}` });
-  }
-};
-
-
-module.exports.generateRefreshToken = async (req, res) => {
-  try {
-    const { id } = req.body;
-    const existingUser = await UserModel.findById(id);
-    if (!existingUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    console.log("Call going to JWE From login");
-    const token = await generateJWE(existingUser._id.toString());
-    console.log("Data Receive From JWE in Login");
-    return res.status(200).json({
-      message: "new token generated successfully",
-      refreshToken: token,
-      userId: existingUser._id,
-      username: existingUser.name,
-      expiry:"1 minute",
-    });
-  } catch (err) {
-    res.status(401).json({ message: "Invalid token or unauthorized access" });
   }
 };

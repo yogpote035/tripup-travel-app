@@ -32,10 +32,8 @@ import PostsFeed from "./components/SocialFeed/PostsFeed.jsx";
 import SinglePostView from "./components/SocialFeed/SinglePostView.jsx";
 import EditPost from "./components/SocialFeed/EditPost.jsx";
 import PageNotFound from "./General/PageNotFound.jsx";
-import { useRefreshToken } from "./General/useRefreshToken.jsx";
 
 function App() {
-  useRefreshToken();
   return (
     <>
       <div className="flex flex-col min-h-screen">
