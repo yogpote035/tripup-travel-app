@@ -38,13 +38,17 @@ export const useRefreshToken = () => {
         localStorage.setItem("userId", res?.data?.userId);
         localStorage.setItem("username", res?.data?.username);
 
-        // console.log("Token refreshed");
+        // console.log("🔄 Token refreshed");
       } catch (err) {
-        // console.error("Refresh token failed", err);
+        // console.error("❌ Refresh token failed", err);
         toast.error("Session expired. Please log in again.");
         localStorage.clear();
         dispatch(logout());
         navigate("/login");
+        if (error.response?.status === 401) {
+          console.log("Unauthorized access - logging out");
+          navigate("/login");
+        }
       }
     };
 
