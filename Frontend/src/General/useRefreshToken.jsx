@@ -18,8 +18,9 @@ export const useRefreshToken = () => {
       try {
         const token = localStorage.getItem("token");
         const userId = localStorage.getItem("userId");
-
         if (!token || !userId) return;
+
+        console.log("old Token: ", token);
 
         const res = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/auth/refresh-token`,
@@ -37,6 +38,7 @@ export const useRefreshToken = () => {
         localStorage.setItem("token", newToken);
         localStorage.setItem("userId", res?.data?.userId);
         localStorage.setItem("username", res?.data?.username);
+        console.log("new token: ", localStorage.getItem("token"));
 
         // console.log("Token refreshed");
       } catch (err) {
@@ -49,7 +51,7 @@ export const useRefreshToken = () => {
     };
 
     // refresh every 10 seconds
-    const interval = setInterval(refreshToken, 40 * 1000);
+    const interval = setInterval(refreshToken, 20 * 1000);
 
     return () => clearInterval(interval);
   }, [isAuthenticated, dispatch, navigate]);
