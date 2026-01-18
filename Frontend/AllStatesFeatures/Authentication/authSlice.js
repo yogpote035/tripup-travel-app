@@ -112,9 +112,30 @@ export const loginUser = (payload) => async (dispatch) => {
       toast.success(data.message || "Login successful");
       return dispatch(loginSuccess(data));
     }
+    // user found but password not match
+    if (status === 208) {
+      dispatch(
+        loginFailure(
+          data?.message || "Password Not Match, Please Check Your Credentials"
+        )
+      );
+      return toast.error("Password Not Match, Please Check Your Credentials");
+    }
 
+    // user Not found
+    if (status === 204) {
+      toast.error("User Not Found, Please Check Your Credentials");
+      return dispatch(
+        loginFailure(data?.message || "Login failed. Try again.")
+      );
+    }
+
+    // user is Admin
+    if (status === 203) {
+      dispatch(loginFailure(data?.message || "Login failed. Try again."));
+      return toast.error(data?.message || "Login failed. Try again.");
+    }
   } catch (error) {
-    toast.error(error.response?.data?.message || "Login failed. Try again.");
     dispatch(
       loginFailure(error.response?.data?.message || "Login failed. Try again.")
     );
@@ -135,7 +156,10 @@ export const signupUser = (payload) => async (dispatch) => {
         password,
       }
     );
-
+    if (status === 208) {
+      toast.error("This Phone Or Mail User Already Exists");
+      return dispatch(signupFailure("User already exists"));
+    }
     dispatch(signupSuccess(data));
     toast.success(data.message || "Signup successful");
   } catch (error) {
@@ -144,7 +168,8 @@ export const signupUser = (payload) => async (dispatch) => {
         error.response?.data?.message || "Signup failed. Try again."
       )
     );
-    toast.error(error.response?.data?.message || "Signup failed. Try again.");
+    toast.error(error.response?.data?.message);
   }
 };
 
+// export const logoutUser = () => (dispatch) => {
