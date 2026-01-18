@@ -1,25 +1,21 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { 
-  Armchair, 
-  BedDouble, 
-  Gauge, 
-  CheckCircle2, 
-  XCircle,
-  AlertTriangle,
-  User,
-  IndianRupee
-} from "lucide-react";
+import { RiSteering2Line } from "react-icons/ri";
+import { MdOutlineAirlineSeatReclineNormal } from "react-icons/md";
+import { MdAirlineSeatFlat, MdAirlineSeatReclineNormal } from "react-icons/md";
+import { FaSquarePersonConfined, FaPersonThroughWindow } from "react-icons/fa6";
 
 const BusSeatSelect = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [disableButton, setDisableButton] = useState(false);
-  
   useEffect(() => {
-    setDisableButton(selectedSeats.length === 0);
-  }, [selectedSeats]);
-
+    if (selectedSeats.length === 0) {
+      setDisableButton(true);
+    } else {
+      setDisableButton(false);
+    }
+  });
   const navigate = useNavigate();
   const { state } = useLocation();
   const { seats = [], bus } = state;
@@ -69,119 +65,92 @@ const BusSeatSelect = () => {
     : [];
 
   return (
-    <div className="max-w-6xl mx-auto mt-10 mb-5 px-4">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-2xl p-6 mb-8">
-        <h2 className="text-3xl font-bold text-center flex items-center justify-center gap-3 text-white mb-4">
-          {bus.type === "sleeper" ? (
-            <>
-              <BedDouble size={32} className="text-orange-400" strokeWidth={2} />
-              <span>Select Your Sleeper Berth</span>
-            </>
-          ) : (
-            <>
-              <Armchair size={32} className="text-blue-400" strokeWidth={2} />
-              <span>Select Your Seat</span>
-            </>
-          )}
-        </h2>
-        
-        {/* Legend */}
-        <div className="flex flex-wrap justify-center gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-green-500 rounded border-2 border-green-600"></div>
-            <span className="text-gray-300">Selected</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-white rounded border-2 border-gray-300"></div>
-            <span className="text-gray-300">Available</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-red-500 rounded border-2 border-red-600"></div>
-            <span className="text-gray-300">Booked</span>
-          </div>
-        </div>
-      </div>
+    <div className="max-w-5xl mx-auto mt-10 mb-5 px-4 text-white">
+      <h2 className="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2">
+        {bus.type === "sleeper" ? (
+          <>
+            <MdAirlineSeatFlat className="text-3xl text-orange-500" />
+            <span>Select Your Sleeper Berth</span>
+          </>
+        ) : (
+          <>
+            <MdAirlineSeatReclineNormal className="text-3xl text-blue-600" />
+            <span>Select Your Seat</span>
+          </>
+        )}
+      </h2>
 
-      {/* Seater Layout */}
       {allSeater && (
-        <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 mb-6">
+        <>
           {/* Driver Icon */}
-          <div className="flex justify-end mb-4 pr-4">
-            <div className="flex items-center gap-2 bg-gray-700 px-4 py-2 rounded-lg">
-              <Gauge size={20} className="text-blue-400" />
-              <span className="text-sm font-semibold text-white">Driver</span>
-            </div>
+          <div className="flex justify-end mb-2 pr-4">
+            <p className="text-sm font-semibold flex items-center gap-1">
+              Driver <RiSteering2Line className="text-xl" />
+            </p>
           </div>
 
-          <div className="flex items-center gap-2 mb-4">
-            <Armchair size={24} className="text-blue-400" />
-            <p className="text-lg font-semibold text-white">Seater Layout</p>
-          </div>
+          <p className="text-lg font-semibold mb-3">🪑 Seater Layout</p>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 mb-6">
             {chunkArray(seats, 4).map((row, rowIndex) => (
               <div
                 key={rowIndex}
                 className="grid grid-cols-5 gap-4 items-center justify-center"
               >
-                {/* Right side - seats 1 & 2 */}
+                {/* Right side - seats 1 & 2 (no reverse) */}
                 {row.slice(0, 2).map((seat) => (
                   <button
                     key={seat.seatNumber}
-                    className={`relative w-14 h-14 rounded-lg font-medium border-2 transition-all duration-200 flex flex-col items-center justify-center ${
+                    className={`w-10 h-10 text-xs rounded-md font-medium border transition-all duration-150 ${
                       seat.isBooked
-                        ? "bg-red-500 text-white cursor-not-allowed border-red-600"
+                        ? "bg-red-500 text-white cursor-not-allowed border-gray-500"
                         : selectedSeats.includes(seat.seatNumber)
-                        ? "bg-green-500 text-white border-green-600 shadow-lg scale-105"
-                        : "bg-white text-gray-800 hover:bg-blue-100 border-gray-300 hover:border-blue-400"
+                        ? "bg-green-500 text-white border-green-600"
+                        : "bg-gray-200 text-black hover:bg-blue-300 border-gray-400"
                     }`}
                     disabled={seat.isBooked}
                     onClick={() => toggleSeat(seat.seatNumber)}
                   >
-                    <Armchair size={20} strokeWidth={2} />
-                    <span className="text-xs font-bold mt-1">{seat.seatNumber}</span>
+                    {seat.seatNumber}
+                    <MdOutlineAirlineSeatReclineNormal fontSize={25} />
                   </button>
                 ))}
 
                 {/* Gap */}
-                <div className="flex items-center justify-center">
-                  <div className="h-12 w-0.5 bg-gray-600"></div>
-                </div>
+                <div></div>
 
-                {/* Left side - seats 3 & 4 */}
+                {/* Left side - seats 3 & 4 (no reverse) */}
                 {row.slice(2, 4).map((seat) => (
                   <button
                     key={seat.seatNumber}
-                    className={`relative w-14 h-14 rounded-lg font-medium border-2 transition-all duration-200 flex flex-col items-center justify-center ${
+                    className={`w-10 h-10 text-xs rounded-md font-medium border transition-all duration-150 ${
                       seat.isBooked
-                        ? "bg-red-500 text-white cursor-not-allowed border-red-600"
+                        ? "bg-red-500 text-white cursor-not-allowed border-gray-500"
                         : selectedSeats.includes(seat.seatNumber)
-                        ? "bg-green-500 text-white border-green-600 shadow-lg scale-105"
-                        : "bg-white text-gray-800 hover:bg-blue-100 border-gray-300 hover:border-blue-400"
+                        ? "bg-green-500 text-white border-green-600"
+                        : "bg-gray-200 text-black hover:bg-blue-300 border-gray-400"
                     }`}
                     disabled={seat.isBooked}
                     onClick={() => toggleSeat(seat.seatNumber)}
                   >
-                    <Armchair size={20} strokeWidth={2} />
-                    <span className="text-xs font-bold mt-1">{seat.seatNumber}</span>
+                    {seat.seatNumber}
+                    <MdOutlineAirlineSeatReclineNormal fontSize={25} />
                   </button>
                 ))}
               </div>
             ))}
           </div>
-        </div>
+        </>
       )}
 
       {/* Sleeper Layout */}
       {allSleeper && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
           {/* Lower Deck */}
-          <div className="bg-gray-800 border-2 border-gray-700 hover:border-orange-400 rounded-2xl p-6 transition-colors">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <BedDouble size={24} className="text-orange-400" />
-              <p className="text-lg font-semibold text-white">Lower Deck</p>
-            </div>
+          <div className="border rounded-md hover:border-orange-400 p-2">
+            <p className="text-lg font-semibold mb-3 text-center">
+              🛏️ Lower Deck
+            </p>
             <div className="flex flex-col gap-4">
               {chunkArray(lowerDeck, 3).map((row, rowIndex) => (
                 <div
@@ -192,32 +161,25 @@ const BusSeatSelect = () => {
                   <div className="flex justify-center">
                     {row[2] && (
                       <div className="flex flex-col items-center">
-                        <div className="text-xs font-medium mb-1 text-gray-400">
+                        <div className="text-xs font-medium mb-1">
                           #{row[2].seatNumber}
                         </div>
                         <button
-                          className={`w-12 h-20 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                          className={`w-10 h-16 rounded-md border-2 text-xl flex items-center justify-center ${
                             row[2].isBooked
-                              ? "bg-red-500 text-white border-red-600 cursor-not-allowed"
+                              ? "bg-gray-300 text-gray-400 border-gray-400 cursor-not-allowed"
                               : selectedSeats.includes(row[2].seatNumber)
-                              ? "bg-green-500 text-white border-green-600 shadow-lg scale-105"
-                              : "bg-white text-gray-800 border-gray-300 hover:bg-orange-100 hover:border-orange-400"
+                              ? "bg-green-400 text-white border-green-500"
+                              : "bg-white text-black border-gray-300 hover:bg-blue-100"
                           }`}
                           disabled={row[2].isBooked}
                           onClick={() => toggleSeat(row[2].seatNumber)}
                         >
-                          <User size={24} strokeWidth={2} />
+                          <FaPersonThroughWindow />
                         </button>
-                        <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                          {row[2].isBooked ? (
-                            <span className="text-red-400">Sold</span>
-                          ) : (
-                            <>
-                              <IndianRupee size={10} />
-                              <span>{bus.fare}</span>
-                            </>
-                          )}
-                        </div>
+                        <span className="text-xs text-gray-500 mt-1">
+                          {row[2].isBooked ? "Sold" : `₹${bus.fare}`}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -229,32 +191,25 @@ const BusSeatSelect = () => {
                         key={seat.seatNumber}
                         className="flex flex-col items-center"
                       >
-                        <div className="text-xs font-medium mb-1 text-gray-400">
+                        <div className="text-xs font-medium mb-1">
                           #{seat.seatNumber}
                         </div>
                         <button
-                          className={`w-12 h-20 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                          className={`w-10 h-16 rounded-md border-2 text-xl flex items-center justify-center ${
                             seat.isBooked
-                              ? "bg-red-500 text-white border-red-600 cursor-not-allowed"
+                              ? "bg-gray-300 text-gray-400 border-gray-400 cursor-not-allowed"
                               : selectedSeats.includes(seat.seatNumber)
-                              ? "bg-green-500 text-white border-green-600 shadow-lg scale-105"
-                              : "bg-white text-gray-800 border-gray-300 hover:bg-orange-100 hover:border-orange-400"
+                              ? "bg-green-400 text-white border-green-500"
+                              : "bg-white text-black border-gray-300 hover:bg-blue-100"
                           }`}
                           disabled={seat.isBooked}
                           onClick={() => toggleSeat(seat.seatNumber)}
                         >
-                          <User size={24} strokeWidth={2} />
+                          <FaPersonThroughWindow />
                         </button>
-                        <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                          {seat.isBooked ? (
-                            <span className="text-red-400">Sold</span>
-                          ) : (
-                            <>
-                              <IndianRupee size={10} />
-                              <span>{bus.fare}</span>
-                            </>
-                          )}
-                        </div>
+                        <span className="text-xs text-gray-500 mt-1">
+                          {seat.isBooked ? "Sold" : `₹${bus.fare}`}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -263,83 +218,70 @@ const BusSeatSelect = () => {
             </div>
           </div>
 
-          {/* Upper Deck */}
-          <div className="bg-gray-800 border-2 border-gray-700 hover:border-orange-400 rounded-2xl p-6 transition-colors">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <BedDouble size={24} className="text-orange-400" />
-              <p className="text-lg font-semibold text-white">Upper Deck</p>
-            </div>
+          {/* Upper Deck – Same as lower */}
+          <div className="border rounded-md hover:border-orange-400 p-2">
+            <p className="text-lg font-semibold mb-3 text-center">
+              🛏️ Upper Deck
+            </p>
             <div className="flex flex-col gap-4">
               {chunkArray(upperDeck, 3).map((row, rowIndex) => (
                 <div
                   key={rowIndex}
                   className="grid grid-cols-3 gap-4 items-start justify-center"
                 >
+                  {/* Right (1 sleeper bed) */}
                   <div className="flex justify-center">
                     {row[2] && (
                       <div className="flex flex-col items-center">
-                        <div className="text-xs font-medium mb-1 text-gray-400">
+                        <div className="text-xs font-medium mb-1">
                           #{row[2].seatNumber}
                         </div>
                         <button
-                          className={`w-12 h-20 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                          className={`w-10 h-16 rounded-md border-2 text-xl flex items-center justify-center ${
                             row[2].isBooked
-                              ? "bg-red-500 text-white border-red-600 cursor-not-allowed"
+                              ? "bg-gray-300 text-gray-400 border-gray-400 cursor-not-allowed"
                               : selectedSeats.includes(row[2].seatNumber)
-                              ? "bg-green-500 text-white border-green-600 shadow-lg scale-105"
-                              : "bg-white text-gray-800 border-gray-300 hover:bg-orange-100 hover:border-orange-400"
+                              ? "bg-green-400 text-white border-green-500"
+                              : "bg-white text-black border-gray-300 hover:bg-blue-100"
                           }`}
                           disabled={row[2].isBooked}
                           onClick={() => toggleSeat(row[2].seatNumber)}
                         >
-                          <User size={24} strokeWidth={2} />
+                          <FaPersonThroughWindow />
                         </button>
-                        <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                          {row[2].isBooked ? (
-                            <span className="text-red-400">Sold</span>
-                          ) : (
-                            <>
-                              <IndianRupee size={10} />
-                              <span>{bus.fare}</span>
-                            </>
-                          )}
-                        </div>
+                        <span className="text-xs text-gray-500 mt-1">
+                          {row[2].isBooked ? "Sold" : `₹${bus.fare}`}
+                        </span>
                       </div>
                     )}
                   </div>
 
+                  {/* Left (2 sleeper beds) */}
                   <div className="col-span-2 flex gap-4 justify-center">
                     {row.slice(0, 2).map((seat) => (
                       <div
                         key={seat.seatNumber}
                         className="flex flex-col items-center"
                       >
-                        <div className="text-xs font-medium mb-1 text-gray-400">
+                        <div className="text-xs font-medium mb-1">
                           #{seat.seatNumber}
                         </div>
                         <button
-                          className={`w-12 h-20 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                          className={`w-10 h-16 rounded-md border-2 text-xl flex items-center justify-center ${
                             seat.isBooked
-                              ? "bg-red-500 text-white border-red-600 cursor-not-allowed"
+                              ? "bg-gray-300 text-gray-400 border-gray-400 cursor-not-allowed"
                               : selectedSeats.includes(seat.seatNumber)
-                              ? "bg-green-500 text-white border-green-600 shadow-lg scale-105"
-                              : "bg-white text-gray-800 border-gray-300 hover:bg-orange-100 hover:border-orange-400"
+                              ? "bg-green-400 text-white border-green-500"
+                              : "bg-white text-black border-gray-300 hover:bg-blue-100"
                           }`}
                           disabled={seat.isBooked}
                           onClick={() => toggleSeat(seat.seatNumber)}
                         >
-                          <User size={24} strokeWidth={2} />
+                          <FaPersonThroughWindow />
                         </button>
-                        <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                          {seat.isBooked ? (
-                            <span className="text-red-400">Sold</span>
-                          ) : (
-                            <>
-                              <IndianRupee size={10} />
-                              <span>{bus.fare}</span>
-                            </>
-                          )}
-                        </div>
+                        <span className="text-xs text-gray-500 mt-1">
+                          {seat.isBooked ? "Sold" : `₹${bus.fare}`}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -352,35 +294,23 @@ const BusSeatSelect = () => {
 
       {/* Mixed Layout Warning */}
       {!allSeater && !allSleeper && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center justify-center gap-3 text-red-400 font-semibold mb-6">
-          <AlertTriangle size={24} />
-          <span>Mixed seat types are currently not supported.</span>
+        <div className="text-center mt-6 text-red-500 font-semibold">
+          ⚠️ Mixed seat types are currently not supported.
         </div>
       )}
 
-      {/* Confirm Button */}
       <div className="text-center mt-8">
         <button
           onClick={handleConfirm}
           disabled={disableButton}
           className={`${
             !disableButton
-              ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl hover:scale-105"
-              : "bg-gray-600 cursor-not-allowed opacity-50"
-          } text-white font-semibold px-8 py-4 rounded-xl transition-all duration-200 inline-flex items-center gap-2`}
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-gray-600 hover:bg-rose-600 hover:cursor-not-allowed"
+          } text-white font-medium px-6 py-2 rounded-lg transition duration-300`}
         >
-          {disableButton ? (
-            <>
-              <XCircle size={20} />
-              Select at least one seat
-            </>
-          ) : (
-            <>
-              <CheckCircle2 size={20} />
-              Confirm Selection ({selectedSeats.length} seat
-              {selectedSeats.length > 1 ? "s" : ""})
-            </>
-          )}
+          Confirm Selection ({selectedSeats.length} seat
+          {selectedSeats.length > 1 ? "s" : ""})
         </button>
       </div>
     </div>

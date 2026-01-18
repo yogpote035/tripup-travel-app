@@ -2,14 +2,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { fetchTrainsBetweenStations } from "../../../AllStatesFeatures/Train/AllTrainsSlice";
-import { 
-  ArrowDownUp, 
-  MapPin, 
-  Calendar, 
-  Search,
-  Train,
-  X
-} from "lucide-react";
+import { MdSwapVerticalCircle } from "react-icons/md";
 
 const SearchTrain = ({ onDateChange }) => {
   const [from, setFrom] = useState("");
@@ -36,7 +29,7 @@ const SearchTrain = ({ onDateChange }) => {
     const payload = { from, to };
 
     if (date) {
-      onDateChange(date);
+      onDateChange(date); //pass to TrainList
       const day = new Date(date).toLocaleDateString("en-US", {
         weekday: "short",
       });
@@ -51,152 +44,109 @@ const SearchTrain = ({ onDateChange }) => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl shadow-lg mb-4">
-          <Train size={32} className="text-white" strokeWidth={2.5} />
-        </div>
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-          Search Trains
-        </h2>
-        <p className="text-gray-400 mt-2">Find trains between stations</p>
+    <form
+      onSubmit={handleSubmit}
+      className="bg-gray-800 text-white max-w-xl mx-auto p-4 rounded-xl shadow-lg space-y-6"
+    >
+      <h2 className="text-2xl font-bold text-blue-400 text-center">
+        Search Trains
+      </h2>
+
+      {/* From */}
+      <div>
+        <label className="block mb-1 text-white font-medium">From</label>
+        <input
+          type="text"
+          value={from}
+          onChange={(e) => setFrom(e.target.value)}
+          placeholder="Enter departure station"
+          className="w-full px-4 py-2 rounded-md bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none  focus:ring-blue-500"
+          required
+        />
       </div>
 
-      {/* Search Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 text-white p-6 rounded-2xl shadow-xl space-y-5"
-      >
-        {/* From Station */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-gray-300">
-            From Station
-          </label>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-              <MapPin size={18} />
-            </div>
-            <input
-              type="text"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              placeholder="Enter departure station"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
-              required
-            />
-          </div>
+      {/* Swap Button */}
+      {from && to && (
+        <div className="text-center mt-0 mb-0">
+          <button
+            type="button"
+            onClick={handleSwap}
+            className="text-white hover:text-gray-400 text-3xl"
+          >
+            <MdSwapVerticalCircle />
+          </button>
         </div>
+      )}
 
-        {/* Swap Button */}
-        {from && to && (
-          <div className="flex justify-center -my-2">
-            <button
-              type="button"
-              onClick={handleSwap}
-              className="bg-gray-700 hover:bg-gray-600 p-3 rounded-full text-yellow-400 hover:text-yellow-300 transition-all shadow-lg hover:shadow-xl hover:scale-110"
-              title="Swap stations"
-            >
-              <ArrowDownUp size={20} strokeWidth={2} />
-            </button>
-          </div>
-        )}
+      {/* To */}
+      <div>
+        <label className="block mb-1 text-white font-medium">To</label>
+        <input
+          type="text"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+          placeholder="Enter destination station"
+          className="w-full px-4 py-2 rounded-md bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none  focus:ring-blue-500"
+          required
+        />
+      </div>
 
-        {/* To Station */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-gray-300">
-            To Station
-          </label>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-              <MapPin size={18} />
-            </div>
-            <input
-              type="text"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              placeholder="Enter destination station"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
-              required
-            />
-          </div>
-        </div>
+      <div className="space-y-2">
+        <label className="block text-white font-medium">
+          Train Type (Optional)
+        </label>
+        <select
+          value={trainType}
+          onChange={(e) => setTrainType(e.target.value)}
+          className="w-full px-4 py-2 rounded-md bg-gray-700 border border-gray-600 text-white focus:outline-none  focus:ring-blue-500"
+        >
+          <option value="">-- All Types --</option>
+          <option value="Express">Express</option>
+          <option value="Shatabdi">Shatabdi</option>
+          <option value="Superfast">Superfast</option>
+          <option value="Intercity">Intercity</option>
+          <option value="Mail">Mail</option>
+          <option value="Vande Bharat">Vande Bharat</option>
+          <option value="Rajdhani">Rajdhani</option>
+          <option value="Duronto">Duronto</option>
+        </select>
+      </div>
 
-        {/* Train Type */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-gray-300">
-            Train Type (Optional)
-          </label>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-              <Train size={18} />
-            </div>
-            <select
-              value={trainType}
-              onChange={(e) => setTrainType(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all appearance-none"
-            >
-              <option value="">All Train Types</option>
-              <option value="Express">Express</option>
-              <option value="Shatabdi">Shatabdi</option>
-              <option value="Superfast">Superfast</option>
-              <option value="Intercity">Intercity</option>
-              <option value="Mail">Mail</option>
-              <option value="Vande Bharat">Vande Bharat</option>
-              <option value="Rajdhani">Rajdhani</option>
-              <option value="Duronto">Duronto</option>
-            </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-              <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-                <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Date Picker */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-gray-300">
+      {/* Date Picker + Clear */}
+      <div className="flex flex-col sm:flex-row gap-3 items-center">
+        <div className="w-full">
+          <label className="block mb-1 text-white font-medium">
             Date of Journey
           </label>
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                <Calendar size={18} />
-              </div>
-              <input
-                type="date"
-                value={date}
-                required
-                onChange={(e) => setDate(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
-              />
-            </div>
-            {date && (
-              <button
-                type="button"
-                onClick={() => setDate("")}
-                className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all flex items-center gap-2 font-semibold shadow-md hover:shadow-lg"
-                title="Clear date"
-              >
-                <X size={18} strokeWidth={2} />
-                Clear
-              </button>
-            )}
-          </div>
+          <input
+            type="date"
+            value={date}
+            required
+            placeholder="All Dates"
+            onChange={(e) => setDate(e.target.value)}
+            min={new Date().toISOString().split("T")[0]}
+            className="w-full px-4 py-2 rounded-md bg-gray-700 border border-gray-600 text-white focus:outline-none  focus:ring-blue-500"
+          />
         </div>
+        <div className="w-full sm:w-[40%] mt-1 sm:mt-6">
+          <button
+            type="button"
+            onClick={() => setDate("")}
+            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition"
+          >
+            Clear Date
+          </button>
+        </div>
+      </div>
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2"
-        >
-          <Search size={20} strokeWidth={2} />
-          Find Trains
-        </button>
-      </form>
-    </div>
+      {/* Submit */}
+      <button
+        type="submit"
+        className="w-full px-4 py-2 bg-white hover:bg-gray-200 outline-none focus:outline-none text-black font-semibold rounded-md transition"
+      >
+        Find Trains
+      </button>
+    </form>
   );
 };
 

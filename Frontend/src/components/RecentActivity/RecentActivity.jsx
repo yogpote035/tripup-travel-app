@@ -1,14 +1,12 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  TrainFront,
-  Bus,
-  Plane,
-  MapPin,
-  Newspaper,
-  Clock,
-  Compass,
-} from "lucide-react";
+  FaTrain,
+  FaBus,
+  FaPlane,
+  FaClipboardList,
+  FaRegNewspaper,
+} from "react-icons/fa";
 import { GetRecentActivity } from "../../../AllStatesFeatures/Recent Activity/RecentActivitySlice";
 import { format } from "date-fns";
 
@@ -22,69 +20,51 @@ const RecentActivity = () => {
   }, [dispatch]);
 
   const getIcon = (type) => {
-    const iconProps = { size: 24, strokeWidth: 2 };
-    
     switch (type) {
       case "train":
-        return <TrainFront {...iconProps} className="text-blue-600" />;
+        return <FaTrain className="text-blue-500" />;
       case "bus":
-        return <Bus {...iconProps} className="text-emerald-600" />;
+        return <FaBus className="text-green-500" />;
       case "flight":
-        return <Plane {...iconProps} className="text-indigo-600" />;
+        return <FaPlane className="text-purple-500" />;
       case "plan":
-        return <MapPin {...iconProps} className="text-amber-600" />;
+        return <FaClipboardList className="text-orange-500" />;
       case "post":
-        return <Newspaper {...iconProps} className="text-rose-600" />;
+        return <FaRegNewspaper className="text-pink-500" />;
       default:
-        return <Compass {...iconProps} className="text-gray-600" />;
+        return null;
     }
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 border border-blue-200 dark:border-gray-700 shadow-xl rounded-3xl p-8 w-full max-w-3xl mx-auto mt-12 mb-12 transition-all duration-300">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-2xl shadow-lg">
-          <Clock size={28} className="text-white" strokeWidth={2.5} />
-        </div>
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-          Recent Journeys
-        </h2>
-      </div>
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl p-6 w-full max-w-2xl mx-auto mt-12 mb-12 transition-all duration-300">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+        📌 Recent Activity
+      </h2>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400 text-center">
-            Loading your travel history...
-          </p>
-        </div>
+        <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+          Loading recent activity...
+        </p>
       ) : activities.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Compass size={64} className="text-gray-300 dark:text-gray-600 mb-4" strokeWidth={1.5} />
-          <p className="text-gray-500 dark:text-gray-400 text-center text-lg">
-            No journeys yet. Start exploring!
-          </p>
-        </div>
+        <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+          No recent activity found.
+        </p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-4">
           {activities.map((activity) => (
             <li
               key={activity.id}
-              className="flex items-start gap-4 border border-blue-100 dark:border-gray-700 p-5 rounded-2xl bg-white dark:bg-gray-800 hover:shadow-lg hover:scale-[1.02] hover:border-blue-300 dark:hover:border-gray-600 transition-all duration-300 cursor-pointer"
+              className="flex items-start gap-4 border border-gray-300 dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 hover:shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
             >
-              <div className="flex-shrink-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 p-3 rounded-xl shadow-sm">
-                {getIcon(activity.type)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-gray-900 dark:text-gray-100 font-semibold text-lg mb-1 truncate">
+              <div className="flex-shrink-0 text-3xl">{getIcon(activity.type)}</div>
+              <div className="flex flex-col">
+                <p className="text-gray-800 dark:text-gray-200 font-semibold text-lg">
                   {activity.title}
                 </p>
-                <div className="flex items-center gap-2">
-                  <Clock size={14} className="text-gray-400" />
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {format(new Date(activity?.createdAt), "dd MMM yyyy, hh:mm a")}
-                  </span>
-                </div>
+                <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {format(new Date(activity?.createdAt),"dd MMM yyyy, hh:mm a")}
+                </span>
               </div>
             </li>
           ))}
