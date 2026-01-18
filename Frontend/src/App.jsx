@@ -32,13 +32,15 @@ import PostsFeed from "./components/SocialFeed/PostsFeed.jsx";
 import SinglePostView from "./components/SocialFeed/SinglePostView.jsx";
 import EditPost from "./components/SocialFeed/EditPost.jsx";
 import PageNotFound from "./General/PageNotFound.jsx";
+import { useRefreshToken } from "./General/useRefreshToken.jsx";
 
 function App() {
+  useRefreshToken();
   return (
     <>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <div className="mb-13"></div>
+        <div className="mb-10"></div>
         <main className="flex-grow bg-gray-900">
           <Routes>
             <Route exact path="/" element={<Home />} />
@@ -194,14 +196,9 @@ function App() {
               }
             />
             {/* For Non Existing Route */}
-            <Route
-              path="*"
-              element={
-                <PageNotFound />
-              }
-            />
+            <Route path="*" element={<PageNotFound />} />
           </Routes>
-          <div className="mt-13"></div>
+          <div className="mt-10"></div>
         </main>
 
         <Footer />

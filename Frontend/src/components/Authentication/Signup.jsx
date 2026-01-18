@@ -2,8 +2,19 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { signupUser } from "../../../AllStatesFeatures/Authentication/authSlice";
 import { useNavigate, Link } from "react-router-dom";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Loading from "../../General/Loading";
+import { 
+  Eye, 
+  EyeOff, 
+  Mail, 
+  Phone, 
+  Lock, 
+  User,
+  UserPlus,
+  Plane,
+  ArrowRight,
+  Sparkles
+} from "lucide-react";
 
 function Signup() {
   const dispatch = useDispatch();
@@ -23,9 +34,10 @@ function Signup() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/", { replace: true }); //if logged in
+      navigate("/", { replace: true });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigate]);
+
   if (loading) {
     return <Loading message="Creating your account" />;
   }
@@ -41,92 +53,155 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4 py-10 ">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-gray-800 text-white p-10 rounded-lg shadow-lg w-full max-w-2xl space-y-6 border border-white"
-      >
-        <h2 className="text-3xl font-bold text-center text-white mb-4">
-          Welcome on TripUp Please SignUp
-        </h2>
-
-        <div>
-          <label className="block font-medium text-white mb-1">Full Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full p-2 border rounded focus:outline-none "
-            required
-          />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 px-4 py-12">
+      <div className="w-full max-w-lg">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg mb-4">
+            <Plane size={32} className="text-white" strokeWidth={2.5} />
+          </div>
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+            Join TripUp
+          </h1>
+          <div className="flex items-center justify-center gap-2">
+            <Sparkles size={16} className="text-blue-400" />
+            <p className="text-gray-400">Start your journey with us today</p>
+            <Sparkles size={16} className="text-blue-400" />
+          </div>
         </div>
 
-        <div>
-          <label className="block font-medium text-white mb-1">
-            Email Address
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full p-2 border rounded focus:outline-none"
-            required
-          />
+        {/* Form Card */}
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-2xl rounded-2xl p-8 border border-gray-700">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Name Input */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Full Name
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  <User size={18} />
+                </div>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter your full name"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Email Input */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Email Address
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  <Mail size={18} />
+                </div>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Phone Input */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Phone Number
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  <Phone size={18} />
+                </div>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="Enter your phone number"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password Input */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  <Lock size={18} />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Create a strong password"
+                  className="w-full pl-10 pr-12 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-400 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2"
+            >
+              <UserPlus size={20} strokeWidth={2} />
+              Create Account
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-gray-800 text-gray-400">Already have an account?</span>
+            </div>
+          </div>
+
+          {/* Login Link */}
+          <div className="text-center">
+            <Link
+              to="/login"
+              className="text-sm text-gray-300 hover:text-white transition-colors inline-flex items-center gap-2 group"
+            >
+              <span>Sign in to your account</span>
+              <ArrowRight size={14} className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
 
-        <div>
-          <label className="block font-medium text-white mb-1">
-            Phone Number
-          </label>
-          <input
-            type="number"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className="w-full p-2 border rounded focus:outline-none "
-            required
-          />
-        </div>
-
-        <div className="relative">
-          <label className="block font-medium text-white mb-1">Password</label>
-          <input
-            type={showPassword ? "text" : "password"}
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full p-2 pr-10 border rounded focus:outline-none"
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 top-[38px] text-gray-600 hover:text-indigo-600"
-            tabIndex={-1}
-          >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
-          </button>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full py-2 font-semibold rounded shadow bg-white text-black hover:bg-gray-300          "
-        >
-          Signup
-        </button>
-      <p className="text-sm text-center text-white">
-        Already Have an Account?
-        <Link to={"/login"}>
-          {" "}
-          <span className="font-bold hover:underline hover:text-yellow-300">
-            Login
-          </span>
-        </Link>
-      </p>
-      </form>
-
+        {/* Footer Note */}
+        <p className="text-center text-gray-500 text-xs mt-6">
+          By signing up, you agree to our Terms of Service and Privacy Policy
+        </p>
+      </div>
     </div>
   );
 }
