@@ -49,7 +49,7 @@ export const useRefreshToken = () => {
     };
 
     // refresh every 10 seconds
-    const interval = setInterval(refreshToken, 30 * 1000);
+    const interval = setInterval(refreshToken, 40 * 1000);
 
     return () => clearInterval(interval);
   }, [isAuthenticated, dispatch, navigate]);
