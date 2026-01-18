@@ -10,7 +10,7 @@ async function generateJWE(userId) {
   const jwe = await new EncryptJWT({ userId })
     .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
     .setIssuedAt()
-    .setExpirationTime("2m")
+    .setExpirationTime("1m")
     .encrypt(secret);
 
   console.log("From JWE:Call  DONE");
