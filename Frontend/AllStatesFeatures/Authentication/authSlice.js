@@ -4,13 +4,13 @@ import { toast } from "react-toastify";
 
 const initialState = {
   user: localStorage.getItem("token") && localStorage.getItem("userId") && localStorage.getItem("username") ? {
-    userId: localStorage.getItem("userID"),
+    userId: localStorage.getItem("userId"),
     username: localStorage.getItem("username"),
   } : null,
   isAuthenticated: localStorage.getItem("token") && localStorage.getItem("userId") && localStorage.getItem("username") ? true : false,
   loading: false,
   error: null,
-  token: null,
+  token: localStorage.getItem("token") && localStorage.getItem("userId") && localStorage.getItem("username") ? localStorage.getItem("token") : null,
 };
 
 const authSlice = createSlice({
@@ -171,3 +171,5 @@ export const signupUser = (payload) => async (dispatch) => {
     toast.error(error.response?.data?.message);
   }
 };
+
+// export const logoutUser = () => (dispatch) => {
