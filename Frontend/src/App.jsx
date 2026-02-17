@@ -39,7 +39,7 @@ function App() {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <div className="mb-10"></div>
-        <main className="flex-grow bg-gray-900">
+        <main className="flex-grow bg-orange-50">
           <Routes>
             <Route exact path="/" element={<Home />} />
             <Route exact path="/login" element={<Login />} />
@@ -212,7 +212,7 @@ function App() {
           pauseOnHover
           theme="light"
           style={{ top: "73px", right: "2px" }}
-          toastClassName="!rounded-none !bg-gray-800 !text-white"
+          toastClassName="!rounded-xl !bg-orange-50 !text-stone-800 !border !border-orange-200 !shadow-md !font-medium"
         />
       </div>
     </>

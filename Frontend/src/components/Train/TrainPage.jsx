@@ -6,7 +6,7 @@ const TrainPage = () => {
   const [searchDate, setSearchDate] = useState(""); // for get date from search page
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white pt-20 pb-10">
+    <div className="min-h-screen bg-orange-50 text-black pt-20 pb-10">
       <SearchTrain onDateChange={setSearchDate} />
       <TrainList searchDate={searchDate} />
     </div>

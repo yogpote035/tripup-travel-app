@@ -75,6 +75,7 @@ const authSlice = createSlice({
       localStorage.removeItem("username");
       localStorage.removeItem("token");
       localStorage.clear();
+      toast.success("Logout successful");
     },
 
     clearErrors: (state) => {

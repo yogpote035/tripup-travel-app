@@ -4,9 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { bookTrainSeats } from "../../../AllStatesFeatures/Train/BookTrainTicketSlice";
 import Loading from "../../General/Loading";
-import { 
-  Train, 
-  MapPin, 
+import {
+  Train,
+  MapPin,
   Calendar,
   Mail,
   Phone,
@@ -15,21 +15,48 @@ import {
   X,
   Ticket,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
+
+const inputCls =
+  "w-full pl-10 pr-4 py-3 rounded-xl bg-orange-50 border border-orange-200 text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all";
+
+const disabledInputCls =
+  "w-full pl-4 pr-4 py-3 rounded-xl bg-stone-100 border border-orange-100 text-stone-400 text-sm cursor-not-allowed";
+
+const Label = ({ children }) => (
+  <label className="block text-xs font-bold uppercase tracking-widest text-stone-400 mb-1.5">
+    {children}
+  </label>
+);
+
+const SectionCard = ({ icon, title, badge, children }) => (
+  <div className="bg-white border border-orange-200 rounded-2xl p-6 shadow-sm">
+    <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center gap-2.5">
+        <div className="bg-orange-50 border border-orange-200 rounded-lg w-8 h-8 flex items-center justify-center">
+          {icon}
+        </div>
+        <h3 className="text-base font-bold text-stone-800">{title}</h3>
+      </div>
+      {badge && <span className="text-xs font-semibold text-stone-400">{badge}</span>}
+    </div>
+    {children}
+  </div>
+);
 
 const TrainSeatBooking = () => {
   const { state } = useLocation();
-  const { loading, error } = useSelector((state) => state.bookTrainTicket);
+  const { loading, error } = useSelector((s) => s.bookTrainTicket);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [trainNumber, setTrainNumber] = useState(state?.trainNumber || "");
-  const [trainName, setTrainName] = useState(state?.trainName || "");
-  const [coachType, setCoachType] = useState(state?.coachType || "Sleeper");
-  const [from, setFrom] = useState(state?.from || "");
-  const [to, setTo] = useState(state?.to || "");
-  const [journeyDate, setJourneyDate] = useState(
+  const [trainNumber] = useState(state?.trainNumber || "");
+  const [trainName] = useState(state?.trainName || "");
+  const [coachType] = useState(state?.coachType || "Sleeper");
+  const [from] = useState(state?.from || "");
+  const [to] = useState(state?.to || "");
+  const [journeyDate] = useState(
     state?.journeyDate || new Date().toISOString().split("T")[0]
   );
   const [email, setEmail] = useState("");
@@ -37,9 +64,7 @@ const TrainSeatBooking = () => {
   const [passengerNames, setPassengerNames] = useState([""]);
 
   if (loading) {
-    return (
-      <Loading message="Wait ,Your Journey is Loading,We are Making Place For You " />
-    );
+    return <Loading message="Wait, Your Journey is Loading. We are Making Place For You" />;
   }
 
   const handlePassengerChange = (index, value) => {
@@ -57,11 +82,9 @@ const TrainSeatBooking = () => {
     if (!trainNumber || !coachType || !from || !to || !journeyDate || !passengerNames) {
       return toast.warn("All fields are required.");
     }
-
     if (passengerNames.some((name) => !name.trim())) {
       return toast.warn("Please fill in all passenger names.");
     }
-
     const dataObject = {
       userId: localStorage.getItem("userId"),
       trainNumber,
@@ -78,197 +101,132 @@ const TrainSeatBooking = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-white p-6 mt-10 mb-10">
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-2xl p-6 mb-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Ticket size={32} className="text-yellow-400" strokeWidth={2} />
-            <h2 className="text-3xl font-bold text-white">
-              Book Train Tickets
-            </h2>
+    <div className="min-h-screen bg-orange-50 px-4 py-10">
+      <div className="max-w-2xl mx-auto space-y-5">
+
+        {/* Page Header */}
+        <div className="bg-white border border-orange-200 rounded-2xl px-6 py-5 text-center shadow-sm">
+          <div className="flex items-center justify-center gap-3 mb-1">
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-2">
+              <Ticket size={22} className="text-orange-500" strokeWidth={2} />
+            </div>
+            <h2 className="text-2xl font-bold text-stone-800">Book Train Tickets</h2>
           </div>
-          <p className="text-center text-gray-400">Complete your booking details below</p>
+          <p className="text-sm text-stone-400 mt-1">Complete your booking details below</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Train Details Card */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center gap-2 mb-4">
-              <Train size={20} className="text-yellow-400" />
-              <h3 className="text-lg font-semibold text-white">Train Details</h3>
-            </div>
-            
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* Train Details */}
+          <SectionCard icon={<Train size={16} className="text-orange-500" />} title="Train Details">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Train Name
-                </label>
-                <input
-                  type="text"
-                  value={trainName}
-                  disabled
-                  className="w-full px-4 py-3 rounded-xl bg-gray-900/50 text-gray-400 border border-gray-700 cursor-not-allowed"
-                />
+                <Label>Train Name</Label>
+                <input type="text" value={trainName} disabled className={disabledInputCls} />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Train Number
-                </label>
-                <input
-                  type="text"
-                  value={trainNumber}
-                  disabled
-                  className="w-full px-4 py-3 rounded-xl bg-gray-900/50 text-gray-400 border border-gray-700 cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Coach Type
-                </label>
-                <input
-                  type="text"
-                  value={coachType}
-                  disabled
-                  className="w-full px-4 py-3 rounded-xl bg-gray-900/50 text-gray-400 border border-gray-700 cursor-not-allowed"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Train Number</Label>
+                  <input type="text" value={trainNumber} disabled className={disabledInputCls} />
+                </div>
+                <div>
+                  <Label>Coach Type</Label>
+                  <input type="text" value={coachType} disabled className={disabledInputCls} />
+                </div>
               </div>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Journey Details Card */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin size={20} className="text-yellow-400" />
-              <h3 className="text-lg font-semibold text-white">Journey Details</h3>
-            </div>
-
+          {/* Journey Details */}
+          <SectionCard icon={<MapPin size={16} className="text-orange-500" />} title="Journey Details">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    From Station
-                  </label>
-                  <input
-                    type="text"
-                    value={from}
-                    disabled
-                    className="w-full px-4 py-3 rounded-xl bg-gray-900/50 text-gray-400 border border-gray-700 cursor-not-allowed"
-                  />
+                  <Label>From Station</Label>
+                  <input type="text" value={from} disabled className={disabledInputCls} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    To Station
-                  </label>
-                  <input
-                    type="text"
-                    value={to}
-                    disabled
-                    className="w-full px-4 py-3 rounded-xl bg-gray-900/50 text-gray-400 border border-gray-700 cursor-not-allowed"
-                  />
+                  <Label>To Station</Label>
+                  <input type="text" value={to} disabled className={disabledInputCls} />
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Journey Date
-                </label>
+                <Label>Journey Date</Label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Calendar size={18} />
-                  </div>
+                  <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                   <input
                     type="date"
                     value={journeyDate}
-                    onChange={(e) => setJourneyDate(e.target.value)}
                     disabled
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900/50 text-gray-400 border border-gray-700 cursor-not-allowed"
+                    className={`${disabledInputCls} pl-10`}
                   />
                 </div>
               </div>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Contact Details Card */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center gap-2 mb-4">
-              <Phone size={20} className="text-yellow-400" />
-              <h3 className="text-lg font-semibold text-white">Contact Details (Optional)</h3>
-            </div>
-
+          {/* Contact Details */}
+          <SectionCard
+            icon={<Phone size={16} className="text-orange-500" />}
+            title="Contact Details"
+            badge="Optional"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Email Address
-                </label>
+                <Label>Email Address</Label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Mail size={18} />
-                  </div>
+                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="example@mail.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+                    className={inputCls}
                   />
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Phone Number
-                </label>
+                <Label>Phone Number</Label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Phone size={18} />
-                  </div>
+                  <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="9876543210"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+                    className={inputCls}
                   />
                 </div>
               </div>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Passengers Card */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <User size={20} className="text-yellow-400" />
-                <h3 className="text-lg font-semibold text-white">Passenger Details</h3>
-              </div>
-              <span className="text-sm text-gray-400">{passengerNames.length} passenger{passengerNames.length > 1 ? 's' : ''}</span>
-            </div>
-
+          {/* Passenger Details */}
+          <SectionCard
+            icon={<User size={16} className="text-orange-500" />}
+            title="Passenger Details"
+            badge={`${passengerNames.length} passenger${passengerNames.length > 1 ? "s" : ""}`}
+          >
             <div className="space-y-3">
               {passengerNames.map((name, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <div className="relative flex-1">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      <User size={18} />
-                    </div>
+                    <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => handlePassengerChange(index, e.target.value)}
                       placeholder={`Passenger ${index + 1} name`}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+                      className={inputCls}
                     />
                   </div>
                   {passengerNames.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removePassenger(index)}
-                      className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all shadow-md hover:shadow-lg"
+                      className="p-2.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-400 hover:text-red-500 rounded-xl transition-all flex-shrink-0"
                     >
-                      <X size={18} strokeWidth={2} />
+                      <X size={16} strokeWidth={2.5} />
                     </button>
                   )}
                 </div>
@@ -277,31 +235,32 @@ const TrainSeatBooking = () => {
               <button
                 type="button"
                 onClick={addPassenger}
-                className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 font-medium transition-colors"
+                className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-400 font-semibold transition-colors mt-1"
               >
-                <Plus size={18} strokeWidth={2} />
+                <Plus size={16} strokeWidth={2.5} />
                 Add Another Passenger
               </button>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Error Message */}
+          {/* Error */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3">
-              <AlertCircle size={20} className="text-red-400 flex-shrink-0" />
-              <p className="text-red-400">{error}</p>
+            <div className="bg-white border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
+              <AlertCircle size={18} className="text-red-400 flex-shrink-0" />
+              <p className="text-red-500 text-sm">{error}</p>
             </div>
           )}
 
-          {/* Submit Button */}
+          {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2"
+            className="w-full bg-orange-500 hover:bg-orange-400 active:scale-95 text-white font-bold py-4 rounded-xl transition-all text-sm tracking-wide flex items-center justify-center gap-2 shadow-md"
           >
-            <CheckCircle2 size={20} strokeWidth={2} />
+            <CheckCircle2 size={18} strokeWidth={2.5} />
             Confirm Booking
           </button>
         </form>
+
       </div>
     </div>
   );

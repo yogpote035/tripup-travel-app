@@ -1,13 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { 
-  Armchair, 
-  Plane,
-  CheckCircle2,
-  XCircle,
-  User
-} from "lucide-react";
+import { Armchair, Plane, CheckCircle2, XCircle } from "lucide-react";
 
 const FlightSeatSelection = () => {
   const navigate = useNavigate();
@@ -19,7 +13,7 @@ const FlightSeatSelection = () => {
     if (isBooked) return;
     setSelectedSeats((prev) =>
       prev.includes(seatNumber)
-        ? prev.filter((seat) => seat !== seatNumber)
+        ? prev.filter((s) => s !== seatNumber)
         : [...prev, seatNumber]
     );
   };
@@ -30,17 +24,10 @@ const FlightSeatSelection = () => {
       return;
     }
     navigate("/flight-seat-book", {
-      state: {
-        flight,
-        seats: selectedSeats,
-        journeyDate,
-        source,
-        destination,
-      },
+      state: { flight, seats: selectedSeats, journeyDate, source, destination },
     });
   };
 
-  // Group seats into rows (assuming 6 seats per row: A-F)
   const seatsPerRow = 6;
   const rows = [];
   for (let i = 0; i < flight.seats.length; i += seatsPerRow) {
@@ -48,86 +35,111 @@ const FlightSeatSelection = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-white p-6 mt-10 mb-10">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/30 rounded-2xl p-6 mb-8">
-          <h2 className="text-3xl font-bold text-center flex items-center justify-center gap-3 text-white mb-4">
-            <Plane size={32} className="text-purple-400" strokeWidth={2} />
-            <span>Select Your Seat</span>
-          </h2>
-          
-          {/* Flight Info */}
-          <div className="text-center text-gray-400 text-sm">
-            <p>{flight.airline} - {flight.flightNumber}</p>
-            <p>{source} → {destination}</p>
-          </div>
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-2xl mx-auto space-y-5">
 
-          {/* Legend */}
-          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white rounded-lg border-2 border-gray-300 flex items-center justify-center">
-                <Armchair size={16} className="text-gray-800" />
-              </div>
-              <span className="text-gray-300">Available</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-purple-500 rounded-lg border-2 border-purple-600 flex items-center justify-center shadow-lg">
-                <Armchair size={16} className="text-white" />
-              </div>
-              <span className="text-gray-300">Selected</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-red-500 rounded-lg border-2 border-red-600 flex items-center justify-center">
-                <Armchair size={16} className="text-white" />
-              </div>
-              <span className="text-gray-300">Booked</span>
-            </div>
-          </div>
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-stone-800">Select a seat</h1>
+          <p className="text-sm text-stone-500 mt-1">
+            {flight.airline} · {flight.flightNumber} &nbsp;·&nbsp; {source} → {destination}
+          </p>
         </div>
 
-        {/* Seat Map */}
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-8 shadow-xl">
-          {/* Cockpit */}
-          <div className="mb-8 text-center">
-            <div className="inline-flex items-center gap-2 bg-purple-500/20 px-6 py-3 rounded-full border border-purple-500/30">
-              <Plane size={20} className="text-purple-400" />
-              <span className="text-purple-300 font-semibold">Cockpit</span>
+        {/* Legend */}
+        <div className="bg-white border border-orange-200 rounded-2xl px-6 py-4 shadow-sm flex flex-wrap gap-5">
+          {[
+            { label: "Available", bg: "bg-white border-orange-200", icon: "text-stone-500" },
+            { label: "Selected",  bg: "bg-orange-500 border-orange-500", icon: "text-white" },
+            { label: "Booked",   bg: "bg-stone-200 border-stone-300", icon: "text-stone-400" },
+          ].map(({ label, bg, icon }) => (
+            <div key={label} className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-lg border-2 ${bg} flex items-center justify-center`}>
+                <Armchair size={15} className={icon} strokeWidth={2} />
+              </div>
+              <span className="text-sm text-stone-500 font-medium">{label}</span>
+            </div>
+          ))}
+
+          {selectedSeats.length > 0 && (
+            <div className="ml-auto flex items-center gap-1.5">
+              <span className="text-xs font-semibold tracking-wide uppercase text-stone-400">Selected</span>
+              <span className="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                {selectedSeats.join(", ")}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Seat map card */}
+        <div className="bg-white border border-orange-200 rounded-2xl shadow-sm overflow-hidden">
+
+          {/* Cockpit nose */}
+          <div className="flex justify-center pt-6 pb-2">
+            <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 px-5 py-2 rounded-full">
+              <Plane size={15} className="text-orange-400" strokeWidth={2} />
+              <span className="text-xs font-semibold tracking-widest uppercase text-stone-500">Cockpit</span>
             </div>
           </div>
 
-          {/* Seats Grid */}
-          <div className="space-y-4">
+          {/* Column labels */}
+          <div className="flex items-center justify-center gap-3 px-8 py-2">
+            <div className="w-6" />
+            <div className="flex gap-2">
+              {["A","B","C"].map(l => (
+                <div key={l} className="w-11 text-center text-xs font-bold tracking-widest uppercase text-stone-400">{l}</div>
+              ))}
+            </div>
+            <div className="w-10" />
+            <div className="flex gap-2">
+              {["D","E","F"].map(l => (
+                <div key={l} className="w-11 text-center text-xs font-bold tracking-widest uppercase text-stone-400">{l}</div>
+              ))}
+            </div>
+            <div className="w-6" />
+          </div>
+
+          {/* Rows */}
+          <div className="px-8 pb-8 pt-1 space-y-2">
             {rows.map((row, rowIndex) => (
               <div key={rowIndex} className="flex items-center justify-center gap-3">
-                {/* Row Number */}
-                <div className="w-8 text-center text-gray-500 text-sm font-semibold">
+                {/* Row number left */}
+                <div className="w-6 text-center text-xs font-semibold text-stone-400">
                   {rowIndex + 1}
                 </div>
 
-                {/* Left Side (ABC) */}
+                {/* Left group A-B-C */}
                 <div className="flex gap-2">
-                  {row.slice(0, 3).map((seat, seatIndex) => {
+                  {row.slice(0, 3).map((seat, i) => {
                     const isSelected = selectedSeats.includes(seat.seatNumber);
                     return (
                       <button
-                        key={seatIndex}
+                        key={i}
                         onClick={() => handleSeatClick(seat.seatNumber, seat.isBooked)}
                         disabled={seat.isBooked}
-                        className={`w-14 h-14 rounded-lg flex flex-col items-center justify-center border-2 transition-all duration-200 ${
+                        title={seat.seatNumber}
+                        className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center border-2 transition-all duration-150 ${
                           seat.isBooked
-                            ? "bg-red-500 border-red-600 cursor-not-allowed"
+                            ? "bg-stone-100 border-stone-200 cursor-not-allowed"
                             : isSelected
-                            ? "bg-purple-500 border-purple-600 shadow-lg scale-105"
-                            : "bg-white border-gray-300 hover:bg-purple-100 hover:border-purple-400"
+                            ? "bg-orange-500 border-orange-500 shadow-md scale-105"
+                            : "bg-white border-orange-200 hover:border-orange-400 hover:bg-orange-50 active:scale-95"
                         }`}
                       >
-                        <Armchair 
-                          size={20} 
+                        <Armchair
+                          size={14}
                           strokeWidth={2}
-                          className={seat.isBooked || isSelected ? "text-white" : "text-gray-800"}
+                          className={
+                            seat.isBooked
+                              ? "text-stone-300"
+                              : isSelected
+                              ? "text-white"
+                              : "text-stone-500"
+                          }
                         />
-                        <span className={`text-xs font-bold mt-1 ${seat.isBooked || isSelected ? "text-white" : "text-gray-800"}`}>
+                        <span className={`text-[10px] font-bold leading-none mt-0.5 ${
+                          seat.isBooked ? "text-stone-300" : isSelected ? "text-white" : "text-stone-500"
+                        }`}>
                           {seat.seatNumber}
                         </span>
                       </button>
@@ -136,34 +148,43 @@ const FlightSeatSelection = () => {
                 </div>
 
                 {/* Aisle */}
-                <div className="w-12 flex items-center justify-center">
-                  <div className="h-12 w-1 bg-gray-700 rounded-full"></div>
+                <div className="w-10 flex justify-center">
+                  <div className="h-8 w-px bg-orange-100" />
                 </div>
 
-                {/* Right Side (DEF) */}
+                {/* Right group D-E-F */}
                 <div className="flex gap-2">
-                  {row.slice(3, 6).map((seat, seatIndex) => {
+                  {row.slice(3, 6).map((seat, i) => {
                     if (!seat) return null;
                     const isSelected = selectedSeats.includes(seat.seatNumber);
                     return (
                       <button
-                        key={seatIndex}
+                        key={i}
                         onClick={() => handleSeatClick(seat.seatNumber, seat.isBooked)}
                         disabled={seat.isBooked}
-                        className={`w-14 h-14 rounded-lg flex flex-col items-center justify-center border-2 transition-all duration-200 ${
+                        title={seat.seatNumber}
+                        className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center border-2 transition-all duration-150 ${
                           seat.isBooked
-                            ? "bg-red-500 border-red-600 cursor-not-allowed"
+                            ? "bg-stone-100 border-stone-200 cursor-not-allowed"
                             : isSelected
-                            ? "bg-purple-500 border-purple-600 shadow-lg scale-105"
-                            : "bg-white border-gray-300 hover:bg-purple-100 hover:border-purple-400"
+                            ? "bg-orange-500 border-orange-500 shadow-md scale-105"
+                            : "bg-white border-orange-200 hover:border-orange-400 hover:bg-orange-50 active:scale-95"
                         }`}
                       >
-                        <Armchair 
-                          size={20} 
+                        <Armchair
+                          size={14}
                           strokeWidth={2}
-                          className={seat.isBooked || isSelected ? "text-white" : "text-gray-800"}
+                          className={
+                            seat.isBooked
+                              ? "text-stone-300"
+                              : isSelected
+                              ? "text-white"
+                              : "text-stone-500"
+                          }
                         />
-                        <span className={`text-xs font-bold mt-1 ${seat.isBooked || isSelected ? "text-white" : "text-gray-800"}`}>
+                        <span className={`text-[10px] font-bold leading-none mt-0.5 ${
+                          seat.isBooked ? "text-stone-300" : isSelected ? "text-white" : "text-stone-500"
+                        }`}>
                           {seat.seatNumber}
                         </span>
                       </button>
@@ -171,8 +192,8 @@ const FlightSeatSelection = () => {
                   })}
                 </div>
 
-                {/* Row Number (Right) */}
-                <div className="w-8 text-center text-gray-500 text-sm font-semibold">
+                {/* Row number right */}
+                <div className="w-6 text-center text-xs font-semibold text-stone-400">
                   {rowIndex + 1}
                 </div>
               </div>
@@ -180,30 +201,29 @@ const FlightSeatSelection = () => {
           </div>
         </div>
 
-        {/* Confirm Button */}
-        <div className="text-center mt-8">
-          <button
-            onClick={handleBooking}
-            disabled={selectedSeats.length === 0}
-            className={`${
-              selectedSeats.length === 0
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl hover:scale-105"
-            } text-white font-semibold px-8 py-4 rounded-xl transition-all duration-200 inline-flex items-center gap-2`}
-          >
-            {selectedSeats.length === 0 ? (
-              <>
-                <XCircle size={20} />
-                Select at least one seat
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={20} />
-                Book Selected Seats ({selectedSeats.length})
-              </>
-            )}
-          </button>
-        </div>
+        {/* Confirm */}
+        <button
+          onClick={handleBooking}
+          disabled={selectedSeats.length === 0}
+          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+            selectedSeats.length === 0
+              ? "bg-stone-200 text-stone-400 cursor-not-allowed"
+              : "bg-orange-500 hover:bg-orange-400 text-white shadow-sm"
+          }`}
+        >
+          {selectedSeats.length === 0 ? (
+            <>
+              <XCircle size={16} strokeWidth={2} />
+              Select at least one seat
+            </>
+          ) : (
+            <>
+              <CheckCircle2 size={16} strokeWidth={2} />
+              Book {selectedSeats.length} seat{selectedSeats.length > 1 ? "s" : ""}
+            </>
+          )}
+        </button>
+
       </div>
     </div>
   );

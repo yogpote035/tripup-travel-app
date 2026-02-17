@@ -8,273 +8,298 @@ import {
 } from "../../../AllStatesFeatures/Bus/BookBusTicketSlice";
 import Loading from "../../General/Loading";
 import { toast } from "react-toastify";
-import { 
-  Download, 
-  Mail, 
-  XCircle, 
+import { FaBus } from "react-icons/fa";
+import {
+  Download,
+  Mail,
+  XCircle,
   Bus,
-  MapPin,
   Calendar,
   Users,
   IndianRupee,
   CheckCircle2,
   AlertTriangle,
-  Ticket,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 
+// ── Shared token ──────────────────────────────────────────────────────────────
+const dashedH = {
+  background:
+    "repeating-linear-gradient(90deg,#fed7aa 0,#fed7aa 8px,transparent 8px,transparent 16px)",
+};
+
+function RouteDivider() {
+  return (
+    <div className="flex-1 flex flex-col items-center gap-1">
+      <FaBus className="text-orange-400" size={13} />
+      <div className="w-full h-px" style={dashedH} />
+    </div>
+  );
+}
+
+function StatusBadge({ cancelled }) {
+  return cancelled ? (
+    <span className="inline-flex items-center gap-1 bg-red-50 border border-red-200 text-red-500 text-xs font-semibold px-2 py-0.5 rounded-full">
+      <XCircle size={10} strokeWidth={2.5} /> Cancelled
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 bg-green-50 border border-green-200 text-green-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+      <CheckCircle2 size={10} strokeWidth={2.5} /> Confirmed
+    </span>
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 const MyBusBookings = () => {
   const dispatch = useDispatch();
   const [actionMsg, setActionMsg] = useState("");
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
 
-  const { booking, loading, error } = useSelector(
-    (state) => state.BookBusTicket
-  );
+  const { booking, loading, error } = useSelector((s) => s.BookBusTicket);
 
-  function fetchBooking() {
-    dispatch(getUserBusBookings());
-  }
+  useEffect(() => { dispatch(getUserBusBookings()); }, [dispatch]);
 
   useEffect(() => {
-    fetchBooking();
-  }, [dispatch]);
-
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setShowConfirm(false);
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+    const onEsc = (e) => { if (e.key === "Escape") setShowConfirm(false); };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
   }, []);
 
-  if (loading) {
-    return <Loading message={actionMsg || "Fetching Your Bus Bookings..."} />;
-  }
+  if (loading) return <Loading message={actionMsg || "Fetching bookings…"} color="border-t-orange-500" />;
 
-  const handleCancel = async () => {
-    if (!selectedBookingId) return toast.warn("Booking Id Missing");
-
-    setActionMsg("Cancelling your ticket...");
-    try {
-      dispatch(cancelBusTicket(selectedBookingId));
-      setShowConfirm(false);
-      setTimeout(() => {
-        fetchBooking();
-      }, 1500);
-    } catch (err) {
-      alert("Failed to cancel ticket.");
-    }
+  const handleCancel = () => {
+    if (!selectedBookingId) return toast.warn("Booking ID missing");
+    setActionMsg("Cancelling your ticket…");
+    dispatch(cancelBusTicket(selectedBookingId));
+    setShowConfirm(false);
+    setTimeout(() => dispatch(getUserBusBookings()), 1500);
   };
 
+  // Derive short route codes from city names
+  const cityCode = (name) =>
+    name?.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, "X") || "???";
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-white p-6 mt-10 mb-10">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-xl shadow-lg">
-              <Bus size={28} className="text-white" strokeWidth={2.5} />
-            </div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-              My Bus Bookings
-            </h2>
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+
+        {/* Heading */}
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-stone-800">My Bus Bookings</h1>
+            <p className="text-sm text-stone-500 mt-1">View and manage your reservations.</p>
           </div>
-          <p className="text-gray-400 ml-14">View and manage all your bus reservations</p>
+          {booking?.length > 0 && (
+            <span className="bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1.5 rounded-full">
+              {booking.length} booking{booking.length > 1 ? "s" : ""}
+            </span>
+          )}
         </div>
 
-        {/* Error State */}
+        {/* Error */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 flex items-center gap-3">
-            <AlertTriangle size={20} className="text-red-400" />
-            <p className="text-red-400">{error}</p>
+          <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            <AlertTriangle size={15} className="text-red-400 shrink-0" />
+            <p className="text-red-500 text-sm">{error}</p>
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty */}
         {!loading && booking?.length === 0 && (
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-12 text-center">
-            <Bus size={64} className="text-gray-600 mx-auto mb-4" strokeWidth={1.5} />
-            <p className="text-gray-400 text-lg mb-2">No bus bookings found</p>
-            <p className="text-gray-500 text-sm">Your bus booking history will appear here</p>
+          <div className="bg-white border border-orange-200 rounded-2xl p-12 text-center shadow-sm">
+            <Bus size={40} className="text-stone-300 mx-auto mb-3" strokeWidth={1.5} />
+            <p className="text-stone-500 font-medium mb-1">No bookings found</p>
+            <p className="text-stone-400 text-sm">Your bus booking history will appear here.</p>
           </div>
         )}
 
-        {/* Bookings List */}
-        <div className="space-y-6">
-          {booking?.map((b) => (
-            <div
-              key={b._id}
-              className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 hover:border-gray-600 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
-            >
-              {/* Status Banner */}
-              <div className={`px-6 py-3 border-b border-gray-700 ${
-                b.status === "cancelled" 
-                  ? "bg-red-500/10" 
-                  : "bg-green-500/10"
-              }`}>
-                <div className="flex items-center justify-between">
+        {/* Cards */}
+        <div className="space-y-4">
+          {booking?.map((b) => {
+            const isCancelled = b.status === "cancelled";
+            const isExpanded = expandedId === b._id;
+            const fromCode = cityCode(b.source);
+            const toCode   = cityCode(b.destination);
+
+            return (
+              <div
+                key={b._id}
+                className={`bg-white border rounded-2xl shadow-sm overflow-hidden ${
+                  isCancelled
+                    ? "border-stone-200 opacity-70"
+                    : "border-orange-200 hover:shadow-md transition-shadow duration-200"
+                }`}
+              >
+                {/* Top strip: bus number + status */}
+                <div className="flex items-center justify-between px-6 py-3 border-b border-orange-100">
                   <div className="flex items-center gap-2">
-                    {b.status === "cancelled" ? (
-                      <>
-                        <XCircle size={18} className="text-red-400" />
-                        <span className="text-sm font-semibold text-red-400">Cancelled</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 size={18} className="text-green-400" />
-                        <span className="text-sm font-semibold text-green-400">Confirmed</span>
-                      </>
-                    )}
+                    <div className="w-7 h-7 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center">
+                      <Bus size={13} className="text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-stone-800 leading-tight">{b.bus?.busNumber}</p>
+                      <p className="text-xs text-stone-400">{b.bus?.busName || "Bus Service"}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-400 text-sm">
-                    <Calendar size={14} />
-                    <span>Booked: {new Date(b.bookingDate).toLocaleDateString()}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 text-stone-400 text-xs">
+                      <Calendar size={11} />
+                      {new Date(b.bookingDate).toLocaleDateString()}
+                    </div>
+                    <StatusBadge cancelled={isCancelled} />
                   </div>
                 </div>
-              </div>
 
-              <div className="p-6">
-                <div className="flex flex-col lg:flex-row justify-between gap-6">
-                  {/* Left Section: Booking Details */}
-                  <div className="flex-1 space-y-4">
-                    {/* Bus Info */}
-                    <div className="flex items-start gap-3">
-                      <div className="bg-green-500/20 p-2 rounded-lg">
-                        <Bus size={20} className="text-green-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-white">{b.bus?.busNumber}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <MapPin size={14} className="text-gray-500" />
-                          <span className="text-sm text-gray-400">{b.source}</span>
-                          <ArrowRight size={14} className="text-gray-600" />
-                          <span className="text-sm text-gray-400">{b.destination}</span>
-                        </div>
-                      </div>
+                {/* Route block */}
+                <div className="px-6 py-5">
+                  <div className="flex items-center gap-4 mb-5">
+                    <div>
+                      <p className="text-2xl font-bold text-stone-800 tracking-widest leading-none">{fromCode}</p>
+                      <p className="text-xs text-stone-400 mt-0.5 truncate max-w-[80px]">{b.source}</p>
                     </div>
 
-                    {/* Journey Date */}
-                    <div className="flex items-center gap-2 text-gray-300">
-                      <Calendar size={16} className="text-gray-500" />
-                      <span className="text-sm">Journey: {new Date(b.journeyDate).toDateString()}</span>
-                    </div>
+                    <RouteDivider />
 
-                    {/* Fare Info */}
-                    <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <IndianRupee size={18} className="text-green-400" />
-                          <span className="text-2xl font-bold text-green-400">
-                            {b.totalFare.toLocaleString()}
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-orange-500 tracking-widest leading-none">{toCode}</p>
+                      <p className="text-xs text-stone-400 mt-0.5 truncate max-w-[80px] text-right">{b.destination}</p>
+                    </div>
+                  </div>
+
+                  {/* Journey date + fare */}
+                  <div className="flex items-center justify-between bg-orange-50 border border-orange-100 rounded-xl px-4 py-2.5">
+                    <div className="flex items-center gap-1.5 text-stone-500 text-xs font-medium">
+                      <Calendar size={12} className="text-orange-400" />
+                      {new Date(b.journeyDate).toDateString()}
+                    </div>
+                    <div className="flex items-center gap-0.5 text-orange-500 font-bold text-base">
+                      <IndianRupee size={14} strokeWidth={2.5} />
+                      {b.totalFare.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Passenger row + expand */}
+                <div className="px-6 pb-4 space-y-3 border-t border-orange-100 pt-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-stone-500 text-sm">
+                      <Users size={13} className="text-orange-400" />
+                      <span className="font-medium">
+                        {b.passengers.length} passenger{b.passengers.length > 1 ? "s" : ""}
+                      </span>
+                      <span className="text-stone-300 text-xs">
+                        · {b.passengers.map((p) => p.seatNumber).join(", ")}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : b._id)}
+                      className="text-xs font-semibold text-orange-500 hover:text-orange-400 transition-colors"
+                    >
+                      {isExpanded ? "Hide ↑" : "Details ↓"}
+                    </button>
+                  </div>
+
+                  {/* Expandable passengers */}
+                  <div
+                    className="overflow-hidden transition-all duration-300"
+                    style={{ maxHeight: isExpanded ? "400px" : "0", opacity: isExpanded ? 1 : 0 }}
+                  >
+                    <div className="border border-orange-100 rounded-xl overflow-hidden">
+                      <div className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 border-b border-orange-100">
+                        <Users size={12} className="text-orange-500" />
+                        <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide">Passengers</p>
+                        {b.farePerSeat && (
+                          <span className="ml-auto text-xs text-stone-400">
+                            ₹{b.farePerSeat} / seat
                           </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-400 text-sm">
-                          <Users size={14} />
-                          <span>{b.passengers.length} seat{b.passengers.length > 1 ? 's' : ''}</span>
-                        </div>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-500">₹{b.farePerSeat} per seat</p>
-                    </div>
-
-                    {/* Passengers */}
-                    <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Users size={16} className="text-gray-400" />
-                        <p className="font-semibold text-white text-sm">Passengers</p>
-                      </div>
-                      <ul className="space-y-2">
+                      <ul className="divide-y divide-orange-50">
                         {b.passengers.map((p, idx) => (
-                          <li key={idx} className="flex items-center gap-3 text-sm text-gray-300">
-                            <div className="bg-green-500/20 px-2 py-1 rounded text-green-400 font-mono text-xs">
+                          <li key={idx} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                            <span className="bg-orange-100 text-orange-600 font-mono text-xs px-2 py-0.5 rounded-lg shrink-0">
                               {p.seatNumber}
-                            </div>
-                            <span>{p.name}</span>
-                            <span className="text-gray-500">({p.gender})</span>
+                            </span>
+                            <span className="text-stone-700 font-medium">{p.name}</span>
+                            <span className="text-stone-400 text-xs ml-auto">{p.gender}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
                   </div>
 
-                  {/* Right Section: Actions */}
-                  <div className="flex flex-col gap-3 lg:w-48">
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-1">
                     <button
                       onClick={() => {
                         dispatch(downloadBusTicket(b._id));
-                        setActionMsg("Wait, Your Ticket is Getting Ready...");
+                        setActionMsg("Preparing your ticket…");
                       }}
-                      className="flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-900 text-sm font-semibold px-4 py-3 rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105"
+                      className="flex-1 flex items-center justify-center gap-1.5 border border-orange-200 hover:border-orange-400 hover:bg-orange-50 text-stone-600 hover:text-stone-800 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
                     >
-                      <Download size={18} strokeWidth={2} />
+                      <Download size={13} strokeWidth={2} />
                       Download
                     </button>
-
                     <button
                       onClick={() => {
                         dispatch(mailBusTicketPdf(b._id));
-                        setActionMsg("Wait, You'll get your ticket by email shortly...");
+                        setActionMsg("Sending ticket to your email…");
                       }}
-                      className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-3 rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105"
+                      className="flex-1 flex items-center justify-center gap-1.5 border border-orange-200 hover:border-orange-400 hover:bg-orange-50 text-stone-600 hover:text-stone-800 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
                     >
-                      <Mail size={18} strokeWidth={2} />
-                      Email Ticket
+                      <Mail size={13} strokeWidth={2} />
+                      Email
                     </button>
-
-                    {b.status === "booked" && (
+                    {!isCancelled && (
                       <button
-                        onClick={() => {
-                          setSelectedBookingId(b._id);
-                          setShowConfirm(true);
-                        }}
-                        className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-3 rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105"
+                        onClick={() => { setSelectedBookingId(b._id); setShowConfirm(true); }}
+                        className="flex-1 flex items-center justify-center gap-1.5 border border-red-100 hover:border-red-300 hover:bg-red-50 text-red-400 hover:text-red-500 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
                       >
-                        <XCircle size={18} strokeWidth={2} />
+                        <XCircle size={13} strokeWidth={2} />
                         Cancel
                       </button>
                     )}
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Cancel modal */}
       {showConfirm && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-6"
           onClick={() => setShowConfirm(false)}
         >
           <div
-            className="bg-gray-800 border border-gray-700 text-white p-6 rounded-2xl shadow-2xl w-full max-w-md"
+            className="bg-white border border-orange-200 rounded-2xl shadow-xl w-full max-w-sm p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-red-500/20 p-3 rounded-xl">
-                <AlertTriangle size={24} className="text-red-400" />
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
+                <AlertTriangle size={16} className="text-red-400" />
               </div>
-              <h3 className="text-xl font-bold">Cancel Bus Ticket?</h3>
+              <p className="font-semibold text-stone-800">Cancel this ticket?</p>
             </div>
-            
-            <p className="text-gray-300 mb-6">
-              Are you sure you want to cancel this ticket? This action cannot be undone.
+            <p className="text-stone-500 text-sm mb-5 pl-12">
+              This action cannot be undone and your seat will be released.
             </p>
-
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all"
+                className="px-4 py-2 border border-orange-200 hover:border-orange-400 hover:bg-orange-50 text-stone-600 rounded-lg text-sm font-medium transition-all"
               >
-                No, Keep It
+                Keep it
               </button>
               <button
                 onClick={handleCancel}
-                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
+                className="px-4 py-2 bg-red-500 hover:bg-red-400 text-white rounded-lg text-sm font-semibold transition-all active:scale-95"
               >
-                Yes, Cancel
+                Cancel ticket
               </button>
             </div>
           </div>

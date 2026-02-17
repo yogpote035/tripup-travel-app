@@ -3,203 +3,150 @@ import { useDispatch, useSelector } from "react-redux";
 import { signupUser } from "../../../AllStatesFeatures/Authentication/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 import Loading from "../../General/Loading";
-import { 
-  Eye, 
-  EyeOff, 
-  Mail, 
-  Phone, 
-  Lock, 
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Phone,
+  Lock,
   User,
   UserPlus,
-  Plane,
   ArrowRight,
-  Sparkles
 } from "lucide-react";
+
+const inputCls =
+  "w-full pl-10 pr-4 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all";
+
+const Field = ({ label, icon: Icon, children }) => (
+  <div className="space-y-1.5">
+    <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
+      {label}
+    </label>
+    <div className="relative">
+      <Icon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+      {children}
+    </div>
+  </div>
+);
 
 function Signup() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-  });
-
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
 
-  const loading = useSelector((state) => state.auth.loading);
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const loading = useSelector((s) => s.auth.loading);
+  const isAuthenticated = useSelector((s) => s.auth.isAuthenticated);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/", { replace: true });
-    }
+    if (isAuthenticated) navigate("/", { replace: true });
   }, [isAuthenticated, navigate]);
 
-  if (loading) {
-    return <Loading message="Creating your account" />;
-  }
+  if (loading) return <Loading message="Creating your account…, this may take a few moments." color="border-t-orange-500" />;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(signupUser(formData));
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 px-4 py-12">
-      <div className="w-full max-w-lg">
-        {/* Header */}
+    <div className="min-h-screen flex items-center justify-center bg-orange-50 px-4 py-16">
+      <div className="w-full max-w-sm">
+
+        {/* Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg mb-4">
-            <Plane size={32} className="text-white" strokeWidth={2.5} />
-          </div>
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-            Join TripUp
-          </h1>
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles size={16} className="text-blue-400" />
-            <p className="text-gray-400">Start your journey with us today</p>
-            <Sparkles size={16} className="text-blue-400" />
-          </div>
+          <h1 className="text-2xl font-bold text-stone-800">Create an account</h1>
+          <p className="text-sm text-stone-500 mt-1">Join TripUp and start your journey today.</p>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-2xl rounded-2xl p-8 border border-gray-700">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name Input */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-300">
-                Full Name
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <User size={18} />
-                </div>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter your full name"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                  required
-                />
-              </div>
-            </div>
+        {/* Card */}
+        <div className="bg-white border border-orange-200 rounded-2xl shadow-sm overflow-hidden">
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
 
-            {/* Email Input */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-300">
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <Mail size={18} />
-                </div>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter your email"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                  required
-                />
-              </div>
-            </div>
+            <Field label="Full Name" icon={User}>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                className={inputCls}
+                required
+              />
+            </Field>
 
-            {/* Phone Input */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-300">
-                Phone Number
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <Phone size={18} />
-                </div>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Enter your phone number"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                  required
-                />
-              </div>
-            </div>
+            <Field label="Email Address" icon={Mail}>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                className={inputCls}
+                required
+              />
+            </Field>
 
-            {/* Password Input */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-300">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <Lock size={18} />
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Create a strong password"
-                  className="w-full pl-10 pr-12 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-400 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
+            <Field label="Phone Number" icon={Phone}>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="+91 XXXXXXXXXX"
+                className={inputCls}
+                required
+              />
+            </Field>
 
-            {/* Submit Button */}
+            <Field label="Password" icon={Lock}>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a strong password"
+                className={`${inputCls} pr-10`}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-orange-500 transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </Field>
+
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2"
+              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-semibold py-3 rounded-xl transition-all active:scale-95 text-sm mt-2"
             >
-              <UserPlus size={20} strokeWidth={2} />
-              Create Account
+              <UserPlus size={15} strokeWidth={2} />
+              Create account
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-gray-800 text-gray-400">Already have an account?</span>
-            </div>
-          </div>
-
-          {/* Login Link */}
-          <div className="text-center">
+          {/* Footer */}
+          <div className="border-t border-orange-100 px-6 py-4 flex items-center justify-between bg-orange-50/50">
+            <p className="text-xs text-stone-400">Already have an account?</p>
             <Link
               to="/login"
-              className="text-sm text-gray-300 hover:text-white transition-colors inline-flex items-center gap-2 group"
+              className="inline-flex items-center gap-1 text-orange-500 hover:text-orange-400 text-xs font-semibold transition-colors"
             >
-              <span>Sign in to your account</span>
-              <ArrowRight size={14} className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+              Sign in
+              <ArrowRight size={11} />
             </Link>
           </div>
         </div>
 
-        {/* Footer Note */}
-        <p className="text-center text-gray-500 text-xs mt-6">
-          By signing up, you agree to our Terms of Service and Privacy Policy
+        <p className="text-center text-stone-400 text-xs mt-5">
+          By signing up, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>
     </div>

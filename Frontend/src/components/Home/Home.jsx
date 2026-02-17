@@ -11,159 +11,318 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
+import { FaPlane } from "react-icons/fa";
+
+const perforation =
+  "repeating-linear-gradient(90deg,#e8622a 0,#e8622a 12px,transparent 12px,transparent 20px)";
+
+const dashedH =
+  "repeating-linear-gradient(90deg,#d6c4a0 0,#d6c4a0 8px,transparent 8px,transparent 16px)";
+
+const StubDivider = () => (
+  <div className="flex items-center my-10">
+    <div className="w-6 h-6 rounded-full bg-orange-50 border-2 border-orange-200 -ml-3 flex-shrink-0" />
+    <div className="flex-1 h-px mx-1" style={{ background: dashedH }} />
+    <div className="w-6 h-6 rounded-full bg-orange-50 border-2 border-orange-200 -mr-3 flex-shrink-0" />
+  </div>
+);
 
 const Home = () => {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const services = [
     {
-      icon: <TrainFront className="text-5xl" strokeWidth={1.5} />,
+      icon: <TrainFront strokeWidth={1.5} />,
       title: "Train Booking",
       description: "Reserve your seats on Indian Railways. Easy and secure!",
       path: "/train",
-      gradient: "from-yellow-500 to-orange-500",
-      bgGradient: "from-yellow-500/10 to-orange-500/10",
+      gate: "A1",
+      code: "TRN",
+      accent: "text-yellow-600",
+      bg: "bg-yellow-50",
+      border: "border-yellow-200",
+      badge: "bg-yellow-100 text-yellow-700",
     },
     {
-      icon: <Bus className="text-5xl" strokeWidth={1.5} />,
+      icon: <Bus strokeWidth={1.5} />,
       title: "Bus Booking",
       description: "Book comfortable and affordable bus tickets in seconds.",
       path: "/bus",
-      gradient: "from-green-400 to-emerald-500",
-      bgGradient: "from-green-400/10 to-emerald-500/10",
+      gate: "B2",
+      code: "BUS",
+      accent: "text-emerald-600",
+      bg: "bg-emerald-50",
+      border: "border-emerald-200",
+      badge: "bg-emerald-100 text-emerald-700",
     },
     {
-      icon: <PlaneTakeoff className="text-5xl" strokeWidth={1.5} />,
+      icon: <PlaneTakeoff strokeWidth={1.5} />,
       title: "Flight Booking",
       description: "Compare flights, get deals, and fly to your dream places.",
       path: "/flight",
-      gradient: "from-purple-400 to-indigo-500",
-      bgGradient: "from-purple-400/10 to-indigo-500/10",
+      gate: "C3",
+      code: "FLT",
+      accent: "text-orange-500",
+      bg: "bg-orange-50",
+      border: "border-orange-200",
+      badge: "bg-orange-100 text-orange-600",
     },
   ];
 
   const features = [
     {
-      icon: <BookOpen size={24} strokeWidth={2} className="text-yellow-500" />,
+      icon: <BookOpen size={22} strokeWidth={2} className="text-orange-500" />,
       title: "Manage Bookings",
       desc: "View your past, upcoming, and canceled journeys in one place.",
+      tag: "BOOKINGS",
     },
     {
-      icon: <MapPin size={24} strokeWidth={2} className="text-yellow-500" />,
+      icon: <MapPin size={22} strokeWidth={2} className="text-orange-500" />,
       title: "Full Itinerary",
       desc: "Track all your trip segments including stopovers and transfers.",
+      tag: "ITINERARY",
     },
     {
-      icon: <Camera size={24} strokeWidth={2} className="text-yellow-500" />,
+      icon: <Camera size={22} strokeWidth={2} className="text-orange-500" />,
       title: "Travel Diary",
       desc: "Save pictures and notes to remember your travel experiences.",
+      tag: "DIARY",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-gray-100 pt-20">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 py-24 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/30 rounded-full px-4 py-2 mb-6">
-            <Sparkles size={16} className="text-blue-400" />
-            <span className="text-sm text-blue-300 font-medium">Your Journey Begins Here</span>
+    <div className="min-h-screen bg-orange-50 text-stone-800 pt-7">
+
+      {/* ── HERO ── */}
+      <section className="relative overflow-hidden bg-stone-900 py-24 px-6 text-center">
+        {/* Top perforation */}
+        <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: perforation }} />
+
+        {/* Subtle dot grid */}
+        <div
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 bg-orange-500/20 border border-orange-500/40 rounded-full px-4 py-2 mb-6">
+            <Sparkles size={14} className="text-orange-400" />
+            <span className="text-sm text-orange-300 font-semibold tracking-wide uppercase">
+              Your Journey Begins Here
+            </span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Welcome to <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">TripUp</span>
+
+          <h1 className="text-5xl md:text-7xl font-black text-white mb-4 leading-none uppercase tracking-tight">
+            Welcome to{" "}
+            <span className="text-orange-400">TripUp</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+
+          {/* Flight route display */}
+          <div className="flex items-center justify-center gap-4 my-6">
+            <div className="text-center">
+              <p className="text-xs text-stone-500 uppercase tracking-widest mb-0.5">From</p>
+              <p className="font-black text-3xl text-white tracking-widest">HME</p>
+              <p className="text-xs text-stone-500">Home Base</p>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <FaPlane className="text-orange-400 text-xl" />
+              <div className="h-px w-20" style={{ background: dashedH }} />
+              <p className="text-xs text-stone-500 tracking-widest uppercase">nonstop</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-stone-500 uppercase tracking-widest mb-0.5">To</p>
+              <p className="font-black text-3xl text-orange-400 tracking-widest">WORLD</p>
+              <p className="text-xs text-stone-500">Everywhere</p>
+            </div>
+          </div>
+
+          <p className="text-stone-400 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
             Your one-stop platform for booking tickets, planning itineraries, and
             recording your travel moments — via Train, Bus, or Flight.
           </p>
+
           <Link
             to="/itinerary"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105"
+            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 active:scale-95 text-white px-8 py-4 rounded-xl text-base font-black tracking-widest uppercase transition-all shadow-lg"
           >
             Create Your Plan
-            <ArrowRight size={20} />
+            <ArrowRight size={18} />
           </Link>
         </div>
+
+        {/* Bottom perforation */}
+        <div className="absolute bottom-0 left-0 w-full h-1.5" style={{ background: perforation }} />
       </section>
 
-      {/* Services (Mode Selection) */}
+      {/* ── SERVICES ── */}
       <section className="py-20 px-6 max-w-7xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-4 text-white">
-          Book with TripUp
-        </h2>
-        <p className="text-center text-gray-400 mb-12 text-lg">Choose your preferred mode of travel</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-2 gap-8">
+        <div className="text-center mb-12">
+          <p className="text-xs font-black tracking-widest text-orange-500 uppercase mb-2">
+            — Departure Gates —
+          </p>
+          <h2 className="text-4xl font-black text-stone-900 uppercase tracking-wide">
+            Book with TripUp
+          </h2>
+          <p className="text-stone-400 mt-2">Choose your preferred mode of travel</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {services.map((service, idx) => (
             <Link
               to={service.path}
               key={idx}
-              className="group relative bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-gray-600 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 text-center overflow-hidden"
+              className={`group relative bg-white border-2 ${service.border} rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col`}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${service.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-              <div className="relative z-10">
-                <div className="mb-6 flex justify-center">
-                  <div className={`bg-gradient-to-br ${service.gradient} p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                    <div className="text-white">
-                      {React.cloneElement(service.icon, { className: "w-12 h-12", strokeWidth: 2 })}
-                    </div>
-                  </div>
+              {/* Top perforation accent */}
+              <div className="h-1 w-full" style={{ background: perforation }} />
+
+              {/* Gate tag */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                <span className={`text-xs font-black tracking-widest uppercase ${service.accent}`}>
+                  GATE {service.gate}
+                </span>
+                <span className={`text-xs font-black tracking-widest px-2 py-0.5 rounded-full ${service.badge}`}>
+                  {service.code}
+                </span>
+              </div>
+
+              {/* Dashed divider */}
+              <div className="mx-5 h-px" style={{ background: dashedH }} />
+
+              {/* Content */}
+              <div className="px-5 py-5 flex-1">
+                <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${service.bg} ${service.accent} mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  {React.cloneElement(service.icon, { className: "w-7 h-7", strokeWidth: 1.5 })}
                 </div>
-                <h3 className="text-2xl font-semibold mb-3 text-white">
+                <h3 className="text-xl font-black text-stone-900 uppercase tracking-wide mb-2">
                   {service.title}
                 </h3>
-                <p className="text-gray-400 leading-relaxed mb-4">{service.description}</p>
-                <div className="inline-flex items-center gap-2 text-sm font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:gap-3 transition-all">
+                <p className="text-stone-500 text-sm leading-relaxed mb-4">
+                  {service.description}
+                </p>
+                <div className={`inline-flex items-center gap-1.5 text-sm font-black uppercase tracking-wide ${service.accent} group-hover:gap-3 transition-all`}>
                   Book Now
-                  <ArrowRight size={16} className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
                 </div>
+              </div>
+
+              {/* Bottom barcode stub */}
+              <div className="bg-stone-900 px-5 py-3 flex items-end gap-px h-10">
+                {[2,1,3,1,2,1,3,2,1,2,1,3,1,2,1,3,2,1,2,3].map((w, i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-sm"
+                    style={{
+                      width: `${w * 2.5}px`,
+                      height: `${50 + (i % 3) * 20}%`,
+                      opacity: 0.1 + (i % 4) * 0.2,
+                    }}
+                  />
+                ))}
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Feature Highlights */}
-      <section className="py-16 px-6 max-w-6xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white">
-          What You Can Do
-        </h2>
-        <p className="text-center text-gray-400 mb-12 text-lg">Explore all the features TripUp offers</p>
-        <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-8">
+      {/* ── FEATURES ── */}
+      <section className="py-4 px-6 max-w-6xl mx-auto">
+        {/* Full-width stub divider */}
+        <div className="flex items-center mb-12">
+          <div className="w-5 h-5 rounded-full bg-orange-50 border-2 border-orange-200 -ml-1 flex-shrink-0" />
+          <div className="flex-1 h-px" style={{ background: dashedH }} />
+          <div className="w-5 h-5 rounded-full bg-orange-50 border-2 border-orange-200 -mr-1 flex-shrink-0" />
+        </div>
+
+        <div className="text-center mb-12">
+          <p className="text-xs font-black tracking-widest text-orange-500 uppercase mb-2">
+            — Amenities on Board —
+          </p>
+          <h2 className="text-4xl font-black text-stone-900 uppercase tracking-wide">
+            What You Can Do
+          </h2>
+          <p className="text-stone-400 mt-2">Explore all the features TripUp offers</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
           {features.map((feature, idx) => (
             <div
               key={idx}
-              className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-8 shadow-md hover:shadow-xl hover:border-gray-600 transition-all duration-300 hover:-translate-y-1"
+              className="bg-white border-2 border-orange-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-yellow-500/10 p-3 rounded-lg">
-                  {feature.icon}
+              <div className="h-1 w-full" style={{ background: perforation }} />
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 flex items-center justify-center bg-orange-100 rounded-lg">
+                    {feature.icon}
+                  </div>
+                  <span className="text-xs font-black tracking-widest text-stone-300 uppercase">
+                    {feature.tag}
+                  </span>
                 </div>
-                <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
+                <h3 className="text-lg font-black text-stone-900 uppercase tracking-wide mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-stone-500 text-sm leading-relaxed">{feature.desc}</p>
               </div>
-              <p className="text-gray-400 leading-relaxed">{feature.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Call to Action */}
+      {/* ── CTA ── */}
       {!isAuthenticated && (
-        <section className="relative bg-gradient-to-br from-gray-800 via-blue-900/20 to-gray-800 py-16 text-center mt-12 overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-600/10 via-transparent to-transparent"></div>
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+        <section className="relative mt-16 overflow-hidden bg-stone-900 py-20 px-6 text-center">
+          <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: perforation }} />
+
+          <div
+            className="absolute inset-0 opacity-5"
+            style={{
+              backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
+            }}
+          />
+
+          <div className="relative z-10 max-w-xl mx-auto">
+            <p className="text-xs font-black tracking-widest text-orange-500 uppercase mb-3">
+              — Final Call —
+            </p>
+            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-wide mb-4 leading-none">
               Start Your Journey Now
             </h2>
-            <p className="text-gray-300 mb-8 text-lg">Join thousands of travelers exploring the world</p>
+            <p className="text-stone-400 mb-8 text-base">
+              Join thousands of travelers exploring the world with TripUp.
+            </p>
             <Link
               to="/signup"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105"
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 active:scale-95 text-white px-8 py-4 rounded-xl text-base font-black tracking-widest uppercase transition-all shadow-lg"
             >
               Sign Up Free
-              <ArrowRight size={20} />
+              <ArrowRight size={18} />
             </Link>
           </div>
+
+          {/* Barcode */}
+          <div className="flex justify-center items-end gap-px h-8 mt-12 opacity-20">
+            {[3,1,2,1,4,1,2,3,1,2,1,3,2,1,3,1,2,1,4,2,1,3,1,2,3,1,2].map((w, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-sm"
+                style={{
+                  width: `${w * 3}px`,
+                  height: `${55 + (i % 3) * 18}%`,
+                }}
+              />
+            ))}
+          </div>
+          <p className="text-xs tracking-widest text-stone-600 uppercase font-semibold mt-2">
+            TRIPUP · YDP
+          </p>
+
+          <div className="absolute bottom-0 left-0 w-full h-1.5" style={{ background: perforation }} />
         </section>
       )}
     </div>

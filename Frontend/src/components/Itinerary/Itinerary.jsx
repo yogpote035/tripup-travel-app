@@ -1,302 +1,537 @@
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Calendar,
-  Users,
-  Wallet,
-  Bus,
-  Car,
-  Footprints,
-  Trash,
-  MapPin,
-  Sparkles,
-  Plus,
-  AlertTriangle,
-  Clock
+  Calendar, Users, Wallet, Bus, Car, Footprints,
+  Trash, MapPin, Sparkles, Plus, AlertTriangle,
+  Clock, ChevronDown, Plane, ArrowRight,
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  getAllItinerary,
-  DeleteItinerary,
-} from "../../../AllStatesFeatures/Itinerary/AllItinerarySlice";
+import { getAllItinerary, DeleteItinerary } from "../../../AllStatesFeatures/Itinerary/AllItinerarySlice";
 import Loading from "../../General/Loading";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const FontLoader = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+    .font-serif { font-family: 'Cormorant Garamond', serif; }
+    .font-dm    { font-family: 'DM Sans', sans-serif; }
+    .font-mono  { font-family: 'DM Mono', monospace; }
+
+    @keyframes fadeUp  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(28px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+    @keyframes planeBob { 0%{transform:translateX(-4px)} 50%{transform:translateX(4px)} 100%{transform:translateX(-4px)} }
+    @keyframes shimmer  { to { background-position: 200% center; } }
+
+    .anim-up    { animation: fadeUp  .4s ease both; }
+    .anim-fade  { animation: fadeIn  .22s ease; }
+    .anim-slide { animation: slideUp .3s cubic-bezier(.34,1.56,.64,1); }
+    .plane-bob  { animation: planeBob 2.4s ease-in-out infinite; }
+
+    .ticket-card { transition: box-shadow .3s ease, transform .3s ease; }
+    .ticket-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 64px rgba(26,18,8,.13), 0 8px 24px rgba(232,105,74,.10) !important;
+    }
+
+    .perforation { position: relative; }
+    .perforation::before,
+    .perforation::after {
+      content: '';
+      position: absolute;
+      width: 22px; height: 22px;
+      background: #F7F2EC;
+      border-radius: 50%;
+      top: 50%; transform: translateY(-50%);
+      z-index: 10;
+    }
+    .perforation::before { left: -11px; }
+    .perforation::after  { right: -11px; }
+
+    .route-line {
+      flex: 1; height: 1.5px;
+      background: repeating-linear-gradient(90deg,rgba(255,255,255,.25) 0px,rgba(255,255,255,.25) 5px,transparent 5px,transparent 10px);
+    }
+
+    .badge-shimmer {
+      background: linear-gradient(135deg, #E8694A 0%, #F5836B 50%, #E8694A 100%);
+      background-size: 200% auto;
+      animation: shimmer 3s linear infinite;
+    }
+
+    .day-wrap { transition: border-color .2s, box-shadow .2s; }
+    .day-wrap:hover { border-color: #F5C4B8 !important; box-shadow: 0 2px 16px rgba(232,105,74,.10); }
+
+    .chev { transition: transform .25s ease; }
+    .chev-open { transform: rotate(180deg); }
+
+    .act-row { border-bottom: 1px dashed #F0E8DF; }
+    .act-row:last-child { border-bottom: none; }
+
+    .del-btn { transition: all .2s ease; }
+    .del-btn:hover {
+      background: rgba(239,68,68,.12) !important;
+      border-color: rgba(239,68,68,.4) !important;
+      transform: scale(1.1);
+    }
+  `}</style>
+);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const destCode = (name = "") => {
+  const w = name.trim().split(/\s+/);
+  if (w.length >= 3) return (w[0][0] + w[1][0] + w[2][0]).toUpperCase();
+  if (w.length === 2) return (w[0].slice(0, 2) + w[1][0]).toUpperCase();
+  return name.slice(0, 3).toUpperCase();
+};
+
+// ─── Day Card ─────────────────────────────────────────────────────────────────
+const DayCard = ({ dayObj }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="day-wrap bg-white border border-stone-100 rounded-2xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        className={`w-full flex items-center justify-between px-4 py-3.5 text-left
+          bg-stone-50 hover:bg-orange-50/40 transition-colors duration-200
+          ${open ? "border-b border-stone-100" : ""}`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0
+            bg-gradient-to-br from-orange-400 to-orange-600 text-white text-xs font-bold font-mono
+            shadow-[0_2px_8px_rgba(232,105,74,0.28)]">
+            {String(dayObj.day).padStart(2, "0")}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-stone-700 font-dm leading-tight">Day {dayObj.day}</p>
+            <p className="text-xs text-stone-400 font-dm mt-0.5">
+              {format(new Date(dayObj.date), "EEE, dd MMM yyyy")}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-dm text-stone-400">{dayObj.activities?.length} activities</span>
+          <ChevronDown size={15} className={`chev text-stone-400 ${open ? "chev-open" : ""}`} />
+        </div>
+      </button>
+
+      {open && (
+        <div className="px-4 py-1 bg-white">
+          {dayObj.activities?.map((act, i) => (
+            <div key={i} className="act-row flex items-start gap-3 py-3 text-sm text-stone-500 font-dm leading-relaxed">
+              <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />
+              <span>{act}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Transport Badge ──────────────────────────────────────────────────────────
+const TransportBadge = ({ mode }) => {
+  const MAP = {
+    public:  { icon: <Bus size={10} />,        label: "Public"  },
+    walking: { icon: <Footprints size={10} />,  label: "Walking" },
+    private: { icon: <Car size={10} />,         label: "Private" },
+  };
+  const item = MAP[mode];
+  if (!item) return null;
+  return (
+    <div className="inline-flex items-center gap-1 bg-stone-100 text-stone-600
+      text-[0.68rem] font-semibold font-dm px-2.5 py-1 rounded-md tracking-wide">
+      {item.icon} {item.label}
+    </div>
+  );
+};
+
+// ─── Budget Dots ──────────────────────────────────────────────────────────────
+const BudgetDots = ({ budget }) => {
+  const level = { low: 1, medium: 2, high: 3 }[budget?.toLowerCase()] || 1;
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3].map(i => (
+        <span key={i} className={`w-2 h-2 rounded-full ${i <= level ? "bg-orange-400" : "bg-stone-200"}`} />
+      ))}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════
+// MAIN
+// ═══════════════════════════════════════════════════════════
 const Itinerary = () => {
   const dispatch = useDispatch();
-  const formRef = useRef(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [selectedId, setSelectedId] = useState("");
-  const [actionMsg, setActionMsg] = useState("");
+  const [selectedId, setSelectedId]   = useState("");
+  const [actionMsg, setActionMsg]     = useState("");
 
-  const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  async function getAllItineraryFunction() {
-    dispatch(getAllItinerary());
-  }
-
+  const fetchAll = () => dispatch(getAllItinerary());
+  useEffect(() => { fetchAll(); }, [dispatch]);
   useEffect(() => {
-    getAllItineraryFunction();
-  }, [dispatch]);
-
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setShowConfirm(false);
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+    const esc = e => { if (e.key === "Escape") setShowConfirm(false); };
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
   }, []);
 
-  const itineraries = useSelector((state) => state.itinerary.itinerary);
-  const { loading, error } = useSelector((state) => state.itinerary);
+  const itineraries = useSelector(s => s.itinerary.itinerary);
+  const { loading, error } = useSelector(s => s.itinerary);
 
   const handleDelete = async () => {
     if (!selectedId) return toast.warn("Itinerary Id Missing");
-
-    setActionMsg("Deleting your Itinerary...");
+    setActionMsg("Cancelling booking...");
     try {
       await dispatch(DeleteItinerary(selectedId));
       setShowConfirm(false);
-      setTimeout(() => {
-        getAllItineraryFunction();
-      }, 1300);
-    } catch (err) {
-      alert("Failed to Delete Itinerary.");
-    }
+      setTimeout(() => fetchAll(), 1300);
+    } catch { alert("Failed to delete."); }
   };
 
-  if (loading) {
-    return (
-      <Loading
-        message={actionMsg || "Fetching All Itineraries...."}
-        color="border-t-red-500"
-      />
-    );
-  }
+  if (loading) return <Loading message={actionMsg || "Loading your trips…"} color="border-t-orange-400" />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-white px-4 sm:px-6 py-12">
-      <div className="max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl shadow-lg mb-6">
-            <MapPin size={40} className="text-white" strokeWidth={2.5} />
+    <div className="min-h-screen font-dm pb-24"
+      style={{
+        background: "linear-gradient(160deg, #FAF7F2 0%, #FDF0E8 40%, #FAF7F2 100%)",
+        backgroundAttachment: "fixed",
+      }}>
+      <FontLoader />
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+
+        {/* ── Hero ── */}
+        <div className="pt-10 pb-10 anim-up">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-px w-8 bg-orange-300" />
+            <span className="text-[0.68rem] font-bold tracking-[.18em] uppercase text-orange-400 font-dm">
+              My Itinerary's
+            </span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent mb-4">
-            Smart Itinerary Planner
-          </h1>
-          <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto mb-8">
-            Plan and manage your perfect trip with AI-powered scheduling. Choose
-            your destination, interests, time, and more — all in one place.
-          </p>
-          <Link to="/itinerary-fill">
-            <button className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center gap-2">
-              <Plus size={20} strokeWidth={2} />
-              Start Planning
-            </button>
-          </Link>
+
+          <div className="flex items-end justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="font-serif text-[clamp(2.4rem,5vw,3.6rem)] font-bold leading-[1.05]
+                tracking-tight text-stone-900">
+                Your Travel<br />
+                <em className="text-orange-500">Itineraries</em>
+              </h1>
+              <p className="text-stone-500 text-sm font-light mt-3 max-w-sm leading-relaxed font-dm">
+                AI-crafted day-by-day plans tailored to your style, pace, and budget.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Stats */}
+              {itineraries?.length > 0 && (
+                <div className="flex items-center gap-4 mr-2">
+                  <div className="text-center">
+                    <p className="font-mono text-3xl font-medium text-stone-800">{itineraries.length}</p>
+                    <p className="text-xs text-stone-400 font-dm mt-0.5">Trips planned</p>
+                  </div>
+                  <div className="w-px h-10 bg-stone-200" />
+                  <div className="text-center">
+                    <p className="font-mono text-3xl font-medium text-orange-500">
+                      {itineraries.reduce((acc, it) => acc + (it.plan?.length || 0), 0)}
+                    </p>
+                    <p className="text-xs text-stone-400 font-dm mt-0.5">Days mapped</p>
+                  </div>
+                </div>
+              )}
+
+              {/* New Trip CTA */}
+              <Link to="/itinerary-fill">
+                <button className="inline-flex items-center gap-2 font-dm font-semibold text-sm text-white
+                  bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 rounded-xl
+                  shadow-[0_4px_14px_rgba(232,105,74,.28)]
+                  hover:shadow-[0_8px_22px_rgba(232,105,74,.36)]
+                  hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
+                  <Plus size={15} strokeWidth={2.5} />
+                  New Trip
+                </button>
+              </Link>
+            </div>
+          </div>
         </div>
 
-        {/* Error Message */}
+        {/* ── Error ── */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 flex items-center gap-3">
-            <AlertTriangle size={20} className="text-red-400" />
-            <p className="text-red-400">{error}</p>
+          <div className="mb-6 flex items-center gap-3 bg-red-50 border border-red-200
+            text-red-600 text-sm font-dm px-4 py-3.5 rounded-2xl">
+            <AlertTriangle size={17} className="flex-shrink-0" /> {error}
           </div>
         )}
 
-        {/* Itineraries List */}
+        {/* ══════════════════════════════════
+            TICKET CARDS
+        ══════════════════════════════════ */}
         {itineraries?.length > 0 ? (
-          <div className="space-y-6">
-            {itineraries.map((itinerary) => (
-              <div
-                key={itinerary._id}
-                className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 hover:border-gray-600 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
-              >
-                {/* Header */}
-                <div className="bg-gradient-to-r from-rose-500/10 to-pink-500/10 border-b border-gray-700 p-6">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="bg-rose-500/20 p-2 rounded-lg">
-                          <MapPin size={20} className="text-rose-400" />
+          <div className="flex flex-col gap-6">
+            {itineraries.map((itin, idx) => {
+              const code = destCode(itin.destination);
+              const nights = itin.startDate && itin.endDate
+                ? Math.round((new Date(itin.endDate) - new Date(itin.startDate)) / 86400000)
+                : null;
+
+              return (
+                <div key={itin._id}
+                  className="ticket-card anim-up rounded-3xl overflow-hidden
+                    shadow-[0_6px_24px_rgba(26,18,8,.08),0_2px_8px_rgba(26,18,8,.04)]
+                    border border-stone-100"
+                  style={{ animationDelay: `${idx * 70}ms` }}>
+
+                  {/* ── Ticket Top: dark header ── */}
+                  <div className="relative bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900
+                    px-6 pt-5 pb-6 overflow-hidden">
+                    <div className="absolute inset-0 opacity-[0.04]"
+                      style={{
+                        backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+                        backgroundSize: "18px 18px",
+                      }} />
+
+                    {/* Status row */}
+                    <div className="relative flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-2">
+                        <div className="badge-shimmer text-white text-[0.62rem] font-bold
+                          tracking-[.14em] uppercase px-3 py-1 rounded-full font-dm">
+                          ✦ AI Generated
                         </div>
-                        <h2 className="text-2xl font-bold text-white">
-                          Trip to{" "}
-                          <span className="text-rose-400">
-                            {itinerary.destination}
-                          </span>
-                        </h2>
-                      </div>
-
-                      <div className="flex flex-wrap gap-3 text-sm">
-                        <div className="flex items-center gap-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
-                          <Calendar size={14} className="text-gray-400" />
-                          <span className="text-gray-300">
-                            {format(new Date(itinerary.startDate), "dd MMM")} –{" "}
-                            {format(new Date(itinerary.endDate), "dd MMM yyyy")}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
-                          <Users size={14} className="text-gray-400" />
-                          <span className="text-gray-300">{itinerary.tripType}</span>
-                        </div>
-
-                        {itinerary.transportMode === "public" && (
-                          <div className="flex items-center gap-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
-                            <Bus size={14} className="text-gray-400" />
-                            <span className="text-gray-300">Public Transport</span>
-                          </div>
-                        )}
-                        {itinerary.transportMode === "walking" && (
-                          <div className="flex items-center gap-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
-                            <Footprints size={14} className="text-gray-400" />
-                            <span className="text-gray-300">Walking</span>
-                          </div>
-                        )}
-                        {itinerary.transportMode === "private" && (
-                          <div className="flex items-center gap-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
-                            <Car size={14} className="text-gray-400" />
-                            <span className="text-gray-300">Private</span>
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
-                          <Wallet size={14} className="text-gray-400" />
-                          <span className="text-gray-300">{itinerary.budget}</span>
+                        <div className="bg-emerald-500/20 text-emerald-400 text-[0.62rem] font-bold
+                          tracking-[.10em] uppercase px-2.5 py-1 rounded-full font-dm border border-emerald-500/30">
+                          Confirmed
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
-                        <Clock size={12} />
-                        Created: {format(new Date(itinerary.createdAt), "dd MMM yyyy, hh:mm a")}
-                      </div>
+                      <button type="button"
+                        onClick={() => { setSelectedId(itin._id); setShowConfirm(true); }}
+                        className="del-btn flex items-center justify-center w-9 h-9
+                          bg-white/10 border border-white/20 rounded-xl text-white/60
+                          cursor-pointer transition-all duration-200">
+                        <Trash size={14} strokeWidth={1.8} />
+                      </button>
                     </div>
 
-                    {/* Delete Button */}
-                    <button
-                      onClick={() => {
-                        setSelectedId(itinerary._id);
-                        setShowConfirm(true);
-                      }}
-                      className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all hover:scale-105"
-                      title="Delete Itinerary"
-                    >
-                      <Trash size={18} strokeWidth={2} />
-                    </button>
+                    {/* Route */}
+                    <div className="relative flex items-end justify-between">
+                      <div>
+                        <p className="font-mono text-[0.6rem] text-white/40 tracking-[.22em] uppercase mb-1">From</p>
+                        <p className="font-mono text-5xl font-medium text-white tracking-tight leading-none">HME</p>
+                        <p className="font-dm text-xs text-white/45 mt-1.5">Home Base</p>
+                      </div>
+
+                      <div className="flex-1 flex flex-col items-center gap-2 mx-5 mb-1">
+                        <div className="plane-bob">
+                          <Plane size={20} color="#F5836B" strokeWidth={2} />
+                        </div>
+                        <div className="route-line w-full" />
+                        {nights !== null && (
+                          <p className="font-dm text-[0.65rem] text-white/35 tracking-wide">
+                            {nights} night{nights !== 1 ? "s" : ""}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="text-right">
+                        <p className="font-mono text-[0.6rem] text-white/40 tracking-[.22em] uppercase mb-1">To</p>
+                        <p className="font-mono text-5xl font-medium text-orange-400 tracking-tight leading-none">{code}</p>
+                        <p className="font-dm text-xs text-white/55 mt-1.5 max-w-[130px] truncate text-right">
+                          {itin.destination}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-6 space-y-6">
-                  {/* Interests */}
-                  {itinerary?.interests?.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkles size={18} className="text-pink-400" />
-                        <h3 className="text-lg font-semibold text-white">Interests</h3>
+                  {/* ── Perforation ── */}
+                  <div className="perforation relative h-0 border-t-2 border-dashed border-stone-200
+                    bg-[#F7F2EC]" />
+
+                  {/* ── Ticket Bottom: white body ── */}
+                  <div className="bg-white px-6 py-5">
+
+                    {/* Info grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 pb-5 border-b border-stone-100">
+                      <div>
+                        <p className="text-[0.6rem] font-bold tracking-[.16em] uppercase text-stone-400 font-dm mb-1.5">Dates</p>
+                        <p className="text-sm font-semibold text-stone-700 font-dm">
+                          {format(new Date(itin.startDate), "dd MMM")}
+                        </p>
+                        <p className="text-xs text-stone-400 font-dm">
+                          → {format(new Date(itin.endDate), "dd MMM yy")}
+                        </p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {itinerary.interests.map((interest, i) => (
-                          <span
-                            key={i}
-                            className="px-3 py-1.5 bg-pink-500/20 text-pink-300 rounded-full text-sm border border-pink-500/30 font-medium"
-                          >
-                            {interest}
-                          </span>
-                        ))}
+
+                      <div>
+                        <p className="text-[0.6rem] font-bold tracking-[.16em] uppercase text-stone-400 font-dm mb-1.5">Travellers</p>
+                        <div className="flex items-center gap-1.5">
+                          <Users size={13} className="text-stone-400" />
+                          <p className="text-sm font-semibold text-stone-700 font-dm capitalize">{itin.tripType}</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-[0.6rem] font-bold tracking-[.16em] uppercase text-stone-400 font-dm mb-1.5">Transport</p>
+                        <TransportBadge mode={itin.transportMode} />
+                      </div>
+
+                      <div>
+                        <p className="text-[0.6rem] font-bold tracking-[.16em] uppercase text-stone-400 font-dm mb-1.5">Budget</p>
+                        <div className="flex items-center gap-2">
+                          <BudgetDots budget={itin.budget} />
+                          <span className="text-sm font-semibold text-stone-700 font-dm capitalize">{itin.budget}</span>
+                        </div>
                       </div>
                     </div>
-                  )}
 
-                  {/* Day Plan */}
-                  <div className="space-y-4">
-                    {itinerary?.plan?.map((dayObj) => (
-                      <div
-                        key={dayObj.day}
-                        className="bg-gray-900/50 border border-gray-700 hover:border-gray-600 p-5 rounded-xl transition-all"
-                      >
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="bg-rose-500/20 w-10 h-10 rounded-full flex items-center justify-center">
-                            <span className="text-rose-400 font-bold">{dayObj.day}</span>
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-semibold text-white">
-                              Day {dayObj.day}
-                            </h4>
-                            <p className="text-sm text-gray-400">
-                              {format(new Date(dayObj.date), "EEEE, dd MMM yyyy")}
+                    {/* Interests */}
+                    {itin?.interests?.length > 0 && (
+                      <div className="py-4 border-b border-stone-100">
+                        <p className="text-[0.6rem] font-bold tracking-[.16em] uppercase text-stone-400 font-dm mb-2.5">
+                          Trip Style
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {itin.interests.map((tag, i) => (
+                            <span key={i}
+                              className="inline-flex items-center bg-orange-50 border border-orange-100
+                                text-orange-600 text-[0.72rem] font-semibold font-dm
+                                px-2.5 py-1 rounded-lg tracking-wide capitalize">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Day plan */}
+                    {itin?.plan?.length > 0 && (
+                      <div className="pt-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Calendar size={13} color="#E8694A" strokeWidth={2} />
+                            <p className="text-[0.6rem] font-bold tracking-[.16em] uppercase text-stone-400 font-dm">
+                              Itinerary — {itin.plan.length} days
                             </p>
                           </div>
+                          <div className="flex items-center gap-1 text-[0.65rem] text-stone-400 font-dm">
+                            <Clock size={10} />
+                            {format(new Date(itin.createdAt), "dd MMM yyyy")}
+                          </div>
                         </div>
-                        <ul className="space-y-2 ml-13">
-                          {dayObj.activities?.map((activity, i) => (
-                            <li
-                              key={i}
-                              className="flex items-start gap-3 text-gray-300 leading-relaxed"
-                            >
-                              <span className="text-rose-400 mt-1">•</span>
-                              <span>{activity}</span>
-                            </li>
+                        <div className="flex flex-col gap-2">
+                          {itin.plan.map(dayObj => (
+                            <DayCard key={dayObj.day} dayObj={dayObj} />
                           ))}
-                        </ul>
+                        </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
+            {/* Bottom CTA */}
+            <div className="text-center pt-2 pb-4">
+              <Link to="/itinerary-fill">
+                <button className="inline-flex items-center gap-2 font-dm font-medium text-sm
+                  text-orange-500 border-[1.5px] border-orange-200 bg-white
+                  px-6 py-3 rounded-full hover:bg-orange-50
+                  hover:border-orange-300 transition-all duration-200">
+                  <Plus size={15} strokeWidth={2.5} />
+                  Plan Another Trip
+                </button>
+              </Link>
+            </div>
           </div>
         ) : (
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-12 text-center">
-            <MapPin size={64} className="text-gray-600 mx-auto mb-4" strokeWidth={1.5} />
-            <p className="text-gray-400 text-lg mb-2">No itineraries found</p>
-            <p className="text-gray-500 text-sm">Start planning your first trip!</p>
-          </div>
-        )}
 
-        {/* Confirmation Modal */}
-        {showConfirm && (
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setShowConfirm(false)}
-          >
-            <div
-              className="bg-gray-800 border border-gray-700 text-white p-6 rounded-2xl shadow-2xl w-full max-w-md"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-red-500/20 p-3 rounded-xl">
-                  <AlertTriangle size={24} className="text-red-400" />
+          /* ── Empty state ── */
+          <div className="text-center py-24">
+            <div className="inline-block relative mb-8">
+              <div className="w-64 h-32 bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl
+                flex items-center justify-center shadow-[0_8px_32px_rgba(26,18,8,.20)] overflow-hidden relative">
+                <div className="absolute inset-0 opacity-[0.05]"
+                  style={{
+                    backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+                    backgroundSize: "14px 14px",
+                  }} />
+                <div className="relative text-center">
+                  <Plane size={28} color="#F5836B" className="mx-auto mb-2 plane-bob" strokeWidth={1.8} />
+                  <p className="font-mono text-white/40 text-xs tracking-[.2em]">NO TRIPS YET</p>
                 </div>
-                <h3 className="text-xl font-bold">Delete Itinerary?</h3>
               </div>
-
-              <p className="text-gray-300 mb-6">
-                Are you sure you want to delete this itinerary? This action cannot be undone.
-              </p>
-
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all"
-                >
-                  No, Keep It
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
-                >
-                  Yes, Delete
-                </button>
-              </div>
+              <div className="absolute -bottom-3 left-6 right-6 h-0 border-t-2 border-dashed border-stone-300" />
+              <div className="absolute bottom-0 left-6 right-6 h-3 bg-stone-50 rounded-b-xl border border-t-0 border-stone-200" />
             </div>
+
+            <h2 className="font-serif text-3xl font-bold text-stone-800 mb-2">No trips booked yet</h2>
+            <p className="text-stone-400 text-sm font-dm font-light mb-8 max-w-xs mx-auto">
+              Your next adventure is just one click away. Let AI plan the perfect trip for you.
+            </p>
+            <Link to="/itinerary-fill">
+              <button className="inline-flex items-center gap-2 font-dm font-semibold text-sm text-white
+                bg-gradient-to-br from-orange-400 to-orange-600 px-7 py-3.5 rounded-full
+                shadow-[0_8px_24px_rgba(232,105,74,.28)]
+                hover:shadow-[0_14px_34px_rgba(232,105,74,.38)]
+                hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
+                <Plane size={15} strokeWidth={2.2} />
+                Plan My First Trip
+                <ArrowRight size={15} strokeWidth={2.5} />
+              </button>
+            </Link>
           </div>
         )}
       </div>
+
+      {/* ── Delete Modal ── */}
+      {showConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 anim-fade"
+          style={{
+            background: "rgba(26,18,8,0.55)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+          }}
+          onClick={() => setShowConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-8 w-full max-w-sm
+              shadow-[0_24px_80px_rgba(26,18,8,.22)] anim-slide"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mb-5">
+              <AlertTriangle size={24} color="#E05C3E" strokeWidth={2} />
+            </div>
+            <p className="text-[0.6rem] font-bold tracking-[.16em] uppercase text-stone-400 font-dm mb-1">
+              Cancel Booking
+            </p>
+            <h3 className="font-serif text-2xl font-bold text-stone-800 mb-2 tracking-tight">
+              Delete this trip?
+            </h3>
+            <p className="text-stone-500 text-sm font-dm font-light leading-relaxed mb-7">
+              This itinerary will be permanently removed. This action cannot be undone.
+            </p>
+            <div className="flex gap-2.5">
+              <button onClick={() => setShowConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl border-[1.5px] border-stone-200 bg-white
+                  text-stone-600 text-sm font-semibold font-dm
+                  hover:bg-stone-50 transition-all duration-200">
+                Keep Trip
+              </button>
+              <button onClick={handleDelete}
+                className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold font-dm
+                  bg-gradient-to-br from-red-500 to-red-700
+                  shadow-[0_4px_14px_rgba(192,57,27,.26)]
+                  hover:shadow-[0_8px_22px_rgba(192,57,27,.34)]
+                  hover:-translate-y-px active:translate-y-0 transition-all duration-200">
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

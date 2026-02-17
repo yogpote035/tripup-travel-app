@@ -3,16 +3,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../../AllStatesFeatures/Authentication/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import Loading from "../../General/Loading";
-import { 
-  Eye, 
-  EyeOff, 
-  Mail, 
-  Phone, 
-  Lock, 
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Phone,
+  Lock,
   LogIn,
-  Plane,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
+
+const inputCls =
+  "w-full pl-10 pr-4 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all";
 
 function Login() {
   const dispatch = useDispatch();
@@ -20,33 +22,21 @@ function Login() {
 
   const [usePhone, setUsePhone] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    phone: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", phone: "", password: "" });
 
-  const loading = useSelector((state) => state.auth.loading);
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const loading = useSelector((s) => s.auth.loading);
+  const isAuthenticated = useSelector((s) => s.auth.isAuthenticated);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/", { replace: true });
-    }
+    if (isAuthenticated) navigate("/", { replace: true });
   }, [isAuthenticated, navigate]);
 
-  if (loading) {
-    return <Loading message="Verifying Your Credentials" />;
-  }
+  if (loading) return <Loading message="Verifying credentials…, this may take a few moments." color="border-t-orange-500" />;
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const payload = {
       password: formData.password,
@@ -56,141 +46,122 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Header */}
+    <div className="min-h-screen flex items-center justify-center bg-orange-50 px-4 py-16">
+      <div className="w-full max-w-sm">
+
+        {/* Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg mb-4">
-            <Plane size={32} className="text-white" strokeWidth={2.5} />
-          </div>
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-            Welcome Back
-          </h1>
-          <p className="text-gray-400">Login to continue your journey with TripUp</p>
+          <h1 className="text-2xl font-bold text-stone-800">Welcome back</h1>
+          <p className="text-sm text-stone-500 mt-1">Log in to continue your journey with TripUp.</p>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-2xl rounded-2xl p-8 border border-gray-700">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email/Phone Input */}
+        {/* Card */}
+        <div className="bg-white border border-orange-200 rounded-2xl shadow-sm overflow-hidden">
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+            {/* Email / Phone toggle */}
             {!usePhone ? (
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-300">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
                   Email Address
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Mail size={18} />
-                  </div>
+                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="Enter your email"
-                    className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    placeholder="you@example.com"
+                    className={inputCls}
                     required
                   />
                 </div>
               </div>
             ) : (
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-300">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
                   Phone Number
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Phone size={18} />
-                  </div>
+                  <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                   <input
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="Enter your phone number"
-                    className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    placeholder="+91 XXXXXXXXXX"
+                    className={inputCls}
                     required
                   />
                 </div>
               </div>
             )}
 
-            {/* Password Input */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-300">
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <Lock size={18} />
-                </div>
+                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
-                  className="w-full pl-10 pr-12 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className={`${inputCls} pr-10`}
                   required
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-400 transition-colors"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-orange-500 transition-colors"
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2"
+              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-semibold py-3 rounded-xl transition-all active:scale-95 text-sm mt-2"
             >
-              <LogIn size={20} strokeWidth={2} />
-              Login
+              <LogIn size={15} strokeWidth={2} />
+              Log in
             </button>
 
-            {/* Switch Login Method */}
+            {/* Switch method */}
             <div className="text-center">
               <button
                 type="button"
                 onClick={() => setUsePhone(!usePhone)}
-                className="text-sm text-gray-400 hover:text-blue-400 transition-colors inline-flex items-center gap-1 group"
+                className="text-xs text-stone-400 hover:text-orange-500 transition-colors inline-flex items-center gap-1 font-medium"
               >
-                <span>{usePhone ? "Use email instead" : "Use phone instead"}</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                {usePhone ? "Use email instead" : "Use phone instead"}
+                <ArrowRight size={11} />
               </button>
             </div>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-gray-800 text-gray-400">New to TripUp?</span>
-            </div>
-          </div>
-
-          {/* Signup Link */}
-          <div className="text-center">
+          {/* Footer */}
+          <div className="border-t border-orange-100 px-6 py-4 flex items-center justify-between bg-orange-50/50">
+            <p className="text-xs text-stone-400">New to TripUp?</p>
             <Link
               to="/signup"
-              className="text-sm text-gray-300 hover:text-white transition-colors inline-flex items-center gap-2 group"
+              className="inline-flex items-center gap-1 text-orange-500 hover:text-orange-400 text-xs font-semibold transition-colors"
             >
-              <span>Create a new account</span>
-              <ArrowRight size={14} className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+              Create an account
+              <ArrowRight size={11} />
             </Link>
           </div>
         </div>
 
-        {/* Footer Note */}
-        <p className="text-center text-gray-500 text-xs mt-6">
-          By logging in, you agree to our Terms of Service and Privacy Policy
+        <p className="text-center text-stone-400 text-xs mt-5">
+          By logging in, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>
     </div>

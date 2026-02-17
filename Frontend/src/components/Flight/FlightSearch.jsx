@@ -6,9 +6,9 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { 
-  PlaneTakeoff, 
-  PlaneLanding, 
+import {
+  PlaneTakeoff,
+  PlaneLanding,
   Calendar,
   Search,
   Plane,
@@ -16,8 +16,20 @@ import {
   IndianRupee,
   ArrowRight,
   Armchair,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
+
+const inputCls =
+  "w-full pl-10 pr-4 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all";
+
+const Field = ({ label, children }) => (
+  <div className="space-y-1.5">
+    <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
+      {label}
+    </label>
+    {children}
+  </div>
+);
 
 const FlightSearch = () => {
   const dispatch = useDispatch();
@@ -31,227 +43,181 @@ const FlightSearch = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-
-    if (!source || !destination || !selectedDate) {
+    if (!source || !destination || !selectedDate)
       return toast.info("Please fill all fields");
-    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    if (selectedDate < today) {
+    if (selectedDate < today)
       return toast.info("Please select today or a future date.");
-    }
 
     const formattedDate = selectedDate.toISOString().split("T")[0];
-    dispatch(
-      fetchFlightsBetweenAirports({
-        from: source,
-        to: destination,
-        date: formattedDate,
-      })
-    );
+    dispatch(fetchFlightsBetweenAirports({ from: source, to: destination, date: formattedDate }));
   };
 
-  const CustomDateInput = React.forwardRef(
-    ({ value, onClick }, ref) => (
-      <div
-        className="relative cursor-pointer w-full"
-        onClick={onClick}
-        ref={ref}
-      >
-        <Calendar size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-500" />
-        <input
-          value={value}
-          required
-          onChange={() => {}}
-          placeholder="Select travel date"
-          readOnly
-          className="pl-10 pr-4 py-3 w-full rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all cursor-pointer"
-        />
-      </div>
-    )
-  );
+  const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
+    <div className="relative cursor-pointer w-full" onClick={onClick} ref={ref}>
+      <Calendar size={15} className="absolute top-1/2 -translate-y-1/2 left-3 text-stone-400" />
+      <input
+        value={value}
+        readOnly
+        required
+        placeholder="Select date"
+        className={inputCls + " cursor-pointer"}
+      />
+    </div>
+  ));
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-white p-6 mt-10 mb-10">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-xl shadow-lg">
-              <Plane size={28} className="text-white" strokeWidth={2.5} />
-            </div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
-              Search Flights
-            </h2>
-          </div>
-          <p className="text-gray-400 ml-14">Find the best flights for your journey</p>
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-3xl mx-auto space-y-6">
+
+        {/* Heading */}
+        <div>
+          <h1 className="text-2xl font-bold text-stone-800">Search Flights</h1>
+          <p className="text-sm text-stone-500 mt-1">Find the best flights for your journey.</p>
         </div>
 
-        {/* Search Card */}
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl shadow-xl p-6 mb-8">
+        {/* Search card */}
+        <div className="bg-white border border-orange-200 rounded-2xl shadow-sm p-6">
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* From Input */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-300">
-                  From
-                </label>
+              <Field label="From">
                 <div className="relative">
-                  <PlaneTakeoff size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-500" />
+                  <PlaneTakeoff size={15} className="absolute top-1/2 -translate-y-1/2 left-3 text-stone-400" />
                   <input
                     type="text"
                     value={source}
                     required
                     onChange={(e) => setSource(e.target.value)}
                     placeholder="e.g. Mumbai"
-                    className="pl-10 pr-4 py-3 w-full rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                    className={inputCls}
                   />
                 </div>
-              </div>
+              </Field>
 
-              {/* To Input */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-300">
-                  To
-                </label>
+              <Field label="To">
                 <div className="relative">
-                  <PlaneLanding size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-500" />
+                  <PlaneLanding size={15} className="absolute top-1/2 -translate-y-1/2 left-3 text-stone-400" />
                   <input
                     type="text"
-                    required
                     value={destination}
+                    required
                     onChange={(e) => setDestination(e.target.value)}
                     placeholder="e.g. Delhi"
-                    className="pl-10 pr-4 py-3 w-full rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                    className={inputCls}
                   />
                 </div>
-              </div>
+              </Field>
 
-              {/* Date Picker */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-300">
-                  Travel Date
-                </label>
+              <Field label="Travel Date">
                 <DatePicker
                   selected={selectedDate}
                   onChange={setSelectedDate}
                   required
                   dateFormat="yyyy-MM-dd"
-                  placeholderText="Select travel date"
+                  placeholderText="Select date"
                   customInput={<CustomDateInput />}
                 />
-              </div>
+              </Field>
             </div>
 
-            {/* Search Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2"
+              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-semibold py-3 rounded-xl transition-all active:scale-95 text-sm"
             >
-              <Search size={20} strokeWidth={2} />
+              <Search size={16} strokeWidth={2} />
               Search Flights
             </button>
           </form>
         </div>
 
-        {/* Loading State */}
-        {loading && <Loading message="Fetching flights..." />}
+        {/* Loading */}
+        {loading && <Loading message="Searching flights…" color="border-t-orange-500" />}
 
-        {/* Error State */}
+        {/* Error */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 flex items-center gap-3">
-            <AlertCircle size={20} className="text-red-400" />
-            <p className="text-red-400">{error}</p>
+          <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            <AlertCircle size={15} className="text-red-400 shrink-0" />
+            <p className="text-red-500 text-sm">{error}</p>
           </div>
         )}
 
-        {/* Flight Results */}
+        {/* Results */}
         {!loading && flights?.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/30 rounded-xl p-4">
-              <Plane size={24} className="text-purple-400" strokeWidth={2} />
-              <div>
-                <h3 className="text-xl font-semibold text-white">Available Flights</h3>
-                <p className="text-sm text-gray-400">{flights.length} flight{flights.length !== 1 ? 's' : ''} found</p>
-              </div>
-            </div>
+          <div className="space-y-4">
+            <p className="text-xs font-semibold tracking-wide uppercase text-stone-400">
+              {flights.length} flight{flights.length !== 1 ? "s" : ""} found
+            </p>
 
             {flights.map((flight, index) => (
               <div
                 key={index}
-                className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 hover:border-gray-600 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+                className="bg-white border border-orange-200 rounded-2xl shadow-sm overflow-hidden hover:border-orange-300 hover:shadow-md transition-all"
               >
-                {/* Flight Header */}
-                <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border-b border-gray-700 p-5">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-purple-500/20 p-2 rounded-lg">
-                        <Plane size={20} className="text-purple-400" />
-                      </div>
-                      <div>
-                        <h4 className="text-xl font-bold text-white">{flight.airline}</h4>
-                        <p className="text-sm text-gray-400">{flight.flightNumber}</p>
-                      </div>
+                {/* Card header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-orange-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center">
+                      <Plane size={15} className="text-orange-500" />
                     </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-1 text-2xl font-bold text-purple-400">
-                        <IndianRupee size={20} strokeWidth={2.5} />
-                        <span>{flight.price.toLocaleString()}</span>
-                      </div>
+                    <div>
+                      <p className="text-sm font-bold text-stone-800">{flight.airline}</p>
+                      <p className="text-xs text-stone-400">{flight.flightNumber}</p>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-orange-500 font-bold text-lg">
+                    <IndianRupee size={16} strokeWidth={2.5} />
+                    {flight.price.toLocaleString()}
                   </div>
                 </div>
 
-                <div className="p-5">
-                  {/* Flight Route */}
+                {/* Route */}
+                <div className="px-6 py-5">
                   <div className="flex items-center justify-between mb-5">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <PlaneTakeoff size={16} className="text-gray-400" />
-                        <span className="text-sm text-gray-400">{flight.from}</span>
-                      </div>
-                      <p className="text-2xl font-bold text-white">{flight.departureTime}</p>
+                    {/* Departure */}
+                    <div>
+                      <p className="text-xs text-stone-400 flex items-center gap-1 mb-1">
+                        <PlaneTakeoff size={12} /> {flight.from}
+                      </p>
+                      <p className="text-2xl font-bold text-stone-800">{flight.departureTime}</p>
                     </div>
 
-                    <div className="flex-1 flex flex-col items-center px-4">
-                      <div className="flex items-center gap-1 text-gray-400 text-sm mb-2">
-                        <Clock size={14} />
-                        <span>{flight.duration}</span>
-                      </div>
-                      <div className="w-full max-w-[120px] relative">
-                        <div className="h-1 bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-400 rounded-full"></div>
-                        <div className="absolute -top-1 left-0 w-3 h-3 bg-purple-400 rounded-full"></div>
-                        <div className="absolute -top-1 right-0 w-3 h-3 bg-purple-400 rounded-full"></div>
+                    {/* Duration */}
+                    <div className="flex-1 flex flex-col items-center px-6">
+                      <span className="text-xs text-stone-400 flex items-center gap-1 mb-2">
+                        <Clock size={12} /> {flight.duration}
+                      </span>
+                      <div className="w-full relative flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-orange-300 shrink-0" />
+                        <div className="flex-1 h-px bg-orange-200 mx-1" />
+                        <Plane size={14} className="text-orange-400 shrink-0" />
+                        <div className="flex-1 h-px bg-orange-200 mx-1" />
+                        <div className="w-2 h-2 rounded-full bg-orange-400 shrink-0" />
                       </div>
                     </div>
 
-                    <div className="flex-1 text-right">
-                      <div className="flex items-center justify-end gap-2 mb-2">
-                        <span className="text-sm text-gray-400">{flight.to}</span>
-                        <PlaneLanding size={16} className="text-gray-400" />
-                      </div>
-                      <p className="text-2xl font-bold text-white">{flight.arrivalTime}</p>
+                    {/* Arrival */}
+                    <div className="text-right">
+                      <p className="text-xs text-stone-400 flex items-center justify-end gap-1 mb-1">
+                        {flight.to} <PlaneLanding size={12} />
+                      </p>
+                      <p className="text-2xl font-bold text-stone-800">{flight.arrivalTime}</p>
                     </div>
                   </div>
 
-                  {/* Book Button */}
+                  {/* Book button */}
                   <button
                     onClick={() =>
                       navigate(`/flight-seat/${flight._id}`, {
-                        state: {
-                          flight: flight,
-                          journeyDate: date,
-                          source: from,
-                          destination: to,
-                        },
+                        state: { flight, journeyDate: date, source: from, destination: to },
                       })
                     }
-                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 px-4 rounded-xl transition-all font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                    className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-semibold py-2.5 rounded-xl transition-all active:scale-95 text-sm"
                   >
-                    <Armchair size={20} strokeWidth={2} />
+                    <Armchair size={15} strokeWidth={2} />
                     Book Seats
-                    <ArrowRight size={20} strokeWidth={2} />
+                    <ArrowRight size={15} strokeWidth={2} />
                   </button>
                 </div>
               </div>
@@ -259,16 +225,17 @@ const FlightSearch = () => {
           </div>
         )}
 
-        {/* No Flights Found */}
+        {/* No results */}
         {!loading && flights?.length === 0 && from && to && (
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-12 text-center">
-            <Plane size={64} className="text-gray-600 mx-auto mb-4" strokeWidth={1.5} />
-            <p className="text-gray-400 text-lg mb-2">No flights found</p>
-            <p className="text-gray-500 text-sm">
-              No flights available from {from} to {to} on the selected date
+          <div className="bg-white border border-orange-200 rounded-2xl p-12 text-center shadow-sm">
+            <Plane size={40} className="text-stone-300 mx-auto mb-3" strokeWidth={1.5} />
+            <p className="text-stone-500 font-medium mb-1">No flights found</p>
+            <p className="text-stone-400 text-sm">
+              No flights available from {from} to {to} on the selected date.
             </p>
           </div>
         )}
+
       </div>
     </div>
   );
