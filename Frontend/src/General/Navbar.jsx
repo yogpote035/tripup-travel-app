@@ -89,7 +89,7 @@ const Navbar = () => {
             }}
           >
             <span className="font-black text-white text-lg tracking-widest uppercase">
-              HME
+              HOME
             </span>
             <div className="flex flex-col items-center">
               <FaPlane className="text-orange-400 text-sm" />
@@ -265,7 +265,7 @@ const Navbar = () => {
             )}
           </div>
           <p className="text-center text-xs tracking-widest text-stone-500 uppercase font-semibold">
-            TRIPUP · BON VOYAGE
+            TRIPUP · Yogesh Pote
           </p>
         </div>
       </aside>

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { GetRecentActivity } from "../../../AllStatesFeatures/Recent Activity/RecentActivitySlice";
 import { format } from "date-fns";
+import Loading from "../../General/Loading";
 
 const typeConfig = {
   train:  { icon: TrainFront, label: "Train" },
@@ -43,10 +44,11 @@ const RecentActivity = () => {
         <div className="bg-white border border-orange-200 rounded-2xl shadow-sm overflow-hidden">
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-8 h-8 rounded-full border-2 border-orange-200 border-t-orange-500 animate-spin" />
-              <p className="text-sm text-stone-400">Loading activity…</p>
-            </div>
+            // <div className="flex flex-col items-center justify-center py-16 gap-3">
+            //   <div className="w-8 h-8 rounded-full border-2 border-orange-200 border-t-orange-500 animate-spin" />
+            //   <p className="text-sm text-stone-400">Loading activity…</p>
+            // </div>
+            <Loading message="Loading activity…" color="border-t-orange-500" />
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <Compass size={36} className="text-stone-300" strokeWidth={1.5} />
