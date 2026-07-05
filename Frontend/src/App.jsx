@@ -1,4 +1,8 @@
 import "./App.css";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { setAccessToken, setAuthInitialized } from "../AllStatesFeatures/Authentication/authSlice";
 import { Route, Routes } from "react-router-dom";
 import Login from "./components/Authentication/Login.jsx";
 import Signup from "./components/Authentication/Signup.jsx";
@@ -34,12 +38,63 @@ import EditPost from "./components/SocialFeed/EditPost.jsx";
 import PageNotFound from "./General/PageNotFound.jsx";
 
 function App() {
+  const dispatch = useDispatch();
+
+  const theme = useSelector((state) => state.theme?.mode || "light");
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function bootstrap() {
+      dispatch(setAuthInitialized(false));
+
+      try {
+        const hasRefreshCookie = document.cookie
+          .split("; ")
+          .some((cookie) => cookie.startsWith("refreshToken="));
+
+        if (!hasRefreshCookie) {
+          if (mounted) {
+            dispatch(setAccessToken(null));
+          }
+          return;
+        }
+
+        const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`);
+        if (res.status === 200 && mounted) {
+          const token = res.data?.data?.accessToken;
+          dispatch(setAccessToken(token));
+        }
+      } catch (e) {
+        if (mounted) {
+          dispatch(setAccessToken(null));
+        }
+      } finally {
+        if (mounted) {
+          dispatch(setAuthInitialized(true));
+        }
+      }
+    }
+
+    bootstrap();
+    return () => (mounted = false);
+  }, [dispatch]);
+
   return (
     <>
-      <div className="flex flex-col min-h-screen">
+      <div className={`flex flex-col min-h-screen ${theme === "dark" ? "bg-stone-950 text-stone-100" : "bg-orange-50 text-stone-900"}`}>
         <Navbar />
         <div className="mb-10"></div>
-        <main className="flex-grow bg-orange-50">
+        <main className={`flex-grow ${theme === "dark" ? "bg-stone-950" : "bg-orange-50"}`}>
           <Routes>
             <Route exact path="/" element={<Home />} />
             <Route exact path="/login" element={<Login />} />
@@ -210,9 +265,12 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="light"
+          theme={theme === "dark" ? "dark" : "light"}
+          className="toast-container"
+          toastClassName={theme === "dark" ? "custom-toast custom-toast-dark" : "custom-toast custom-toast-light"}
+          bodyClassName="custom-toast-body"
+          closeButton={false}
           style={{ top: "73px", right: "2px" }}
-          toastClassName="!rounded-xl !bg-orange-50 !text-stone-800 !border !border-orange-200 !shadow-md !font-medium"
         />
       </div>
     </>

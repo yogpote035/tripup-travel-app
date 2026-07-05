@@ -74,7 +74,7 @@ export default busBookingSlice.reducer;
 export const bookBusSeats =
   (bookingData, navigate) => async (dispatch, getState) => {
     dispatch(bookingRequest());
-    const token = getState().auth.token;
+    const token = getState().auth.accessToken;
 
     try {
       const response = await axios.post(
@@ -82,7 +82,7 @@ export const bookBusSeats =
         bookingData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+            Authorization: `Bearer ${token || localStorage.getItem("token") || ""}`,
             userId: localStorage.getItem("userId"),
           },
         }
@@ -126,14 +126,14 @@ export const bookBusSeats =
 
 export const getUserBusBookings = () => async (dispatch, getState) => {
   dispatch(getAllBookingRequest());
-  const token = getState().auth.token;
+  const token = getState().auth.accessToken;
 
   try {
     const response = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/bus/bus-bookings`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+          Authorization: `Bearer ${token || localStorage.getItem("token") || ""}`,
           userId: localStorage.getItem("userId"),
         },
       }
@@ -150,7 +150,7 @@ export const getUserBusBookings = () => async (dispatch, getState) => {
 export const downloadBusTicket = (bookingId) => async (dispatch, getState) => {
   dispatch(getDownloadRequest());
 
-  const token = getState().auth.token || localStorage.getItem("token");
+  const token = getState().auth.accessToken || localStorage.getItem("token");
 
   try {
     const response = await axios.get(
@@ -159,7 +159,7 @@ export const downloadBusTicket = (bookingId) => async (dispatch, getState) => {
         params: { bookingId },
         responseType: "blob",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token || ""}`,
         },
       }
     );
@@ -199,7 +199,7 @@ export const downloadBusTicket = (bookingId) => async (dispatch, getState) => {
 
 export const mailBusTicketPdf = (bookingId) => async (dispatch, getState) => {
   dispatch(getDownloadRequest());
-  const token = getState().auth.token;
+  const token = getState().auth.accessToken;
 
   try {
     const response = await axios.get(
@@ -208,7 +208,7 @@ export const mailBusTicketPdf = (bookingId) => async (dispatch, getState) => {
         params: { bookingId },
         responseType: "blob",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+          Authorization: `Bearer ${token || localStorage.getItem("token") || ""}`,
         },
       }
     );
@@ -224,7 +224,7 @@ export const mailBusTicketPdf = (bookingId) => async (dispatch, getState) => {
 
 export const cancelBusTicket = (bookingId) => async (dispatch, getState) => {
   dispatch(getDownloadRequest());
-  const token = getState().auth.token;
+  const token = getState().auth.accessToken;
 
   try {
     const response = await axios.put(
@@ -234,7 +234,7 @@ export const cancelBusTicket = (bookingId) => async (dispatch, getState) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+          Authorization: `Bearer ${token || localStorage.getItem("token") || ""}`,
         },
       }
     );

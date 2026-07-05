@@ -64,7 +64,7 @@ export const bookFlightSeat =
     dispatch(bookFlightRequest());
 
     try {
-      const token = getState().auth.token || localStorage.getItem("token");
+      const token = getState().auth.accessToken || localStorage.getItem("token");
 
       const res = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/flight/book-flight-seat`,
@@ -109,7 +109,7 @@ export const bookFlightSeat =
 export const fetchMyFlightBookings = () => async (dispatch, getState) => {
   dispatch(getMyFlightBookingsRequest());
   try {
-    const token = getState().auth.token || localStorage.getItem("token");
+    const token = getState().auth.accessToken || localStorage.getItem("token");
 
     const res = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/flight/my-flights`,

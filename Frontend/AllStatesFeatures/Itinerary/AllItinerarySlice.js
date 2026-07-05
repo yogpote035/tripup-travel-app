@@ -90,7 +90,7 @@ export const generateItinerary =
     dispatch(createItineraryRequest());
 
     try {
-      const token = getState().auth.token || localStorage.getItem("token");
+      const token = getState().auth.accessToken || localStorage.getItem("token");
 
       const res = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/itinerary/generate`,
@@ -122,7 +122,7 @@ export const getAllItinerary = () => async (dispatch, getState) => {
   dispatch(getAllItineraryRequest());
 
   try {
-    const token = getState().auth.token || localStorage.getItem("token");
+    const token = getState().auth.accessToken || localStorage.getItem("token");
 
     const res = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/itinerary/get-all`,
@@ -150,7 +150,7 @@ export const DeleteItinerary = (itineraryId) => async (dispatch, getState) => {
   dispatch(deleteItineraryRequest());
 
   try {
-    const token = getState().auth.token || localStorage.getItem("token");
+    const token = getState().auth.accessToken || localStorage.getItem("token");
 
     const res = await axios.delete(
       `${import.meta.env.VITE_API_BASE_URL}/itinerary/delete/${itineraryId}`,

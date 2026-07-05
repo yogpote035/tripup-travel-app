@@ -17,10 +17,10 @@ import {
 const inputCls =
   "w-full pl-10 pr-4 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all";
 
-const Field = ({ label, icon: Icon, children }) => (
+const Field = ({ label, icon: Icon, children, required }) => (
   <div className="space-y-1.5">
     <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
-      {label}
+      {label} {required && <span className="text-red-500">*</span>}
     </label>
     <div className="relative">
       <Icon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
@@ -35,6 +35,7 @@ function Signup() {
 
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const loading = useSelector((s) => s.auth.loading);
   const isAuthenticated = useSelector((s) => s.auth.isAuthenticated);
@@ -50,6 +51,13 @@ function Signup() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const errs = {};
+    if (!formData.name) errs.name = "Name is required";
+    if (!formData.email) errs.email = "Email is required";
+    if (!formData.phone) errs.phone = "Phone is required";
+    if (!formData.password) errs.password = "Password is required";
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
     dispatch(signupUser(formData));
   };
 
@@ -67,7 +75,7 @@ function Signup() {
         <div className="bg-white border border-orange-200 rounded-2xl shadow-sm overflow-hidden">
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
 
-            <Field label="Full Name" icon={User}>
+            <Field label="Full Name" icon={User} required>
               <input
                 type="text"
                 name="name"
@@ -77,9 +85,10 @@ function Signup() {
                 className={inputCls}
                 required
               />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </Field>
 
-            <Field label="Email Address" icon={Mail}>
+            <Field label="Email Address" icon={Mail} required>
               <input
                 type="email"
                 name="email"
@@ -89,9 +98,10 @@ function Signup() {
                 className={inputCls}
                 required
               />
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             </Field>
 
-            <Field label="Phone Number" icon={Phone}>
+            <Field label="Phone Number" icon={Phone} required>
               <input
                 type="tel"
                 name="phone"
@@ -101,9 +111,10 @@ function Signup() {
                 className={inputCls}
                 required
               />
+              {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </Field>
 
-            <Field label="Password" icon={Lock}>
+            <Field label="Password" icon={Lock} required>
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -121,6 +132,7 @@ function Signup() {
               >
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
+              {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
             </Field>
 
             <button

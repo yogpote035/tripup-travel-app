@@ -6,7 +6,7 @@ module.exports.getFlightsBetweenAirports = async (req, res) => {
   const { from, to, date } = req.query;
   console.log("Request Received in Get B/w Train");
   if (!from || !to || !date) {
-    return res.status(406).json({ message: "Missing required fields" });
+    return res.status(400).json({ message: "Missing required fields" });
   }
 
   try {
@@ -21,7 +21,7 @@ module.exports.getFlightsBetweenAirports = async (req, res) => {
     });
 
     if (!flights.length) {
-      return res.status(204).json({ message: "No Flights Found" });
+      return res.status(200).json({ flights: [] });
     }
 
     res.status(200).json({ flights, from, to, date });
@@ -43,15 +43,13 @@ module.exports.bookFlight = async (req, res) => {
     !passengers?.length ||
     !userId
   ) {
-    return res
-      .status(406)
-      .json({ message: "Missing required booking details." });
+    return res.status(400).json({ message: "Missing required booking details." });
   }
 
   try {
     const flightDoc = await FlightModel.findById(flightId);
     if (!flightDoc) {
-      return res.status(208).json({ message: "Flight not found." });
+      return res.status(404).json({ message: "Flight not found." });
     }
 
     const farePerSeat = flightDoc.price;
@@ -63,7 +61,7 @@ module.exports.bookFlight = async (req, res) => {
     );
 
     if (alreadyBookedSeats.length > 0) {
-      return res.status(204).json({
+      return res.status(409).json({
         message: `Seats already booked: ${alreadyBookedSeats
           .map((s) => s.seatNumber)
           .join(", ")}`,
@@ -118,11 +116,7 @@ exports.getAllFlightBookingsForUser = async (req, res) => {
     const bookings = await FlightBookingModel.find({ user: userId })
       .populate("flight")
       .sort({ bookingDate: -1 });
-    if (!bookings) {
-      return res
-        .status(208)
-        .json({ message: "Oop's!, We Don't Get Your Flight Bookings." });
-    }
+    // bookings will be an array (possibly empty); return it directly
     res.status(200).json(bookings);
   } catch (error) {
     console.error("Error fetching flight bookings:", error);

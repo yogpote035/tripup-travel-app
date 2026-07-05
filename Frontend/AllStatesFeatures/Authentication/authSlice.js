@@ -3,14 +3,12 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const initialState = {
-  user: localStorage.getItem("token") && localStorage.getItem("userId") && localStorage.getItem("username") ? {
-    userId: localStorage.getItem("userID"),
-    username: localStorage.getItem("username"),
-  } : null,
-  isAuthenticated: localStorage.getItem("token") && localStorage.getItem("userId") && localStorage.getItem("username") ? true : false,
+  user: localStorage.getItem("userId") && localStorage.getItem("username") ? { userId: localStorage.getItem("userId"), username: localStorage.getItem("username") } : null,
+  isAuthenticated: false,
+  authInitialized: false,
   loading: false,
   error: null,
-  token: null,
+  accessToken: null,
 };
 
 const authSlice = createSlice({
@@ -24,14 +22,14 @@ const authSlice = createSlice({
     loginSuccess: (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
+      state.authInitialized = true;
       state.user = {
-        userId: action.payload.userId,
-        username: action.payload.username,
+        userId: action.payload.user._id,
+        username: action.payload.user.name,
       };
-      localStorage.setItem("userId", action.payload.userId);
-      localStorage.setItem("username", action.payload.username);
-      localStorage.setItem("token", action.payload.token);
-      state.token = action.payload.token;
+      localStorage.setItem("userId", action.payload.user._id);
+      localStorage.setItem("username", action.payload.user.name);
+      state.accessToken = action.payload.accessToken;
     },
     loginFailure: (state, action) => {
       state.loading = false;
@@ -48,14 +46,14 @@ const authSlice = createSlice({
     signupSuccess: (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
+      state.authInitialized = true;
       state.user = {
-        userId: action.payload.userId,
-        username: action.payload.username,
+        userId: action.payload.user._id,
+        username: action.payload.user.name,
       };
-      localStorage.setItem("userId", action.payload.userId);
-      localStorage.setItem("username", action.payload.username);
-      localStorage.setItem("token", action.payload.token);
-      state.token = action.payload.token;
+      localStorage.setItem("userId", action.payload.user._id);
+      localStorage.setItem("username", action.payload.user.name);
+      state.accessToken = action.payload.accessToken;
     },
     signupFailure: (state, action) => {
       state.loading = false;
@@ -70,12 +68,18 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
-      state.token = null;
+      state.accessToken = null;
+      state.authInitialized = true;
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
-      localStorage.removeItem("token");
-      localStorage.clear();
       toast.success("Logout successful");
+    },
+    setAuthInitialized: (state, action) => {
+      state.authInitialized = action.payload === true;
+    },
+    setAccessToken: (state, action) => {
+      state.accessToken = action.payload;
+      state.isAuthenticated = !!action.payload;
     },
 
     clearErrors: (state) => {
@@ -93,6 +97,8 @@ export const {
   signupRequest,
   signupSuccess,
   signupFailure,
+  setAuthInitialized,
+  setAccessToken,
 } = authSlice.actions;
 
 export default authSlice.reducer;
@@ -111,7 +117,7 @@ export const loginUser = (payload) => async (dispatch) => {
     );
     if (status === 200) {
       toast.success(data.message || "Login successful");
-      return dispatch(loginSuccess(data));
+      return dispatch(loginSuccess(data.data));
     }
     // user found but password not match
     if (status === 208) {
@@ -161,7 +167,7 @@ export const signupUser = (payload) => async (dispatch) => {
       toast.error("This Phone Or Mail User Already Exists");
       return dispatch(signupFailure("User already exists"));
     }
-    dispatch(signupSuccess(data));
+    dispatch(signupSuccess(data.data));
     toast.success(data.message || "Signup successful");
   } catch (error) {
     dispatch(

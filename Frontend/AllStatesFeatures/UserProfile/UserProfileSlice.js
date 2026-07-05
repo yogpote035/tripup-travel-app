@@ -42,14 +42,14 @@ export default UserProfileSlice.reducer;
 
 export const GetUserProfile = () => async (dispatch, getState) => {
   dispatch(profileRequest());
-  const { token, user } = getState().auth;
+  const { accessToken: token, user } = getState().auth;
 
   try {
     const { data } = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/user/profile`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || token}`,
+          Authorization: `Bearer ${token || localStorage.getItem("token") || ""}`,
           userId: localStorage.getItem("userId") || user.userId,
         },
       }

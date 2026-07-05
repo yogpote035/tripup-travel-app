@@ -130,7 +130,7 @@ export const downloadFlightTicket =
   (bookingId) => async (dispatch, getState) => {
     dispatch(getDownloadRequest());
 
-    const token = getState().auth.token || localStorage.getItem("token");
+    const token = getState().auth.accessToken || localStorage.getItem("token");
 
     try {
       const response = await axios.get(
@@ -191,7 +191,7 @@ export const downloadFlightTicket =
 export const mailFlightTicket = (bookingId) => async (dispatch, getState) => {
   dispatch(getMailRequest());
 
-  const token = getState().auth.token || localStorage.getItem("token");
+  const token = getState().auth.accessToken || localStorage.getItem("token");
   if (!bookingId) {
     return toast.error("Booking Id is Missing");
   }
@@ -233,7 +233,7 @@ export const mailFlightTicket = (bookingId) => async (dispatch, getState) => {
 export const cancelFlightTicket = (bookingId) => async (dispatch, getState) => {
   dispatch(getMailRequest());
 
-  const token = getState().auth.token || localStorage.getItem("token");
+  const token = getState().auth.accessToken || localStorage.getItem("token");
   if (!bookingId) {
     return toast.error("Booking Id is Missing");
   }

@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const connectToDatabase = require("./connectToDatabase");
+const cookieParser = require("cookie-parser");
 
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
@@ -11,6 +12,7 @@ const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   "https://tripup-travel-app-eight.vercel.app",
   "https://tripup-travel-app-smartyatris-projects.vercel.app",
   "https://tripup-travel-app-git-main-smartyatris-projects.vercel.app",
@@ -35,6 +37,7 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 connectToDatabase();
 

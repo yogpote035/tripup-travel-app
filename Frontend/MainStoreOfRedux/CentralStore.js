@@ -10,6 +10,7 @@ import flightBookingReducer from "../AllStatesFeatures/Flight/BookFlightSeatSlic
 import itineraryReducer from "../AllStatesFeatures/Itinerary/AllItinerarySlice";
 import SocialMediaReducer from "../AllStatesFeatures/SocialFeed/SocialFeedSlice";
 import RecentActivityReducer from "../AllStatesFeatures/Recent Activity/RecentActivitySlice";
+import themeReducer from "../AllStatesFeatures/Theme/ThemeSlice";
 let Store = {}; //initialize because export default
 export default Store = configureStore({
   reducer: {
@@ -24,5 +25,6 @@ export default Store = configureStore({
     itinerary: itineraryReducer, //for all itinerary and add ,delete
     socialFeed: SocialMediaReducer,
     recentActivity: RecentActivityReducer, // for recent activity
+    theme: themeReducer,
   },
 });

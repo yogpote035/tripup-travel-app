@@ -68,7 +68,7 @@ module.exports.FindItinerary = async (req, res) => {
   console.log("Request Receive is Get All Itinerary");
   try {
     if (!req.user.userId) {
-      return res.status(406).json({ message: "User Id Not Found" });
+      return res.status(401).json({ message: "User Id not found in token" });
     }
     const itinerary = await ItineraryModel.find({ user: req.user.userId }).sort(
       {
@@ -76,7 +76,7 @@ module.exports.FindItinerary = async (req, res) => {
       }
     );
     if (!itinerary.length) {
-      return res.status(208).json({ message: "Itinerary Not Found" });
+      return res.status(200).json([]);
     }
     console.log("itinerary before sent: ");
     // console.log(itinerary);
@@ -92,23 +92,21 @@ module.exports.DeleteItinerary = async (req, res) => {
     const { id } = req.params; //itinerary id
 
     if (!req.user.userId) {
-      return res.status(406).json({ message: "User Id is Missing" });
+      return res.status(401).json({ message: "User Id is missing in token" });
     }
 
     if (!id) {
-      return res.status(204).json({ message: "Itinerary Id is Not Found" });
+      return res.status(400).json({ message: "Itinerary id is required" });
     }
 
     const itinerary = await ItineraryModel.findById(id);
 
     if (!itinerary) {
-      return res.status(208).json({ message: "Itinerary Not Found" });
+      return res.status(404).json({ message: "Itinerary not found" });
     }
 
     if (String(itinerary.user) !== req.user.userId) {
-      return res
-        .status(203)
-        .json({ message: "Unauthorized to delete this itinerary" });
+      return res.status(403).json({ message: "Unauthorized to delete this itinerary" });
     }
 
     await ItineraryModel.findByIdAndDelete(id);

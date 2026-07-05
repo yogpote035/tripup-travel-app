@@ -26,7 +26,7 @@ module.exports.TrainBetween = async (req, res) => {
   const { from, to, day, trainType } = req.query;
 
   if (!from || !to) {
-    return res.status(406).json({ message: "Please Provide Parameters" });
+    return res.status(400).json({ message: "Missing required parameters" });
   }
 
   const fromClean = from.trim().toLowerCase();
@@ -72,9 +72,7 @@ module.exports.TrainBetween = async (req, res) => {
       .filter(Boolean);
 
     if (!validTrains.length) {
-      return res
-        .status(208)
-        .json({ message: `No Train Found from ${from} to ${to}` });
+      return res.status(200).json([]);
     }
 
     return res.status(200).json(validTrains);
@@ -119,7 +117,7 @@ module.exports.bookTrain = async (req, res) => {
 
     //if user not found
     if (!user) {
-      return res.status(404).json({ message: "User Not Found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (!email && user) {
@@ -139,7 +137,7 @@ module.exports.bookTrain = async (req, res) => {
   console.log("user phone After validate :", userPhone);
 
   if (!result.isValid) {
-    return res.status(406).json({ message: "Invalid phone number" });
+    return res.status(400).json({ message: "Invalid phone number" });
   }
   console.log("Before formatted phone from signup ");
   console.log(userPhone);
@@ -150,9 +148,7 @@ module.exports.bookTrain = async (req, res) => {
   const isEmailValid = await validateEmail(userEmail);
 
   if (!isEmailValid) {
-    return res
-      .status(406)
-      .json({ message: "Email does not appear to be valid." });
+    return res.status(400).json({ message: "Email does not appear to be valid." });
   }
 
   try {
@@ -254,9 +250,7 @@ module.exports.getUserBookings = async (req, res) => {
     });
 
     if (!bookings.length) {
-      return res
-        .status(208)
-        .json({ message: "Oh! no, Sorry We Didn't Get Your Memories" });
+      return res.status(200).json([]);
     }
 
     res.status(200).json(bookings);
@@ -270,15 +264,13 @@ module.exports.generateReceiptPdf = async (req, res) => {
     const bookingId = req.query.bookingId;
 
     if (!bookingId) {
-      return res.status(406).json({ message: "Please Provide Booking ID" });
+      return res.status(400).json({ message: "Please provide booking ID" });
     }
 
     const booking = await TrainBookingModel.findById(bookingId);
 
     if (!booking) {
-      return res.status(404).json({
-        message: "Oh! no, We Didn't Get Your Travel Memory to Write It in File",
-      });
+      return res.status(404).json({ message: "Booking not found" });
     }
     // this is finale
     const ticketData = {
@@ -433,9 +425,7 @@ exports.mailTrainTicket = async (req, res) => {
     const booking = await TrainBookingModel.findById(bookingId);
 
     if (!booking) {
-      return res.status(404).json({
-        message: "Oh! no, We Didn't Sent Your Travel Memory to Mail",
-      });
+      return res.status(404).json({ message: "Booking not found" });
     }
 
     const ticketData = {

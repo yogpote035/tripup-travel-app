@@ -23,6 +23,7 @@ function Login() {
   const [usePhone, setUsePhone] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", phone: "", password: "" });
+  const [errors, setErrors] = useState({});
 
   const loading = useSelector((s) => s.auth.loading);
   const isAuthenticated = useSelector((s) => s.auth.isAuthenticated);
@@ -38,6 +39,16 @@ function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // client-side validation
+    const errs = {};
+    if (!formData.password) errs.password = "Password is required";
+    if (usePhone) {
+      if (!formData.phone) errs.phone = "Phone number is required";
+    } else {
+      if (!formData.email) errs.email = "Email is required";
+    }
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
     const payload = {
       password: formData.password,
       ...(usePhone ? { phone: formData.phone } : { email: formData.email }),
@@ -62,9 +73,9 @@ function Login() {
             {/* Email / Phone toggle */}
             {!usePhone ? (
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
-                  Email Address
-                </label>
+                  <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
                 <div className="relative">
                   <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                   <input
@@ -76,12 +87,13 @@ function Login() {
                     className={inputCls}
                     required
                   />
+                  {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                 </div>
               </div>
             ) : (
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
-                  Phone Number
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
@@ -94,6 +106,7 @@ function Login() {
                     className={inputCls}
                     required
                   />
+                  {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                 </div>
               </div>
             )}
@@ -101,7 +114,7 @@ function Login() {
             {/* Password */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
-                Password
+                Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
@@ -114,6 +127,7 @@ function Login() {
                   className={`${inputCls} pr-10`}
                   required
                 />
+                {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
                 <button
                   type="button"
                   onClick={() => setShowPassword((p) => !p)}

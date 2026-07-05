@@ -138,7 +138,7 @@ export const createPost =
   (formData, navigate) => async (dispatch, getState) => {
     dispatch(createPostRequest());
     try {
-      const token = getState().auth.token || localStorage.getItem("token");
+      const token = getState().auth.accessToken || localStorage.getItem("token");
       const res = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/posts`,
         formData,
@@ -162,7 +162,7 @@ export const createPost =
 export const getAllPosts = () => async (dispatch, getState) => {
   dispatch(getAllPostRequest());
   try {
-    const token = getState().auth.token || localStorage.getItem("token");
+    const token = getState().auth.accessToken || localStorage.getItem("token");
     const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/posts`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -177,7 +177,7 @@ export const getAllPosts = () => async (dispatch, getState) => {
 export const getMyPosts = () => async (dispatch, getState) => {
   dispatch(getAllPostRequest());
   try {
-    const token = localStorage.getItem("token") || getState().auth.token;
+    const token = getState().auth.accessToken || localStorage.getItem("token");
     const res = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/posts/my-posts`,
       {
@@ -198,7 +198,7 @@ export const getSinglePost = (id) => async (dispatch, getState) => {
   }
   dispatch(getSinglePostRequest());
   try {
-    const token = localStorage.getItem("token") || getState().auth.token;
+    const token = getState().auth.accessToken || localStorage.getItem("token");
     const res = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/posts/${id}`,
       {
@@ -218,7 +218,7 @@ export const updatePost =
   async (dispatch, getState) => {
     dispatch(updatePostRequest());
     try {
-      const token = getState().auth.token || localStorage.getItem("token");
+      const token = getState().auth.accessToken || localStorage.getItem("token");
       const res = await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/posts/${id}`,
         formData,
@@ -249,7 +249,7 @@ export const deletePost = (id, navigate) => async (dispatch, getState) => {
   }
   dispatch(deletePostRequest());
   try {
-    const token = getState().auth.token || localStorage.getItem("token");
+    const token = getState().auth.accessToken || localStorage.getItem("token");
     const { data } = await axios.delete(
       `${import.meta.env.VITE_API_BASE_URL}/posts/${id}`,
       {
@@ -268,7 +268,7 @@ export const deletePost = (id, navigate) => async (dispatch, getState) => {
 
 export const toggleLike = (postId) => async (dispatch, getState) => {
   try {
-    const token = getState().auth.token || localStorage.getItem("token");
+    const token = getState().auth.accessToken || localStorage.getItem("token");
     const res = await axios.put(
       `${import.meta.env.VITE_API_BASE_URL}/posts/${postId}/like`,
       {},
@@ -287,7 +287,7 @@ export const addComment = (postId, text) => async (dispatch, getState) => {
     const username =
       localStorage.getItem("username") || getState().auth?.user?.username;
     dispatch(getSinglePostRequest());
-    const token = getState().auth.token || localStorage.getItem("token");
+    const token = getState().auth.accessToken || localStorage.getItem("token");
     const res = await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}/posts/${postId}/comments`,
       { text, username },
@@ -307,7 +307,7 @@ export const deleteComment =
   (postId, commentId) => async (dispatch, getState) => {
     try {
       dispatch(getSinglePostRequest());
-      const token = getState().auth.token || localStorage.getItem("token");
+      const token = getState().auth.accessToken || localStorage.getItem("token");
       const res = await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/posts/${postId}/comments/${commentId}`,
         { headers: { Authorization: `Bearer ${token}` } }

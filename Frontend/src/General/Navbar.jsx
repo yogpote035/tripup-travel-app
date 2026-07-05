@@ -10,8 +10,13 @@ import {
   FaUserPlus,
   FaSignOutAlt,
   FaPlane,
+  FaBus,
+  FaTrain,
+  FaHome,
 } from "react-icons/fa";
+import { FiMoon, FiSun } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
+import { toggleTheme } from "../../AllStatesFeatures/Theme/ThemeSlice";
 
 /* ── Small reusable helpers ── */
 
@@ -48,11 +53,25 @@ const SidebarLink = ({ to, icon, children, onClick }) => (
 const Navbar = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  const theme = useSelector((s) => s.theme?.mode || "light");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef();
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
-  const handleLogout = () => dispatch(logout());
+  const handleLogout = async () => {
+    try {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/logout`, { method: "POST", credentials: "include" });
+    } catch (e) {
+      // ignore
+    }
+    dispatch(logout());
+  };
+  useEffect(() => {
+    try {
+      if (theme === "dark") document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
+    } catch (e) {}
+  }, [theme]);
   const navigate = useNavigate();
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -103,6 +122,18 @@ const Navbar = () => {
           </div>
 
           <StubDivider />
+
+          {/* Theme toggle */}
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => dispatch(toggleTheme())}
+              aria-label="Toggle theme"
+              className="flex items-center gap-2 px-3 py-1 rounded-md border border-transparent hover:border-orange-200 hover:bg-orange-100 text-sm text-stone-700"
+            >
+              {theme === "dark" ? <FiSun size={16} /> : <FiMoon size={16} />}
+              {theme === "dark" ? "Light" : "Dark"}
+            </button>
+          </div>
 
           {/* Desktop nav links */}
           <nav className="hidden md:flex items-center gap-1">
@@ -187,10 +218,11 @@ const Navbar = () => {
             Navigate
           </p>
           {[
-            { to: "/bookings", emoji: "📘", label: "Bookings" },
-            { to: "/itinerary", emoji: "📍", label: "Itinerary" },
-            { to: "/post", emoji: "📸", label: "Post" },
-          ].map(({ to, emoji, label }) => (
+            { to: "/", icon: <FaHome className="text-orange-500" />, label: "Home" },
+            { to: "/train", icon: <FaTrain className="text-orange-500" />, label: "Train" },
+            { to: "/bus", icon: <FaBus className="text-orange-500" />, label: "Bus" },
+            { to: "/flight", icon: <FaPlane className="text-orange-500" />, label: "Flight" },
+          ].map(({ to, icon, label }) => (
             <Link
               key={to}
               to={to}
@@ -198,7 +230,7 @@ const Navbar = () => {
               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-orange-100 text-stone-700 hover:text-orange-600 transition-all text-sm font-semibold mb-1"
             >
               <span className="w-7 h-7 flex items-center justify-center bg-orange-100 rounded-md text-base">
-                {emoji}
+                {icon}
               </span>
               {label}
             </Link>
@@ -245,6 +277,14 @@ const Navbar = () => {
               </SidebarLink>
             </>
           )}
+
+          <button
+            type="button"
+            onClick={() => dispatch(toggleTheme())}
+            className="mt-4 w-full px-3 py-2 rounded-lg border border-orange-200 bg-orange-50 text-stone-700 hover:bg-orange-100 transition-all text-sm font-semibold"
+          >
+            {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          </button>
         </div>
 
         {/* Barcode footer */}

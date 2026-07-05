@@ -64,7 +64,7 @@ module.exports.findBus = async (req, res) => {
 
   try {
     if (!source || !destination || !date) {
-      return res.status(406).json({ message: "Missing required parameters" });
+      return res.status(400).json({ message: "Missing required parameters" });
     }
 
     const dayOfWeek = new Date(date).toLocaleDateString("en-US", {
@@ -84,7 +84,7 @@ module.exports.findBus = async (req, res) => {
     });
     console.log("Before Filter Bus: ", buses.length);
     if (!buses.length) {
-      return res.status(204).json({ message: "No Bus Found" });
+      return res.status(200).json([]);
     }
 
     const filtered = buses
@@ -139,7 +139,7 @@ module.exports.findBus = async (req, res) => {
       .filter(Boolean);
     console.log("After Filter Bus: ", filtered.length);
     if (!filtered.length) {
-      return res.status(204).json({ message: "No Bus Found" });
+      return res.status(200).json([]);
     }
 
     res.status(200).json(filtered);
@@ -166,14 +166,14 @@ module.exports.bookBusSeats = async (req, res) => {
     passengers.length === 0 ||
     !req.header("userId")
   ) {
-    return res.status(406).json({ message: "Missing required booking fields" });
+    return res.status(400).json({ message: "Missing required booking fields" });
   }
 
   try {
     const bus = await BusModel.findOne({ busNumber });
 
     if (!bus) {
-      return res.status(204).json({ message: "Bus not found" });
+      return res.status(404).json({ message: "Bus not found" });
     }
 
     // Convert Map to plain object
@@ -185,7 +185,7 @@ module.exports.bookBusSeats = async (req, res) => {
     const destIndex = route.indexOf(destination.toLowerCase());
 
     if (sourceIndex === -1 || destIndex === -1 || sourceIndex >= destIndex) {
-      return res.status(203).json({ message: "Invalid route sequence" });
+      return res.status(400).json({ message: "Invalid route sequence" });
     }
 
     // Get station data safely
@@ -194,9 +194,7 @@ module.exports.bookBusSeats = async (req, res) => {
       stationMap[destination] || stationMap[destination.toLowerCase()];
 
     if (!sourceData || !destData) {
-      return res
-        .status(203)
-        .json({ message: "Invalid source or destination in stationMap" });
+      return res.status(400).json({ message: "Invalid source or destination in stationMap" });
     }
 
     const distance = destData.distance - sourceData.distance;
@@ -207,7 +205,7 @@ module.exports.bookBusSeats = async (req, res) => {
     for (const p of passengers) {
       const seat = bus.seats.find((s) => s.seatNumber === p.seatNumber);
       if (!seat || seat.isBooked) {
-        return res.status(203).json({
+        return res.status(409).json({
           message: `Seat ${p.seatNumber} is already booked or doesn't exist.`,
         });
       }

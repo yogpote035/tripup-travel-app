@@ -3,7 +3,10 @@ import { Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 function ProtectedRoutes({ children }) {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated, authInitialized } = useSelector((state) => state.auth);
+  if (!authInitialized) {
+    return null; // or a loading placeholder
+  }
   if (!isAuthenticated) {
     toast.info("Please try to login or signup first");
   }
