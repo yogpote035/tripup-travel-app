@@ -7,6 +7,7 @@ const SessionModel = require("../../models/SessionModel");
 const { hashToken } = require("../../utils/hashToken");
 const { generateAccessToken, generateRefreshToken } = require("../../utils/tokenUtils");
 const { setRefreshTokenCookie } = require("../../utils/cookieUtils");
+const ensureBootstrapAdmin = require("../../utils/bootstrapAdmin");
 
 module.exports.Signup = async (request, response) => {
   let { name, email, phone, password } = request.body;
@@ -179,5 +180,40 @@ module.exports.Login = async (request, response) => {
     return response
       .status(500)
       .json({ message: `Something went wrong` });
+  }
+};
+
+/** Authenticates an administrator without changing the customer login contract. */
+module.exports.AdminLogin = async (request, response) => {
+  const { email, password } = request.body;
+  if (!email || !password) return response.status(400).json({ message: "Email and password are required" });
+
+  try {
+    await ensureBootstrapAdmin();
+    const admin = await UserModel.findOne({ email: email.trim().toLowerCase(), role: "admin" });
+    if (!admin || admin.isActive === false || !(await bcrypt.compare(password, admin.password))) {
+      return response.status(401).json({ message: "Invalid administrator credentials" });
+    }
+
+    const sessionId = uuidv4();
+    const familyId = uuidv4();
+    const refreshToken = await generateRefreshToken(admin, sessionId, familyId);
+    await new SessionModel({
+      _id: sessionId,
+      userId: admin._id,
+      refreshTokenHash: hashToken(refreshToken),
+      familyId,
+      userAgent: request.get("User-Agent") || null,
+      ipAddress: request.ip,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    }).save();
+    setRefreshTokenCookie(response, refreshToken);
+    const accessToken = await generateAccessToken(admin);
+    return response.status(200).json({
+      message: "Administrator logged in",
+      data: { user: { _id: admin._id, name: admin.name, email: admin.email, role: admin.role }, accessToken },
+    });
+  } catch (error) {
+    return response.status(500).json({ message: "Unable to sign in" });
   }
 };

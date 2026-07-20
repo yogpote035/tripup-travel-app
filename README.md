@@ -66,6 +66,19 @@
 - **dotenv** – Manage secrets
 - **Multer** + **Cloudinary SDK** – File upload system
 
+### Admin setup
+
+Set the following optional values in `Backend/.env` before starting the backend to securely bootstrap the first administrator. The account is only created when no account exists with that email.
+
+```env
+ADMIN_NAME=TripUp Admin
+ADMIN_EMAIL=admin@example.com
+ADMIN_PHONE=+919876543210
+ADMIN_PASSWORD=use-a-strong-password
+```
+
+Administrators sign in through `/admin/login`. Once signed in, use **Administrators** in the admin sidebar to create, activate, or deactivate other administrator accounts.
+
 ---
 
 ## 🌐 External APIs (Optional / Recommended)

@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   Signup,
   Login,
+  AdminLogin,
 } = require("../../controllers/Authentication/UserController");
 const {
   refresh,
@@ -14,6 +15,7 @@ const {
 
 router.post("/signup", Signup);
 router.post("/login", Login);
+router.post("/admin/login", AdminLogin);
 
 router.post("/refresh", refresh);
 router.post("/logout", logout);

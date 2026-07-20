@@ -1,0 +1,12 @@
+import { createElement, useState } from "react";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { LayoutDashboard, Users, CalendarCheck, MessageSquare, ShieldCheck, Menu, X, LogOut, ChevronRight } from "lucide-react";
+import { logout } from "../../../AllStatesFeatures/Authentication/authSlice";
+
+const links = [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true }, { to: "/admin/users", label: "Users", icon: Users }, { to: "/admin/bookings", label: "Bookings", icon: CalendarCheck }, { to: "/admin/posts", label: "Posts", icon: MessageSquare }, { to: "/admin/administrators", label: "Administrators", icon: ShieldCheck }];
+export default function AdminLayout() {
+  const [open, setOpen] = useState(false); const [profileOpen, setProfileOpen] = useState(false); const { user } = useSelector((state) => state.auth); const location = useLocation(); const dispatch = useDispatch(); const navigate = useNavigate(); const crumb = location.pathname.split("/").filter(Boolean).at(-1) || "admin";
+  const signOut = () => { dispatch(logout()); navigate("/admin/login"); };
+  return <div className="admin-shell"><aside className={`admin-sidebar ${open ? "is-open" : ""}`}><Link to="/admin" className="admin-logo">TripUp <small>ADMIN</small></Link><nav>{links.map((link) => <NavLink key={link.to} to={link.to} end={link.end} onClick={() => setOpen(false)}>{createElement(link.icon, { size: 18 })}{link.label}</NavLink>)}</nav><div className="admin-sidebar-footer">Travel operations, simplified.</div></aside>{open && <button className="admin-backdrop" aria-label="Close navigation" onClick={() => setOpen(false)} />}<section className="admin-content"><header className="admin-header"><button className="admin-menu" onClick={() => setOpen(!open)} aria-label="Toggle navigation">{open ? <X /> : <Menu />}</button><div className="admin-breadcrumb"><Link to="/admin">Admin</Link><ChevronRight size={15} /><span>{crumb === "admin" ? "Dashboard" : crumb}</span></div><div className="admin-profile"><button onClick={() => setProfileOpen(!profileOpen)}>{user?.username?.slice(0, 1).toUpperCase()} <span>{user?.username}</span></button>{profileOpen && <div className="admin-profile-menu"><Link to="/profile">My profile</Link><button onClick={signOut}><LogOut size={15} /> Sign out</button></div>}</div></header><main className="admin-main"><Outlet /></main></section></div>;
+}

@@ -11,6 +11,7 @@ import itineraryReducer from "../AllStatesFeatures/Itinerary/AllItinerarySlice";
 import SocialMediaReducer from "../AllStatesFeatures/SocialFeed/SocialFeedSlice";
 import RecentActivityReducer from "../AllStatesFeatures/Recent Activity/RecentActivitySlice";
 import themeReducer from "../AllStatesFeatures/Theme/ThemeSlice";
+import adminReducer from "../AllStatesFeatures/Admin/AdminSlice";
 let Store = {}; //initialize because export default
 export default Store = configureStore({
   reducer: {
@@ -26,5 +27,6 @@ export default Store = configureStore({
     socialFeed: SocialMediaReducer,
     recentActivity: RecentActivityReducer, // for recent activity
     theme: themeReducer,
+    admin: adminReducer,
   },
 });

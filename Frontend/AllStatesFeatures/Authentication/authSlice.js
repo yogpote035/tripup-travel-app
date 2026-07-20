@@ -2,8 +2,17 @@ import { createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+function accessTokenPayload(token) {
+  try {
+    const part = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(part));
+  } catch {
+    return null;
+  }
+}
+
 const initialState = {
-  user: localStorage.getItem("userId") && localStorage.getItem("username") ? { userId: localStorage.getItem("userId"), username: localStorage.getItem("username") } : null,
+  user: localStorage.getItem("userId") && localStorage.getItem("username") ? { userId: localStorage.getItem("userId"), username: localStorage.getItem("username"), role: localStorage.getItem("userRole") || "user" } : null,
   isAuthenticated: false,
   authInitialized: false,
   loading: false,
@@ -26,9 +35,11 @@ const authSlice = createSlice({
       state.user = {
         userId: action.payload.user._id,
         username: action.payload.user.name,
+        role: action.payload.user.role || "user",
       };
       localStorage.setItem("userId", action.payload.user._id);
       localStorage.setItem("username", action.payload.user.name);
+      localStorage.setItem("userRole", action.payload.user.role || "user");
       state.accessToken = action.payload.accessToken;
     },
     loginFailure: (state, action) => {
@@ -50,9 +61,11 @@ const authSlice = createSlice({
       state.user = {
         userId: action.payload.user._id,
         username: action.payload.user.name,
+        role: action.payload.user.role || "user",
       };
       localStorage.setItem("userId", action.payload.user._id);
       localStorage.setItem("username", action.payload.user.name);
+      localStorage.setItem("userRole", action.payload.user.role || "user");
       state.accessToken = action.payload.accessToken;
     },
     signupFailure: (state, action) => {
@@ -72,6 +85,7 @@ const authSlice = createSlice({
       state.authInitialized = true;
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
+      localStorage.removeItem("userRole");
       toast.success("Logout successful");
     },
     setAuthInitialized: (state, action) => {
@@ -80,6 +94,16 @@ const authSlice = createSlice({
     setAccessToken: (state, action) => {
       state.accessToken = action.payload;
       state.isAuthenticated = !!action.payload;
+      const payload = action.payload ? accessTokenPayload(action.payload) : null;
+      if (payload?.sub) {
+        state.user = {
+          userId: payload.sub,
+          username: state.user?.username || localStorage.getItem("username") || "User",
+          role: payload.role || "user",
+        };
+        localStorage.setItem("userId", payload.sub);
+        localStorage.setItem("userRole", payload.role || "user");
+      }
     },
 
     clearErrors: (state) => {
@@ -176,5 +200,20 @@ export const signupUser = (payload) => async (dispatch) => {
       )
     );
     toast.error(error.response?.data?.message);
+  }
+};
+
+export const loginAdmin = ({ email, password }) => async (dispatch) => {
+  dispatch(loginRequest());
+  try {
+    const { data } = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/admin/login`, { email, password });
+    dispatch(loginSuccess(data.data));
+    toast.success(data.message || "Administrator login successful");
+    return { success: true };
+  } catch (error) {
+    const message = error.response?.data?.message || "Administrator login failed";
+    dispatch(loginFailure(message));
+    toast.error(message);
+    return { success: false };
   }
 };

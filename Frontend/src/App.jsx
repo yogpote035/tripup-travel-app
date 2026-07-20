@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { setAccessToken, setAuthInitialized } from "../AllStatesFeatures/Authentication/authSlice";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Login from "./components/Authentication/Login.jsx";
 import Signup from "./components/Authentication/Signup.jsx";
 import { ToastContainer } from "react-toastify";
@@ -36,11 +36,22 @@ import PostsFeed from "./components/SocialFeed/PostsFeed.jsx";
 import SinglePostView from "./components/SocialFeed/SinglePostView.jsx";
 import EditPost from "./components/SocialFeed/EditPost.jsx";
 import PageNotFound from "./General/PageNotFound.jsx";
+import AdminLogin from "./components/Admin/AdminLogin.jsx";
+import AdminLayout from "./components/Admin/AdminLayout.jsx";
+import AdminProtectedRoute from "./components/Admin/AdminProtectedRoute.jsx";
+import AdminDashboard from "./components/Admin/AdminDashboard.jsx";
+import AdminUsers from "./components/Admin/AdminUsers.jsx";
+import AdminBookings from "./components/Admin/AdminBookings.jsx";
+import AdminPosts from "./components/Admin/AdminPosts.jsx";
+import AdminAdministrators from "./components/Admin/AdminAdministrators.jsx";
+import "./components/Admin/admin.css";
 
 function App() {
   const dispatch = useDispatch();
 
   const theme = useSelector((state) => state.theme?.mode || "light");
+  const location = useLocation();
+  const isAdminArea = location.pathname.startsWith("/admin");
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -74,7 +85,7 @@ function App() {
           const token = res.data?.data?.accessToken;
           dispatch(setAccessToken(token));
         }
-      } catch (e) {
+      } catch {
         if (mounted) {
           dispatch(setAccessToken(null));
         }
@@ -92,10 +103,18 @@ function App() {
   return (
     <>
       <div className={`flex flex-col min-h-screen ${theme === "dark" ? "bg-stone-950 text-stone-100" : "bg-orange-50 text-stone-900"}`}>
-        <Navbar />
-        <div className="mb-10"></div>
+        {!isAdminArea && <Navbar />}
+        {!isAdminArea && <div className="mb-10"></div>}
         <main className={`flex-grow ${theme === "dark" ? "bg-stone-950" : "bg-orange-50"}`}>
           <Routes>
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="bookings" element={<AdminBookings />} />
+              <Route path="posts" element={<AdminPosts />} />
+              <Route path="administrators" element={<AdminAdministrators />} />
+            </Route>
             <Route exact path="/" element={<Home />} />
             <Route exact path="/login" element={<Login />} />
             <Route exact path="/signup" element={<Signup />} />
@@ -251,10 +270,10 @@ function App() {
             {/* For Non Existing Route */}
             <Route path="*" element={<PageNotFound />} />
           </Routes>
-          <div className="mt-10"></div>
+          {!isAdminArea && <div className="mt-10"></div>}
         </main>
 
-        <Footer />
+        {!isAdminArea && <Footer />}
         <ToastContainer
           position="top-right"
           autoClose={2000}
@@ -270,7 +289,7 @@ function App() {
           toastClassName={theme === "dark" ? "custom-toast custom-toast-dark" : "custom-toast custom-toast-light"}
           bodyClassName="custom-toast-body"
           closeButton={false}
-          style={{ top: "73px", right: "2px" }}
+          style={{ top: isAdminArea ? "16px" : "73px", right: "16px" }}
         />
       </div>
     </>

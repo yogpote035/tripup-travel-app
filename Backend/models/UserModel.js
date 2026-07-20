@@ -21,6 +21,10 @@ const UserSchema = new mongoose.Schema({
     default: "user", // 'user' or 'admin'
     required: true,
   },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

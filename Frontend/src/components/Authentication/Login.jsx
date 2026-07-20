@@ -177,6 +177,9 @@ function Login() {
         <p className="text-center text-stone-400 text-xs mt-5">
           By logging in, you agree to our Terms of Service and Privacy Policy.
         </p>
+        <Link to="/admin/login" className="mt-3 block text-center text-xs font-medium text-stone-500 hover:text-orange-500 transition-colors">
+          Sign in as an administrator
+        </Link>
       </div>
     </div>
   );
