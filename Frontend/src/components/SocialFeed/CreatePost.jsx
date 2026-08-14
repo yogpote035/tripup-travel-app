@@ -1,13 +1,15 @@
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { createPost } from "../../../AllStatesFeatures/SocialFeed/SocialFeedSlice";
-import { useState } from "react";
+import { createLocation, searchLocations } from "../../../AllStatesFeatures/Location/locationSlice";
+import { useState, useEffect, useRef } from "react";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TextField, createTheme, ThemeProvider } from "@mui/material";
 import Loading from "../../General/Loading";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   FileText,
   MapPin,
@@ -46,13 +48,69 @@ const iconInputCls =
 const CreatePost = () => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.socialFeed);
+  const { loading: locationLoading, searchResults } = useSelector((state) => state.locations);
   const navigate = useNavigate();
   const { register, handleSubmit, reset, setValue } = useForm();
   const [images, setImages] = useState([]);
   const [travelDate, setTravelDate] = useState(null);
+  const [locationInput, setLocationInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [creatingLocation, setCreatingLocation] = useState(false);
+  const suggestionsRef = useRef(null);
 
   const handleImageChange = (e) => setImages(Array.from(e.target.files));
   const removeImage = (index) => setImages(images.filter((_, i) => i !== index));
+
+  useEffect(() => {
+    if (locationInput.trim().length >= 2) {
+      const timer = window.setTimeout(() => {
+        dispatch(searchLocations(locationInput.trim()));
+        setShowSuggestions(true);
+      }, 250);
+      return () => window.clearTimeout(timer);
+    }
+    setShowSuggestions(false);
+  }, [locationInput, dispatch]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLocationChange = (value) => {
+    setLocationInput(value);
+    setValue("location", value);
+  };
+
+  const handleSelectLocation = (locationName) => {
+    setLocationInput(locationName);
+    setValue("location", locationName);
+    setShowSuggestions(false);
+  };
+
+  const handleCreateLocation = async () => {
+    const trimmed = locationInput.trim();
+    if (!trimmed) return;
+    setCreatingLocation(true);
+
+    try {
+      const location = await dispatch(createLocation({ name: trimmed })).unwrap();
+      setLocationInput(location.name);
+      setValue("location", location.name);
+      setShowSuggestions(false);
+      toast.success(`Created location “${location.name}”`);
+    } catch (createError) {
+      toast.error(createError || "Unable to create location");
+    } finally {
+      setCreatingLocation(false);
+    }
+  };
 
   const onSubmit = (data) => {
     const formData = new FormData();
@@ -67,6 +125,8 @@ const CreatePost = () => {
     reset();
     setImages([]);
     setTravelDate(null);
+    setLocationInput("");
+    setShowSuggestions(false);
   };
 
   if (loading) return <Loading message="Creating your post…" color="border-t-orange-500" />;
@@ -113,15 +173,53 @@ const CreatePost = () => {
 
               {/* Location */}
               <Field label="Location">
-                <div className="relative">
+                <div className="relative" ref={suggestionsRef}>
                   <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" strokeWidth={2} />
                   <input
                     required
                     type="text"
                     placeholder="Where did you travel?"
                     {...register("location", { required: true })}
+                    value={locationInput}
+                    onChange={(e) => handleLocationChange(e.target.value)}
+                    onFocus={() => {
+                      if (locationInput.trim().length >= 2) {
+                        setShowSuggestions(true);
+                      }
+                    }}
                     className={iconInputCls}
                   />
+
+                  {showSuggestions && (
+                    <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-orange-200 bg-white shadow-xl">
+                      {locationLoading ? (
+                        <div className="p-3 text-sm text-stone-500">Searching locations…</div>
+                      ) : searchResults && searchResults.length > 0 ? (
+                        searchResults.map((location) => (
+                          <button
+                            key={location._id}
+                            type="button"
+                            onClick={() => handleSelectLocation(location.name)}
+                            className="w-full text-left px-4 py-3 text-sm text-stone-800 hover:bg-orange-50"
+                          >
+                            {location.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="space-y-2 p-4 text-sm text-stone-500">
+                          <p>No locations found.</p>
+                          <button
+                            type="button"
+                            onClick={handleCreateLocation}
+                            disabled={creatingLocation}
+                            className="w-full rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {creatingLocation ? "Creating…" : `Create "${locationInput.trim()}"`}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Field>
 
@@ -174,10 +272,11 @@ const CreatePost = () => {
                       className={`${iconInputCls} appearance-none pr-8`}
                     >
                       <option value="public">Public</option>
+                      <option value="followers">Followers</option>
                       <option value="private">Private</option>
                     </select>
                     <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400" width="10" height="6" viewBox="0 0 10 6" fill="none">
-                      <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
                   </div>
                 </Field>

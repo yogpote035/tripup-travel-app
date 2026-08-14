@@ -57,7 +57,22 @@ const FlightBookingForm = () => {
       if (!p.name || !p.gender || !p.seatNumber || !p.email || !p.phone)
         return toast.info("Please fill all fields for each passenger");
     }
-    dispatch(bookFlightSeat({ flightId: flight?._id, journeyDate, from, to, passengers }, navigate));
+
+    const totalAmount = Number(flight?.price || 0) * passengers.length;
+    dispatch(
+      bookFlightSeat(
+        {
+          flightId: flight?._id,
+          journeyDate,
+          from,
+          to,
+          passengers,
+          amount: totalAmount,
+          flight,
+        },
+        navigate
+      )
+    );
   };
 
   if (!state)
@@ -141,7 +156,7 @@ const FlightBookingForm = () => {
                       className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"
                       width="10" height="6" viewBox="0 0 10 6" fill="none"
                     >
-                      <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
                   </div>
                 </Field>

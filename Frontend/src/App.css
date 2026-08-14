@@ -1,0 +1,16 @@
+/* Sidebar hidden-scroll helpers */
+.user-sidebar-menu {
+  flex: 1 1 auto;
+  min-height: 0; /* allow proper flex+overflow behavior */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.5rem 1rem 1rem;
+}
+.user-sidebar-menu::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.user-sidebar-menu {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

@@ -1,23 +1,114 @@
 const TrainBookingModel = require("../../models/TrainBookingModel");
 const UserModel = require("../../models/UserModel");
 const TrainModel = require("../../models/TrainModel");
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const validateEmail = require("../../Middleware/validateEmail");
 const PhoneNumberValidator = require("../../Middleware/PhoneNumberValidator");
+const { sendNotification } = require('../../utils/socket');
+const { getConfig } = require("../../config/environment");
+const { confirmExistingBooking } = require("../../services/payment/UniversalConfirmationService");
+
+const config = getConfig();
+const razorpayClient = config.razorpay?.keyId && config.razorpay?.keySecret
+  ? new Razorpay({
+    key_id: config.razorpay.keyId,
+    key_secret: config.razorpay.keySecret,
+  })
+  : null;
+
+function verifyRazorpaySignature({ order_id, payment_id, signature }) {
+  if (!config.razorpay?.keySecret || !order_id || !payment_id || !signature) {
+    return false;
+  }
+
+  const expectedSignature = crypto
+    .createHmac("sha256", config.razorpay.keySecret)
+    .update(`${order_id}|${payment_id}`)
+    .digest("hex");
+
+  return expectedSignature === signature;
+}
+
+function pickRandomSeats(availableSeats = [], requiredCount = 1) {
+  if (!Array.isArray(availableSeats) || !availableSeats.length) return [];
+
+  const shuffled = [...availableSeats].sort(() => Math.random() - 0.5);
+  const chosen = shuffled.slice(0, Math.min(requiredCount, shuffled.length));
+
+  return chosen;
+}
+
+const normalizeStationName = (value) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+const normalizeDayName = (value) => {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (!raw) return "";
+
+  const shortMap = {
+    sun: "sunday",
+    mon: "monday",
+    tue: "tuesday",
+    thu: "thursday",
+    wed: "wednesday",
+    fri: "friday",
+    sat: "saturday",
+  };
+
+  const normalized = raw.replace(/[^a-z]/g, "");
+  return shortMap[normalized] || normalized;
+};
+
+const matchesStation = (storedStation, queryStation) => {
+  if (!storedStation || !queryStation) return false;
+
+  const stored = normalizeStationName(storedStation);
+  const query = normalizeStationName(queryStation);
+
+  if (!stored || !query) return false;
+
+  return (
+    stored === query ||
+    stored.includes(query) ||
+    query.includes(stored) ||
+    stored.startsWith(query) ||
+    query.startsWith(stored)
+  );
+};
+
+const getRouteStationIndex = (route, stationName) => {
+  if (!Array.isArray(route) || !route.length) return -1;
+
+  return route.findIndex((station) => {
+    if (typeof station === "string") return matchesStation(station, stationName);
+    if (station && typeof station === "object") {
+      return [station.station, station.name, station.city, station.stop, station.label]
+        .some((value) => matchesStation(value, stationName));
+    }
+    return false;
+  });
+};
 
 const getDistance = (train, from, to) => {
-  const stationDistances = Object.fromEntries(train.stationDistances);
-  const fromKey = Object.keys(stationDistances).find(
-    (key) => key.toLowerCase() === from.toLowerCase()
-  );
-  const toKey = Object.keys(stationDistances).find(
-    (key) => key.toLowerCase() === to.toLowerCase()
-  );
+  const rawDistances = train?.stationDistances || {};
+  const stationDistances = Array.isArray(rawDistances)
+    ? Object.fromEntries(rawDistances)
+    : rawDistances;
 
-  const fromDist = stationDistances[fromKey];
-  const toDist = stationDistances[toKey];
+  const fromKey = Object.keys(stationDistances).find((key) => matchesStation(key, from));
+  const toKey = Object.keys(stationDistances).find((key) => matchesStation(key, to));
 
-  return fromDist != null && toDist != null && fromDist < toDist
+  if (!fromKey || !toKey) return 0;
+
+  const fromDist = Number(stationDistances[fromKey]);
+  const toDist = Number(stationDistances[toKey]);
+
+  return Number.isFinite(fromDist) && Number.isFinite(toDist) && fromDist < toDist
     ? toDist - fromDist
     : 0;
 };
@@ -33,24 +124,43 @@ module.exports.TrainBetween = async (req, res) => {
   const toClean = to.trim().toLowerCase();
 
   try {
-    const trains = await TrainModel.find({
-      route: {
-        $all: [new RegExp(`^${from}$`, "i"), new RegExp(`^${to}$`, "i")],
-      },
-      ...(day && {
-        days: { $in: [new RegExp(`^${day}$`, "i"), /^Daily$/i] },
-      }),
-      ...(trainType && { trainType: new RegExp(`^${trainType}$`, "i") }),
-    });
+    const allTrains = await TrainModel.find({}).lean();
+    const trains = Array.isArray(allTrains) ? allTrains : [allTrains].filter(Boolean);
 
     const validTrains = trains
+      .filter((train) => {
+        const route = Array.isArray(train?.route) ? train.route : [];
+        if (!route.length) return false;
+
+        const fromIndex = getRouteStationIndex(route, fromClean);
+        const toIndex = getRouteStationIndex(route, toClean);
+
+        if (fromIndex === -1 || toIndex === -1 || fromIndex >= toIndex) {
+          return false;
+        }
+
+        if (day) {
+          const requestedDay = normalizeDayName(day);
+          const days = Array.isArray(train?.days)
+            ? train.days.map((value) => normalizeDayName(value))
+            : [];
+          const matchesDay = days.some((value) => value === requestedDay || value === "daily");
+          if (!matchesDay) return false;
+        }
+
+        if (trainType) {
+          const targetType = String(trainType).trim().toLowerCase();
+          if (String(train?.trainType || "").trim().toLowerCase() !== targetType) {
+            return false;
+          }
+        }
+
+        return true;
+      })
       .map((train) => {
-        const fromIndex = train.route.findIndex(
-          (station) => station.toLowerCase() === fromClean
-        );
-        const toIndex = train.route.findIndex(
-          (station) => station.toLowerCase() === toClean
-        );
+        const route = Array.isArray(train?.route) ? train.route : [];
+        const fromIndex = getRouteStationIndex(route, fromClean);
+        const toIndex = getRouteStationIndex(route, toClean);
 
         if (fromIndex === -1 || toIndex === -1 || fromIndex >= toIndex) {
           return null;
@@ -58,13 +168,17 @@ module.exports.TrainBetween = async (req, res) => {
 
         const distance = getDistance(train, from, to);
 
-        const updatedCoaches = train.coaches.map((coach) => ({
-          ...coach._doc,
-          fare: parseFloat((Number(coach.baseFarePerKm) * distance).toFixed(2)),
-        }));
+        const updatedCoaches = (train.coaches || []).map((coach) => {
+          const safeCoach = coach && coach._doc ? coach._doc : coach;
+          const baseFare = Number(safeCoach?.baseFarePerKm ?? safeCoach?.base_fare_per_km ?? 0);
+          return {
+            ...safeCoach,
+            fare: parseFloat((baseFare * distance).toFixed(2)),
+          };
+        });
 
         return {
-          ...train._doc,
+          ...train,
           coaches: updatedCoaches,
           distance,
         };
@@ -77,13 +191,13 @@ module.exports.TrainBetween = async (req, res) => {
 
     return res.status(200).json(validTrains);
   } catch (error) {
+    console.error("TrainBetween error:", error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
 
 module.exports.bookTrain = async (req, res) => {
   const {
-    userId,
     trainNumber,
     coachType,
     passengerNames,
@@ -92,7 +206,15 @@ module.exports.bookTrain = async (req, res) => {
     journeyDate,
     email,
     phone,
+    paymentMethod,
   } = req.body;
+
+  // Use the authenticated user's ID from the JWT token
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
 
   if (
     !trainNumber ||
@@ -100,22 +222,17 @@ module.exports.bookTrain = async (req, res) => {
     !passengerNames ||
     !from ||
     !to ||
-    !journeyDate ||
-    !userId
+    !journeyDate
   ) {
     return res.status(400).json({ message: "Missing booking data" });
   }
 
-  console.log("before userEmail Email is Form Booking :", email);
-
-  // Fallback to user info from UserModel
   let userEmail = email ? email : null;
   let userPhone = phone ? phone : null;
 
   if ((!email || !phone) && userId) {
     const user = await UserModel.findById(userId);
 
-    //if user not found
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -128,25 +245,13 @@ module.exports.bookTrain = async (req, res) => {
     }
   }
 
-  console.log("After userEmail Email is Form Booking :", userEmail);
-
-  console.log("user phone before validate :", userPhone);
-
   const result = PhoneNumberValidator(userPhone);
-
-  console.log("user phone After validate :", userPhone);
-
   if (!result.isValid) {
     return res.status(400).json({ message: "Invalid phone number" });
   }
-  console.log("Before formatted phone from signup ");
-  console.log(userPhone);
-  userPhone = result.formatted; // formate number
-  console.log("After formatted phone from signup ");
-  console.log(userPhone);
+  userPhone = result.formatted;
 
   const isEmailValid = await validateEmail(userEmail);
-
   if (!isEmailValid) {
     return res.status(400).json({ message: "Email does not appear to be valid." });
   }
@@ -157,68 +262,20 @@ module.exports.bookTrain = async (req, res) => {
 
     const distance = getDistance(train, from, to);
     const selectedCoach = train.coaches.find(
-      (c) => c.coachType.toLowerCase() === coachType.toLowerCase()
+      (c) => String(c.coachType || "").toLowerCase() === String(coachType).trim().toLowerCase()
     );
-    if (!selectedCoach)
+    if (!selectedCoach) {
       return res.status(404).json({ message: "Coach not found" });
-
-    const availableSeats = selectedCoach.seats.filter((s) => !s.isBooked);
-
-    if (availableSeats.length < passengerNames.length) {
-      return res.status(409).json({ message: "Not enough seats available" });
     }
 
-    // Seat Allocation
-    let seatToBook = [];
-
-    // If only one --> random
-    if (passengerNames.length === 1) {
-      seatToBook.push(
-        availableSeats[Math.floor(Math.random() * availableSeats.length)]
-      );
-    } else {
-      // Try continuous seats
-      for (let i = 0; i <= availableSeats.length - passengerNames.length; i++) {
-        const group = availableSeats.slice(i, i + passengerNames.length);
-        const isContinuous = group.every(
-          (s, idx, arr) =>
-            idx === 0 || s.seatNumber === arr[idx - 1].seatNumber + 1
-        );
-        if (isContinuous) {
-          seatToBook = group;
-          break;
-        }
-      }
-
-      // pick first N available
-      if (seatToBook.length === 0) {
-        seatToBook = availableSeats.slice(0, passengerNames.length);
-      }
-    }
-
-    // Update seat in TrainModel
-    seatToBook.forEach((seat, i) => {
-      const seatInTrain = selectedCoach.seats.find((s) =>
-        s._id.equals(seat._id)
-      );
-      seatInTrain.isBooked = true;
-      seatInTrain.passengerName = passengerNames[i];
-      seatInTrain.bookingTime = new Date();
-    });
-
-    selectedCoach.availableSeats -= passengerNames.length;
-    await train.save();
-
-    const fare =
-      Math.round(selectedCoach.baseFarePerKm * distance) *
-      passengerNames.length;
+    const fare = Math.round(Number(selectedCoach.baseFarePerKm || 0) * distance) * passengerNames.length;
 
     const booking = await TrainBookingModel.create({
       user: userId,
       trainNumber,
       trainName: train.trainName,
       coachType,
-      seatNumbers: seatToBook.map((seat) => seat.seatNumber),
+      seatNumbers: [],
       passengerNames,
       from,
       to,
@@ -226,15 +283,220 @@ module.exports.bookTrain = async (req, res) => {
       fare,
       email: userEmail,
       phone: userPhone,
-      status: "booked", //caus an error check
+      status: "pending",
+      payment: {
+        method: paymentMethod || "upi",  // Default to 'upi' if not provided, will be updated with actual method from Razorpay
+        provider: "razorpay",
+        status: "pending",
+        originalMethod: paymentMethod || null,  // Store the originally selected method
+      },
     });
 
+    if (!razorpayClient) {
+      return res.status(500).json({ message: "Razorpay is not configured on the server." });
+    }
+
+    const order = await razorpayClient.orders.create({
+      amount: Math.round(fare * 100),
+      currency: "INR",
+      receipt: `train_booking_${booking._id}`,
+      payment_capture: 1,
+      notes: {
+        trainNumber,
+        userId,
+        bookingId: booking._id.toString(),
+        bookingType: "train",
+      },
+    });
+    booking.payment = { ...(booking.payment || {}), orderId: order.id };
+    await booking.save();
+
     return res.status(201).json({
-      message: "Booking successful",
-      booking,
+      message: "Payment required to complete booking",
+      data: {
+        booking,
+        payment: {
+          order,
+          paymentKeyId: config.razorpay.keyId,
+        },
+      },
     });
   } catch (err) {
-    res.status(500).json({ message: "Booking failed" });
+    console.error("Train booking order creation failed:", err);
+    return res.status(500).json({ message: "Booking failed" });
+  }
+};
+
+module.exports.confirmTrainBooking = async (req, res) => {
+  try {
+    const {
+      bookingId,
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+    } = req.body;
+
+    if (!bookingId || !razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+      return res.status(400).json({ message: "Payment verification fields are required" });
+    }
+
+    const authenticatedUserId = req.user?.userId;
+    if (!authenticatedUserId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const booking = await TrainBookingModel.findById(bookingId);
+
+    if (!booking) {
+      console.error(`❌ Train booking not found: bookingId=${bookingId}`);
+      return res.status(404).json({ message: "Pending train booking not found" });
+    }
+
+    const bookingUserId = String(booking.user || "").trim();
+    const requestUserId = String(authenticatedUserId || "").trim();
+
+    console.log(`🔍 Train booking confirmation - bookingUserId: ${bookingUserId}, requestUserId: ${requestUserId}`);
+
+    if (bookingUserId !== requestUserId) {
+      console.error(`❌ User mismatch: booking belongs to ${bookingUserId}, but request is from ${requestUserId}`);
+      return res.status(403).json({ message: "You are not authorized to confirm this booking" });
+    }
+
+    const isValidSignature = verifyRazorpaySignature({
+      order_id: razorpay_order_id,
+      payment_id: razorpay_payment_id,
+      signature: razorpay_signature,
+    });
+
+    if (!isValidSignature) {
+      booking.payment = {
+        ...(booking.payment || {}),
+        provider: "razorpay",
+        status: "failed",
+        reference: razorpay_payment_id,
+      };
+      booking.status = "failed";
+      await booking.save();
+      return res.status(400).json({ message: "Payment verification failed" });
+    }
+
+    const confirmedBooking = await confirmExistingBooking({
+      bookingId,
+      bookingType: "train",
+      payment: { id: razorpay_payment_id },
+      orderId: razorpay_order_id,
+    });
+    return res.status(200).json({
+      message: confirmedBooking.status === "booked" ? "Booking successful" : `Added to ${confirmedBooking.status}`,
+      booking: confirmedBooking,
+    });
+
+    const train = await TrainModel.findOne({ trainNumber: booking.trainNumber });
+    if (!train) {
+      return res.status(404).json({ message: "Train not found" });
+    }
+
+    const selectedCoach = train.coaches.find(
+      (coach) => String(coach.coachType || "").toLowerCase() === String(booking.coachType || "").trim().toLowerCase()
+    );
+
+    if (!selectedCoach) {
+      return res.status(404).json({ message: "Coach not found" });
+    }
+
+    const availableSeats = selectedCoach.seats.filter((s) => !s.isBooked && (!s.status || s.status === "Available"));
+
+    let seatToBook = [];
+    let finalStatus = "booked";
+
+    if (availableSeats.length < booking.passengerNames.length) {
+      const canUseRac = (selectedCoach.racCount || 0) + booking.passengerNames.length <= (selectedCoach.racCapacity || 0);
+      const canUseWaitingList = (selectedCoach.waitingListCount || 0) + booking.passengerNames.length <= (selectedCoach.waitingListCapacity || 0);
+
+      if (!canUseRac && !canUseWaitingList) {
+        return res.status(409).json({ message: "No confirmed, RAC, or waiting-list capacity is available" });
+      }
+
+      finalStatus = canUseRac ? "rac" : "waiting";
+      if (finalStatus === "rac") {
+        selectedCoach.racCount = (selectedCoach.racCount || 0) + booking.passengerNames.length;
+      } else {
+        selectedCoach.waitingListCount = (selectedCoach.waitingListCount || 0) + booking.passengerNames.length;
+      }
+    } else {
+      seatToBook = pickRandomSeats(availableSeats, booking.passengerNames.length);
+
+      seatToBook.forEach((seat, index) => {
+        const seatInTrain = selectedCoach.seats.find((currentSeat) => Number(currentSeat.seatNumber) === Number(seat.seatNumber));
+        if (seatInTrain) {
+          seatInTrain.isBooked = true;
+          seatInTrain.status = "Booked";
+          seatInTrain.passengerName = booking.passengerNames[index];
+          seatInTrain.bookingTime = new Date();
+        }
+      });
+
+      selectedCoach.availableSeats = Math.max(0, (selectedCoach.availableSeats || 0) - booking.passengerNames.length);
+    }
+
+    let razorpayPaymentData = null;
+    if (razorpayClient) {
+      try {
+        razorpayPaymentData = await razorpayClient.payments.fetch(razorpay_payment_id);
+      } catch (error) {
+        console.warn("Unable to fetch Razorpay payment details:", error?.message || error);
+      }
+    }
+
+    // Use actual method from Razorpay, fall back to originally selected method, then 'upi'
+    const paymentMethod = razorpayPaymentData?.method || booking.payment?.originalMethod || booking.payment?.method || "upi";
+    const paymentStatus = razorpayPaymentData?.status || "success";
+    const paymentAmount = razorpayPaymentData?.amount ? Number(razorpayPaymentData.amount) / 100 : Number(booking.fare || 0);
+
+    booking.status = finalStatus;
+    // Ensure seats are properly assigned
+    booking.seatNumbers = seatToBook && seatToBook.length > 0
+      ? seatToBook.map((seat) => seat.seatNumber)
+      : [];
+    booking.payment = {
+      ...(booking.payment || {}),
+      provider: "razorpay",
+      method: paymentMethod,
+      status: paymentStatus === "captured" || paymentStatus === "authorized" || paymentStatus === "paid" ? "success" : paymentStatus,
+      reference: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      amount: paymentAmount,
+      currency: razorpayPaymentData?.currency || "INR",
+      email: razorpayPaymentData?.email || booking.email,
+      contact: razorpayPaymentData?.contact || booking.phone,
+      captured: Boolean(razorpayPaymentData?.captured),
+      cardType: razorpayPaymentData?.card?.type || null,
+      bank: razorpayPaymentData?.bank || null,
+      wallet: razorpayPaymentData?.wallet || null,
+      createdAt: razorpayPaymentData?.created ? new Date(razorpayPaymentData.created * 1000) : new Date(),
+    };
+
+    await train.save();
+    await booking.save();
+
+    try {
+      await sendNotification(booking.user, {
+        type: "booking_confirmed",
+        title: "Train Booked",
+        message: `Your train booking for ${booking.journeyDate} is ${finalStatus === "booked" ? "confirmed" : finalStatus}`,
+        meta: { bookingId: booking._id, trainNumber: booking.trainNumber },
+      });
+    } catch (notificationError) {
+      console.error("Train booking notification failed:", notificationError?.message || notificationError);
+    }
+
+    return res.status(201).json({
+      message: finalStatus === "booked" ? "Booking successful" : finalStatus === "rac" ? "Added to RAC" : "Added to waiting list",
+      booking,
+    });
+  } catch (error) {
+    console.error("Train booking confirmation failed:", error);
+    return res.status(500).json({ message: "Booking confirmation failed" });
   }
 };
 
@@ -247,14 +509,15 @@ module.exports.getUserBookings = async (req, res) => {
     }
     const bookings = await TrainBookingModel.find({ user: userId }).sort({
       bookedAt: -1,
-    });
+    }).lean();
 
-    if (!bookings.length) {
+    if (!bookings || !bookings.length) {
       return res.status(200).json([]);
     }
 
     res.status(200).json(bookings);
   } catch (err) {
+    console.error("Failed to retrieve train bookings:", err);
     res.status(500).json({ message: "Failed to retrieve bookings" });
   }
 };
@@ -284,9 +547,13 @@ module.exports.generateReceiptPdf = async (req, res) => {
       phone: booking.phone,
       email: booking.email,
       status: booking.status,
+      payment: {
+        status: booking.payment?.status || "pending",
+        method: booking.payment?.method || booking.payment?.originalMethod || "upi",
+      },
       passengers: booking.passengerNames.map((name, index) => ({
         name,
-        seat: booking.seatNumbers[index] || "N/A",
+        seat: booking.seatNumbers && booking.seatNumbers[index] ? booking.seatNumbers[index] : "N/A",
       })),
     };
 
@@ -336,26 +603,27 @@ module.exports.generateReceiptPdf = async (req, res) => {
   <body>
     <div class="mainHeading">Train Ticket</div>
     <div class="ticket">
-      <div class="title">${ticketData.trainName} (${
-      ticketData.trainNumber
-    })</div>
-      <div class="info"><strong>Route:</strong> ${ticketData.from} ➝ ${
-      ticketData.to
-    }</div>
+      <div class="title">${ticketData.trainName} (${ticketData.trainNumber
+      })</div>
+      <div class="info"><strong>Route:</strong> ${ticketData.from} ➝ ${ticketData.to
+      }</div>
       <div class="info"><strong>Date:</strong> ${ticketData.date}</div>
       <div class="info"><strong>Coach:</strong> ${ticketData.coach}</div>
       <div class="info"><strong>Fare:</strong> ₹${ticketData.fare}</div>
       <div class="info"><strong>Phone:</strong> ${ticketData.phone}</div>
       <div class="info"><strong>Email:</strong> ${ticketData.email}</div>
       <div class="info"><strong>Status:</strong> ${ticketData.status}</div>
+      <div class="info"><strong>Payment Status:</strong> ${ticketData.payment.status || "pending"}</div>
+      <div class="info"><strong>Payment Method:</strong> ${ticketData.payment.method || "upi"}</div>
+      ${ticketData.payment.reference ? `<div class="info"><strong>Payment Ref:</strong> ${ticketData.payment.reference}</div>` : ""}
       <div class="passengers">
         <strong>Passengers:</strong>
         ${ticketData.passengers
-          .map(
-            (p, i) =>
-              `<p>${i + 1}. ${p.name} - Seat: <strong>${p.seat}</strong></p>`
-          )
-          .join("")}
+        .map(
+          (p, i) =>
+            `<p>${i + 1}. ${p.name} - Seat: <strong>${p.seat}</strong></p>`
+        )
+        .join("")}
       </div>
     </div>
   </body>
@@ -439,9 +707,13 @@ exports.mailTrainTicket = async (req, res) => {
       phone: booking.phone,
       email: booking.email,
       status: booking.status,
+      payment: {
+        status: booking.payment?.status || "pending",
+        method: booking.payment?.method || booking.payment?.originalMethod || "upi",
+      },
       passengers: booking.passengerNames.map((name, i) => ({
         name,
-        seat: booking.seatNumbers[i] || "N/A",
+        seat: booking.seatNumbers && booking.seatNumbers[i] ? booking.seatNumbers[i] : "N/A",
       })),
     };
 
@@ -477,9 +749,8 @@ exports.mailTrainTicket = async (req, res) => {
       <body>
         <div class="mainHeading">Train Ticket</div>
         <div class="ticket">
-          <p><strong>${ticketData.trainName} (${
-      ticketData.trainNumber
-    })</strong></p>
+          <p><strong>${ticketData.trainName} (${ticketData.trainNumber
+      })</strong></p>
           <p><strong>From:</strong> ${ticketData.from}</p>
           <p><strong>To:</strong> ${ticketData.to}</p>
           <p><strong>Date:</strong> ${ticketData.date}</p>
@@ -488,11 +759,14 @@ exports.mailTrainTicket = async (req, res) => {
           <p><strong>Phone:</strong> ${ticketData.phone}</p>
           <p><strong>Email:</strong> ${ticketData.email}</p>
           <p><strong>Status:</strong> ${ticketData.status}</p>
+          <p><strong>Payment Status:</strong> ${ticketData.payment.status || "pending"}</p>
+          <p><strong>Payment Method:</strong> ${ticketData.payment.method || "upi"}</p>
+          ${ticketData.payment.reference ? `<p><strong>Payment Ref:</strong> ${ticketData.payment.reference}</p>` : ""}
           <div class="passengers">
             <strong>Passengers:</strong>
             ${ticketData.passengers
-              .map((p, i) => `<p>${i + 1}. ${p.name} - Seat: ${p.seat}</p>`)
-              .join("")}
+        .map((p, i) => `<p>${i + 1}. ${p.name} - Seat: ${p.seat}</p>`)
+        .join("")}
           </div>
         </div>
       </body>
@@ -589,18 +863,27 @@ module.exports.cancelTrainTicket = async (req, res) => {
       const seat = coach.seats.find((s) => s.seatNumber === seatNum);
       if (seat) {
         seat.isBooked = false;
+        seat.status = "Available";
         seat.passengerName = null;
         seat.bookingTime = null;
       }
     });
 
     // Update available Seats
-    coach.availableSeats += booking.seatNumbers.length;
+    if (booking.status === "rac") coach.racCount = Math.max(0, (coach.racCount || 0) - booking.passengerNames.length);
+    else if (booking.status === "waiting") coach.waitingListCount = Math.max(0, (coach.waitingListCount || 0) - booking.passengerNames.length);
+    else coach.availableSeats += booking.seatNumbers.length;
 
     await train.save();
 
     booking.status = "cancelled";
     await booking.save();
+
+    try {
+      await sendNotification(booking.user, { type: 'booking_cancelled', title: 'Train Booking Cancelled', message: `Your train booking for ${booking.journeyDate?.toString?.() || ''} has been cancelled`, meta: { bookingId: booking._id, trainNumber: booking.trainNumber } });
+    } catch (err) {
+      console.error('notify error', err.message);
+    }
 
     return res
       .status(200)

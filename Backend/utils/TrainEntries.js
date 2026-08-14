@@ -37046,31 +37046,22 @@ const Train = [
   },
 ];
 
-// seedTrains.js
-const mongoose = require("mongoose");
-const TrainModel = require("../models/TrainModel"); // Your Mongoose Train schema
-
-const MONGO =
-  "mongodb+srv://SmartYatri:SmartYatri@cluster0.hfqnc6g.mongodb.net/"; // replace with your DB URI
+// SQL seed utility. Run explicitly with `node utils/TrainEntries.js`.
+const TrainModel = require("../models/TrainModel");
+const { query } = require("../database/connection");
 
 const seedTrains = async () => {
   try {
-    await mongoose.connect(MONGO);
-    console.log("MongoDB connected");
-
-    // Optional: Remove old data
-    await TrainModel.deleteMany({});
+    await query("DELETE FROM trains");
     console.log("Old train data cleared");
 
-    // Insert all trains
-    await TrainModel.insertMany(Train);
+    for (const train of Train) await TrainModel.create(train);
     console.log("Train data seeded successfully");
-
-    process.exit();
   } catch (err) {
     console.error("Seeding failed:", err);
-    process.exit(1);
+    process.exitCode = 1;
   }
 };
 
-seedTrains();
+if (require.main === module) seedTrains();
+module.exports = { Train, seedTrains };

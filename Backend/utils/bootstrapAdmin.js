@@ -14,11 +14,16 @@ async function ensureBootstrapAdmin() {
     return;
   }
 
-  const existing = await UserModel.findOne({ email }).lean();
+  const existing = await UserModel.findOne({ email })
+    || await UserModel.findOne({ phone: phone.formatted });
   if (existing) return;
   await UserModel.create({
-    name: ADMIN_NAME.trim(), email, phone: phone.formatted,
-    password: await bcrypt.hash(ADMIN_PASSWORD, 12), role: "admin", isActive: true,
+    name: ADMIN_NAME.trim(),
+    email,
+    phone: phone.formatted,
+    password: await bcrypt.hash(ADMIN_PASSWORD, 12),
+    role: "admin",
+    isActive: true,
   });
   console.log("Initial administrator created");
 }

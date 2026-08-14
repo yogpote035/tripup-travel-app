@@ -9,9 +9,14 @@ import flightReducer from "../AllStatesFeatures/Flight/AllFlightSlice";
 import flightBookingReducer from "../AllStatesFeatures/Flight/BookFlightSeatSlice";
 import itineraryReducer from "../AllStatesFeatures/Itinerary/AllItinerarySlice";
 import SocialMediaReducer from "../AllStatesFeatures/SocialFeed/SocialFeedSlice";
+import savedPostsReducer from "../AllStatesFeatures/SocialFeed/savedPostsSlice";
+import likedPostsReducer from "../AllStatesFeatures/SocialFeed/likedPostsSlice";
+import locationReducer from "../AllStatesFeatures/Location/locationSlice";
 import RecentActivityReducer from "../AllStatesFeatures/Recent Activity/RecentActivitySlice";
 import themeReducer from "../AllStatesFeatures/Theme/ThemeSlice";
-import adminReducer from "../AllStatesFeatures/Admin/AdminSlice";
+import adminReducer from "../AllStatesFeatures/Admin/adminSlice";
+import notificationsReducer from "../AllStatesFeatures/Notifications/NotificationsSlice";
+
 let Store = {}; //initialize because export default
 export default Store = configureStore({
   reducer: {
@@ -25,8 +30,12 @@ export default Store = configureStore({
     BookFlightTicket: flightBookingReducer,
     itinerary: itineraryReducer, //for all itinerary and add ,delete
     socialFeed: SocialMediaReducer,
+    savedPosts: savedPostsReducer, // saved/bookmarked posts
+    likedPosts: likedPostsReducer,
+    locations: locationReducer, // locations with reviews and posts
     recentActivity: RecentActivityReducer, // for recent activity
     theme: themeReducer,
+    notifications: notificationsReducer,
     admin: adminReducer,
   },
 });

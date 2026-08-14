@@ -1,16 +1,43 @@
 const FlightModel = require("../../models/FlightModel");
 const FlightBookingModel = require("../../models/FlightBookingModel");
 const nodemailer = require("nodemailer");
+const { sendNotification } = require('../../utils/socket');
+const { logger } = require("../../Middleware/Logger");
+
+const toPlainSeat = (seat) => (seat && typeof seat.toObject === "function" ? seat.toObject() : { ...seat });
+const normalizeSeatNumber = (value) => String(value ?? "").trim().toUpperCase();
+
+function markSeatsBooked(seats, requestedSeats, passengers) {
+  const requestedSet = new Set((requestedSeats || []).map(normalizeSeatNumber));
+
+  return seats.map((seat) => {
+    const seatNumber = normalizeSeatNumber(seat?.seatNumber);
+    if (!requestedSet.has(seatNumber)) return seat;
+    const passenger = passengers.find((entry) => normalizeSeatNumber(entry?.seatNumber) === seatNumber);
+
+    return {
+      ...toPlainSeat(seat),
+      isBooked: true,
+      status: "Booked",
+      passengerName: passenger?.name || "Unknown",
+      bookingTime: new Date(),
+    };
+  });
+}
 
 module.exports.getFlightsBetweenAirports = async (req, res) => {
   const { from, to, date } = req.query;
-  console.log("Request Received in Get B/w Train");
+  console.log("Request received in flight search");
   if (!from || !to || !date) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
   try {
-    const weekday = new Date(date).toLocaleDateString("en-US", {
+    const searchDate = new Date(`${date}T12:00:00`);
+    if (Number.isNaN(searchDate.getTime())) {
+      return res.status(400).json({ message: "Invalid journey date" });
+    }
+    const weekday = searchDate.toLocaleDateString("en-US", {
       weekday: "long",
     });
 
@@ -26,6 +53,16 @@ module.exports.getFlightsBetweenAirports = async (req, res) => {
 
     res.status(200).json({ flights, from, to, date });
   } catch (error) {
+    logger.error("Flight search failed", {
+      requestId: req.requestId,
+      message: error.message,
+      code: error.code,
+      sqlState: error.sqlState,
+      stack: error.stack,
+      from,
+      to,
+      date,
+    });
     res.status(500).json({ message: "Failed to search flights", error });
   }
 };
@@ -53,35 +90,25 @@ module.exports.bookFlight = async (req, res) => {
     }
 
     const farePerSeat = flightDoc.price;
-    const requestedSeats = passengers.map((p) => p.seatNumber.toUpperCase());
+    const requestedSeats = passengers.map((passenger) => normalizeSeatNumber(passenger?.seatNumber));
+    if (requestedSeats.some((seatNumber) => !seatNumber) || new Set(requestedSeats).size !== requestedSeats.length) {
+      return res.status(400).json({ message: "Passenger seat numbers must be present and unique" });
+    }
 
-    const alreadyBookedSeats = flightDoc.seats.filter(
+    const unavailableSeats = flightDoc.seats.filter(
       (seat) =>
-        seat.isBooked && requestedSeats.includes(seat.seatNumber.toUpperCase())
+        requestedSeats.includes(normalizeSeatNumber(seat.seatNumber)) && (seat.isBooked || (seat.status && seat.status !== "Available"))
     );
 
-    if (alreadyBookedSeats.length > 0) {
+    if (unavailableSeats.length > 0) {
       return res.status(409).json({
-        message: `Seats already booked: ${alreadyBookedSeats
+        message: `Seats unavailable: ${unavailableSeats
           .map((s) => s.seatNumber)
           .join(", ")}`,
       });
     }
 
-    flightDoc.seats = flightDoc.seats.map((seat) => {
-      if (requestedSeats.includes(seat.seatNumber.toUpperCase())) {
-        return {
-          ...seat.toObject(),
-          isBooked: true,
-          passengerName:
-            passengers.find(
-              (p) => p.seatNumber.toUpperCase() === seat.seatNumber
-            )?.name || "Unknown",
-          bookingTime: new Date(),
-        };
-      }
-      return seat;
-    });
+    flightDoc.seats = markSeatsBooked(flightDoc.seats, requestedSeats, passengers);
 
     flightDoc.availableSeats -= requestedSeats.length;
     await flightDoc.save();
@@ -101,6 +128,10 @@ module.exports.bookFlight = async (req, res) => {
     });
 
     await newBooking.save();
+    // send notification to user
+    try {
+      await sendNotification(userId, { type: 'booking_confirmed', title: 'Flight Booked', message: `Your flight booking is confirmed for ${journeyDate}`, meta: { bookingId: newBooking._id, flightId: flightId } });
+    } catch (e) { console.error('notify error', e.message); }
 
     res.status(200).json({ message: "Flight booked successfully!" });
   } catch (error) {
@@ -109,15 +140,20 @@ module.exports.bookFlight = async (req, res) => {
   }
 };
 
+module.exports.__test__ = { markSeatsBooked };
+
 exports.getAllFlightBookingsForUser = async (req, res) => {
   try {
     const userId = req.user.userId;
+    const bookings = await FlightBookingModel.find({ user: userId }).lean();
+    const enrichedBookings = await Promise.all(
+      bookings.map(async (booking) => {
+        const flight = booking.flight ? await FlightModel.findById(booking.flight) : null;
+        return { ...booking, flight: flight || null };
+      })
+    );
 
-    const bookings = await FlightBookingModel.find({ user: userId })
-      .populate("flight")
-      .sort({ bookingDate: -1 });
-    // bookings will be an array (possibly empty); return it directly
-    res.status(200).json(bookings);
+    res.status(200).json(enrichedBookings);
   } catch (error) {
     console.error("Error fetching flight bookings:", error);
     res.status(500).json({ message: "Failed to fetch flight bookings" });
@@ -134,15 +170,16 @@ module.exports.downloadFlightTicket = async (req, res) => {
   }
 
   try {
-    const booking = await FlightBookingModel.findById(bookingId).populate(
-      "flight"
-    );
+    const booking = await FlightBookingModel.findById(bookingId);
 
     if (!booking) {
       return res.status(208).json({ message: "Booking not found" });
     }
 
-    const passengerRows = booking.passengers
+    const flight = booking.flight ? await FlightModel.findById(booking.flight) : null;
+    const enrichedBooking = { ...booking, flight: flight || null };
+
+    const passengerRows = enrichedBooking.passengers
       .map(
         (p, i) => `
         <tr>
@@ -176,11 +213,11 @@ module.exports.downloadFlightTicket = async (req, res) => {
           <p><strong>From:</strong> ${booking.from}</p>
           <p><strong>To:</strong> ${booking.to}</p>
           <p><strong>Journey Date:</strong> ${new Date(
-            booking.journeyDate
-          ).toDateString()}</p>
+      booking.journeyDate
+    ).toDateString()}</p>
           <p><strong>Booking Date:</strong> ${new Date(
-            booking.bookingDate
-          ).toDateString()}</p>
+      booking.bookingDate
+    ).toDateString()}</p>
           <p><strong>Total Fare:</strong> ₹${booking.totalFare}</p>
           <p><strong>Status:</strong> ${booking.status}</p>
 
@@ -269,15 +306,16 @@ module.exports.MailFlightTicket = async (req, res) => {
   }
 
   try {
-    const booking = await FlightBookingModel.findById(bookingId).populate(
-      "flight"
-    );
+    const booking = await FlightBookingModel.findById(bookingId);
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found." });
     }
 
-    const passengerRows = booking.passengers
+    const flight = booking.flight ? await FlightModel.findById(booking.flight) : null;
+    const enrichedBooking = { ...booking, flight: flight || null };
+
+    const passengerRows = enrichedBooking.passengers
       .map(
         (p, i) => `
         <tr>
@@ -311,11 +349,11 @@ module.exports.MailFlightTicket = async (req, res) => {
           <p><strong>From:</strong> ${booking.from}</p>
           <p><strong>To:</strong> ${booking.to}</p>
           <p><strong>Journey Date:</strong> ${new Date(
-            booking.journeyDate
-          ).toDateString()}</p>
+      booking.journeyDate
+    ).toDateString()}</p>
           <p><strong>Booking Date:</strong> ${new Date(
-            booking.bookingDate
-          ).toDateString()}</p>
+      booking.bookingDate
+    ).toDateString()}</p>
           <p><strong>Total Fare:</strong> ₹${booking.totalFare}</p>
           <p><strong>Status:</strong> ${booking.status}</p>
 
@@ -439,6 +477,7 @@ module.exports.cancelFlightBooking = async (req, res) => {
       );
       if (seat) {
         seat.isBooked = false;
+        seat.status = "Available";
         seat.passengerName = null;
         seat.bookingTime = null;
       }
@@ -452,6 +491,12 @@ module.exports.cancelFlightBooking = async (req, res) => {
     // Update booking status instead of deleting bcz i went user history
     booking.status = "cancelled";
     await booking.save();
+
+    try {
+      await sendNotification(booking.user, { type: 'booking_cancelled', title: 'Flight Booking Cancelled', message: `Your flight booking for ${booking.journeyDate?.toString?.() || ''} has been cancelled`, meta: { bookingId: booking._id, flightId: booking.flight } });
+    } catch (err) {
+      console.error('notify error', err.message);
+    }
 
     return res
       .status(200)

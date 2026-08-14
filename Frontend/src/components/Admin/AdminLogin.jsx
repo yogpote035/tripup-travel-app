@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Lock, LogIn, Mail, ShieldCheck } from "lucide-react";
 import { loginAdmin } from "../../../AllStatesFeatures/Authentication/authSlice";
 
@@ -9,14 +9,30 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromLocation = location.state?.from;
+  const fromPath = fromLocation ? `${fromLocation.pathname || "/"}${fromLocation.search || ""}` : null;
   const { loading, user, isAuthenticated } = useSelector((state) => state.auth);
 
-  if (isAuthenticated && user?.role === "admin") return <Navigate to="/admin" replace />;
+  if (isAuthenticated && user?.role === "admin") {
+    if (fromLocation) {
+      const returnPath = `${fromLocation.pathname || "/admin"}${fromLocation.search || ""}`;
+      return <Navigate to={returnPath} replace state={fromLocation.state || null} />;
+    }
+    return <Navigate to="/admin" replace />;
+  }
 
   const submit = async (event) => {
     event.preventDefault();
     const result = await dispatch(loginAdmin(form));
-    if (result.success) navigate("/admin");
+    if (result.success) {
+      if (fromLocation) {
+        const returnPath = `${fromLocation.pathname || "/admin"}${fromLocation.search || ""}`;
+        navigate(returnPath, { state: fromLocation.state || null, replace: true });
+      } else {
+        navigate("/admin", { replace: true });
+      }
+    }
   };
 
   return (
@@ -29,6 +45,11 @@ export default function AdminLogin() {
           </span>
           <h1>Welcome back</h1>
           <p>Sign in to manage TripUp operations securely.</p>
+          {fromPath ? (
+            <p className="mt-2 text-sm text-stone-400">
+              Please sign in to continue to <span className="font-semibold text-stone-900">{fromPath}</span>
+            </p>
+          ) : null}
         </div>
 
         <div className="admin-login-card">
@@ -65,8 +86,9 @@ export default function AdminLogin() {
                   className="password-toggle"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </label>

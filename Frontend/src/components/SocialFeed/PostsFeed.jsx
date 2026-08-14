@@ -1,190 +1,310 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Plus, MapPin, Calendar, Grid3x3, List,
-  Newspaper, User, Globe, Hash, ArrowRight,
+  Newspaper, User, Globe, Hash, ArrowRight, Lock, Users, Star,
 } from "lucide-react";
 import { getAllPosts, getMyPosts } from "../../../AllStatesFeatures/SocialFeed/SocialFeedSlice";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Loading from "../../General/Loading";
 import { FaPlane } from "react-icons/fa";
+
+const SkeletonCard = ({ viewMode }) => (
+  <div className="bg-white border border-orange-200 rounded-2xl overflow-hidden shadow-sm animate-pulse">
+    <div className="h-52 bg-orange-100" />
+    <div className="p-5 space-y-3">
+      <div className="h-4 bg-orange-100 rounded w-3/4" />
+      <div className="h-3 bg-orange-100 rounded w-1/2" />
+      <div className="h-3 bg-orange-100 rounded w-full" />
+      <div className="h-3 bg-orange-100 rounded w-5/6" />
+    </div>
+  </div>
+);
 
 /* ══════════════════════════════════════════
    GRID CARD
 ═══════════════════════════════════════════ */
-const GridCard = ({ post }) => (
-  <Link to={`/post/${post._id}`} className="group block">
-    <div className="bg-white border border-orange-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:border-orange-300 transition-all duration-300 hover:-translate-y-1 flex flex-col">
+const GridCard = ({ post }) => {
+  const navigate = useNavigate();
+  const visibilityLabel =
+    post.visibility === "private"
+      ? { label: "Private", icon: Lock }
+      : post.visibility === "followers"
+        ? { label: "Followers", icon: Users }
+        : { label: "Public", icon: Globe };
+  const VisibilityIcon = visibilityLabel.icon;
+  const locationRating = Number(post.locationRating);
+  const hasLocationRating = Number.isFinite(locationRating);
+  const isPinned = Boolean(post.pinned);
+  const isTrending = (post.likes?.length || 0) + (post.comments?.length || 0) >= 6 || (hasLocationRating && locationRating >= 4.5);
 
-      {/* Image */}
-      {post.images?.[0] ? (
-        <div className="relative h-52 overflow-hidden flex-shrink-0">
-          <img
-            src={post.images[0]}
-            alt={post.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-stone-900/50 via-transparent to-transparent" />
-          {post.location && (
-            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm border border-orange-100 px-2.5 py-1 rounded-full">
-              <MapPin size={10} className="text-orange-500" />
-              <span className="text-xs font-semibold text-stone-700 truncate max-w-[130px]">{post.location}</span>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="h-28 flex-shrink-0 bg-orange-50 flex items-center justify-center border-b border-orange-100">
-          <Newspaper size={32} className="text-orange-200" strokeWidth={1.5} />
-        </div>
-      )}
-
-      {/* Body */}
-      <div className="px-5 py-4 flex-1 flex flex-col">
-        <h2 className="font-bold text-stone-900 group-hover:text-orange-500 transition-colors line-clamp-2 leading-snug text-base mb-2">
-          {post.title}
-        </h2>
-
-        <div className="flex items-center gap-1.5 mb-3">
-          <Calendar size={11} className="text-orange-400" />
-          <span className="text-xs font-medium text-stone-400">
-            {format(new Date(post.travelDate), "dd MMM yyyy")}
-          </span>
-        </div>
-
-        <p className="text-stone-400 text-xs leading-relaxed line-clamp-3 mb-4 flex-1">
-          {post.description}
-        </p>
-
-        {post.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {post.tags.slice(0, 3).map((tag, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 text-stone-500 text-xs px-2 py-0.5 rounded-full font-medium"
-              >
-                <Hash size={9} />{tag}
-              </span>
-            ))}
-            {post.tags.length > 3 && (
-              <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                +{post.tags.length - 3}
-              </span>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center justify-end gap-1 text-xs font-bold text-orange-500 group-hover:gap-2 transition-all">
-          Read Story <ArrowRight size={13} strokeWidth={2.5} />
-        </div>
-      </div>
-    </div>
-  </Link>
-);
-
-/* ══════════════════════════════════════════
-   LIST CARD
-═══════════════════════════════════════════ */
-const ListCard = ({ post }) => (
-  <Link to={`/post/${post._id}`} className="group block">
-    <div className="bg-white border border-orange-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:border-orange-300 transition-all duration-300">
-      <div className="flex flex-col md:flex-row">
+  return (
+    <Link to={`/post/${post._id}`} className="group block">
+      <div className="bg-white border border-orange-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:border-orange-300 transition-all duration-300 hover:-translate-y-1 flex flex-col">
 
         {/* Image */}
         {post.images?.[0] ? (
-          <div className="relative md:w-64 lg:w-72 h-48 md:h-auto overflow-hidden flex-shrink-0">
+          <div className="relative h-52 overflow-hidden flex-shrink-0">
             <img
               src={post.images[0]}
               alt={post.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-stone-900/10 hidden md:block" />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-900/50 via-transparent to-transparent" />
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm border border-orange-100 px-2.5 py-1 rounded-full text-[10px] font-semibold text-stone-700">
+              <VisibilityIcon size={10} className="text-orange-500" />
+              {visibilityLabel.label}
+            </div>
+            {post.location && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/locations?search=${encodeURIComponent(post.location)}`);
+                }}
+                className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm border border-orange-100 px-2.5 py-1 rounded-full hover:bg-white hover:border-orange-300 transition-all cursor-pointer"
+              >
+                <MapPin size={10} className="text-orange-500" />
+                <span className="text-xs font-semibold text-stone-700 truncate max-w-[130px] hover:text-orange-600">{post.location}</span>
+              </button>
+            )}
           </div>
         ) : (
-          <div className="md:w-48 h-28 md:h-auto bg-orange-50 flex items-center justify-center flex-shrink-0 border-r border-orange-100">
-            <Newspaper size={28} className="text-orange-200" strokeWidth={1.5} />
+          <div className="h-28 flex-shrink-0 bg-orange-50 flex items-center justify-center border-b border-orange-100">
+            <Newspaper size={32} className="text-orange-200" strokeWidth={1.5} />
           </div>
         )}
 
-        {/* Divider */}
-        <div className="hidden md:block w-px bg-orange-100 flex-shrink-0" />
-
-        {/* Content */}
-        <div className="flex-1 px-6 py-5 flex flex-col justify-between">
-          <div>
-            <h2 className="font-bold text-stone-900 group-hover:text-orange-500 transition-colors leading-snug text-xl mb-3">
-              {post.title}
-            </h2>
-
-            <div className="flex flex-wrap gap-4 mb-3">
-              {post.location && (
-                <div className="flex items-center gap-1.5">
-                  <span className="w-6 h-6 bg-orange-50 border border-orange-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <MapPin size={11} className="text-orange-500" />
-                  </span>
-                  <span className="text-xs font-medium text-stone-500">{post.location}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-1.5">
-                <span className="w-6 h-6 bg-orange-50 border border-orange-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Calendar size={11} className="text-orange-500" />
-                </span>
-                <span className="text-xs font-medium text-stone-500">
-                  {format(new Date(post.travelDate), "dd MMM yyyy")}
-                </span>
-              </div>
-            </div>
-
-            <p className="text-stone-400 text-sm leading-relaxed line-clamp-2 mb-4">
-              {post.description}
-            </p>
+        {/* Body */}
+        <div className="px-5 py-4 flex-1 flex flex-col">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {isPinned && (
+              <span className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-600">
+                Pinned
+              </span>
+            )}
+            {isTrending && (
+              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                Trending
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex flex-wrap gap-1.5">
-              {post.tags?.slice(0, 4).map((tag, idx) => (
+          <h2 className="font-bold text-stone-900 group-hover:text-orange-500 transition-colors line-clamp-2 leading-snug text-base mb-2">
+            {post.title}
+          </h2>
+
+          <div className="flex items-center gap-1.5 mb-3">
+            <Calendar size={11} className="text-orange-400" />
+            <span className="text-xs font-medium text-stone-400">
+              {format(new Date(post.travelDate), "dd MMM yyyy")}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between mb-3 text-xs text-stone-500">
+            <div className="flex items-center gap-1.5">
+              <Star size={12} className="text-orange-400" />
+              <span>{hasLocationRating ? locationRating.toFixed(1) : "New"}</span>
+            </div>
+            <span>{(post.likes || []).length} likes · {(post.bookmarks || []).length} saved</span>
+          </div>
+
+          <p className="text-stone-400 text-xs leading-relaxed line-clamp-3 mb-4 flex-1">
+            {post.description}
+          </p>
+
+          {post.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {post.tags.slice(0, 3).map((tag, idx) => (
                 <span
                   key={idx}
-                  className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 text-stone-500 text-xs px-2.5 py-1 rounded-full font-medium hover:border-orange-400 hover:text-orange-500 transition-all"
+                  className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 text-stone-500 text-xs px-2 py-0.5 rounded-full font-medium"
                 >
                   <Hash size={9} />{tag}
                 </span>
               ))}
-              {post.tags?.length > 4 && (
-                <span className="bg-orange-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">
-                  +{post.tags.length - 4}
+              {post.tags.length > 3 && (
+                <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                  +{post.tags.length - 3}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-orange-500 group-hover:gap-2.5 transition-all whitespace-nowrap">
-              Read Story <ArrowRight size={13} strokeWidth={2.5} />
+          )}
+
+          <div className="flex items-center justify-end gap-1 text-xs font-bold text-orange-500 group-hover:gap-2 transition-all">
+            Read Story <ArrowRight size={13} strokeWidth={2.5} />
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+/* ══════════════════════════════════════════
+   LIST CARD
+═══════════════════════════════════════════ */
+const ListCard = ({ post }) => {
+  const navigate = useNavigate();
+  const visibilityLabel =
+    post.visibility === "private"
+      ? { label: "Private", icon: Lock }
+      : post.visibility === "followers"
+        ? { label: "Followers", icon: Users }
+        : { label: "Public", icon: Globe };
+  const VisibilityIcon = visibilityLabel.icon;
+  const locationRating = Number(post.locationRating);
+  const hasLocationRating = Number.isFinite(locationRating);
+  const isPinned = Boolean(post.pinned);
+  const isTrending = (post.likes?.length || 0) + (post.comments?.length || 0) >= 6 || (hasLocationRating && locationRating >= 4.5);
+
+  return (
+    <Link to={`/post/${post._id}`} className="group block">
+      <div className="bg-white border border-orange-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:border-orange-300 transition-all duration-300">
+        <div className="flex flex-col md:flex-row">
+
+          {/* Image */}
+          {post.images?.[0] ? (
+            <div className="relative md:w-64 lg:w-72 h-48 md:h-auto overflow-hidden flex-shrink-0">
+              <img
+                src={post.images[0]}
+                alt={post.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-stone-900/10 hidden md:block" />
+            </div>
+          ) : (
+            <div className="md:w-48 h-28 md:h-auto bg-orange-50 flex items-center justify-center flex-shrink-0 border-r border-orange-100">
+              <Newspaper size={28} className="text-orange-200" strokeWidth={1.5} />
+            </div>
+          )}
+
+          {/* Divider */}
+          <div className="hidden md:block w-px bg-orange-100 flex-shrink-0" />
+
+          {/* Content */}
+          <div className="flex-1 px-6 py-5 flex flex-col justify-between">
+            <div>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {isPinned && (
+                  <span className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-orange-600">
+                    Pinned
+                  </span>
+                )}
+                {isTrending && (
+                  <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                    Trending
+                  </span>
+                )}
+              </div>
+              <h2 className="font-bold text-stone-900 group-hover:text-orange-500 transition-colors leading-snug text-xl mb-3">
+                {post.title}
+              </h2>
+
+              <div className="flex flex-wrap gap-4 mb-3">
+                {post.location && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(`/locations?search=${encodeURIComponent(post.location)}`);
+                    }}
+                    className="flex items-center gap-1.5 hover:bg-orange-100 px-2 py-1 rounded-lg transition-all cursor-pointer"
+                  >
+                    <span className="w-6 h-6 bg-orange-50 border border-orange-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <MapPin size={11} className="text-orange-500" />
+                    </span>
+                    <span className="text-xs font-medium text-stone-500 hover:text-orange-600">{post.location}</span>
+                  </button>
+                )}
+                <div className="flex items-center gap-1.5">
+                  <span className="w-6 h-6 bg-orange-50 border border-orange-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar size={11} className="text-orange-500" />
+                  </span>
+                  <span className="text-xs font-medium text-stone-500">
+                    {format(new Date(post.travelDate), "dd MMM yyyy")}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-stone-400 text-sm leading-relaxed line-clamp-2 mb-4">
+                {post.description}
+              </p>
+              <div className="flex items-center gap-3 mb-4 text-xs text-stone-500">
+                <span className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-full">
+                  <VisibilityIcon size={12} className="text-orange-500" />
+                  {visibilityLabel.label}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Star size={12} className="text-orange-400" />
+                  {hasLocationRating ? locationRating.toFixed(1) : "New"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex flex-wrap gap-1.5">
+                {post.tags?.slice(0, 4).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 text-stone-500 text-xs px-2.5 py-1 rounded-full font-medium hover:border-orange-400 hover:text-orange-500 transition-all"
+                  >
+                    <Hash size={9} />{tag}
+                  </span>
+                ))}
+                {post.tags?.length > 4 && (
+                  <span className="bg-orange-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">
+                    +{post.tags.length - 4}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-orange-500 group-hover:gap-2.5 transition-all whitespace-nowrap">
+                Read Story <ArrowRight size={13} strokeWidth={2.5} />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </Link>
-);
+    </Link>
+  );
+};
 
 /* ══════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════ */
 export default function PostsFeed() {
   const dispatch = useDispatch();
+  const loadMoreRef = useRef(null);
   const [mode, setMode] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
 
-  const { posts, loading, error } = useSelector((state) => state.socialFeed);
+  const { posts, loading, loadingMore, error, pagination } = useSelector((state) => state.socialFeed);
   const isAuthenticated = useSelector((state) => state?.auth?.isAuthenticated);
 
   useEffect(() => {
-    if (mode === "all") dispatch(getAllPosts());
-    else dispatch(getMyPosts());
+    if (mode === "all") dispatch(getAllPosts(1, false));
+    else dispatch(getMyPosts(1, false));
   }, [mode, dispatch]);
+
+  useEffect(() => {
+    if (!loadMoreRef.current || mode !== "all" || !pagination.hasMore || loadingMore || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          dispatch(getAllPosts(pagination.page + 1, true));
+        }
+      },
+      { rootMargin: "250px" }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [dispatch, loading, loadingMore, mode, pagination.hasMore, pagination.page]);
 
   const isEmpty = !posts || posts.length === 0;
 
-  if (loading) return <Loading color="border-t-orange-500" message="Loading Posts..." />;
+  if (loading && posts.length === 0) return <Loading color="border-t-orange-500" message="Loading Posts..." />;
 
   return (
     <div className="min-h-screen bg-orange-50 pt-24 pb-16 px-4">
@@ -209,18 +329,16 @@ export default function PostsFeed() {
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-1 flex gap-1">
               <button
                 onClick={() => setMode("all")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
-                  mode === "all" ? "bg-orange-500 text-white shadow-sm" : "text-stone-500 hover:text-orange-500"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${mode === "all" ? "bg-orange-500 text-white shadow-sm" : "text-stone-500 hover:text-orange-500"
+                  }`}
               >
                 <Globe size={13} /> All Posts
               </button>
               {isAuthenticated && (
                 <button
                   onClick={() => setMode("mine")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
-                    mode === "mine" ? "bg-orange-500 text-white shadow-sm" : "text-stone-500 hover:text-orange-500"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${mode === "mine" ? "bg-orange-500 text-white shadow-sm" : "text-stone-500 hover:text-orange-500"
+                    }`}
                 >
                   <User size={13} /> My Posts
                 </button>
@@ -231,17 +349,15 @@ export default function PostsFeed() {
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-1 flex gap-1">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-lg transition-all ${
-                  viewMode === "grid" ? "bg-orange-500 text-white" : "text-stone-400 hover:text-orange-500"
-                }`}
+                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-orange-500 text-white" : "text-stone-400 hover:text-orange-500"
+                  }`}
               >
                 <Grid3x3 size={15} />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded-lg transition-all ${
-                  viewMode === "list" ? "bg-orange-500 text-white" : "text-stone-400 hover:text-orange-500"
-                }`}
+                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-orange-500 text-white" : "text-stone-400 hover:text-orange-500"
+                  }`}
               >
                 <List size={15} />
               </button>
@@ -307,6 +423,19 @@ export default function PostsFeed() {
               viewMode === "grid"
                 ? <GridCard key={post._id} post={post} />
                 : <ListCard key={post._id} post={post} />
+            )}
+            {mode === "all" && pagination.hasMore && (
+              <div ref={loadMoreRef} className="col-span-full flex justify-center py-4">
+                {loadingMore ? (
+                  <div className="w-full grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {[...Array(3)].map((_, index) => (
+                      <SkeletonCard key={index} viewMode={viewMode} />
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-sm text-stone-400">Scroll to load more stories</span>
+                )}
+              </div>
             )}
           </div>
         )}

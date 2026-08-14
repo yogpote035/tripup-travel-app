@@ -3,9 +3,12 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { setAccessToken, setAuthInitialized } from "../AllStatesFeatures/Authentication/authSlice";
+import io from 'socket.io-client';
+import { receiveNotification, fetchUnreadCount } from "../AllStatesFeatures/Notifications/NotificationsSlice";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Login from "./components/Authentication/Login.jsx";
 import Signup from "./components/Authentication/Signup.jsx";
+import ForgotPassword from "./components/Authentication/ForgotPassword.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./General/Navbar.jsx";
@@ -13,6 +16,7 @@ import Home from "./components/Home/Home.jsx";
 import Footer from "./General/Footer.jsx";
 import Bookings from "./components/Booking/Booking.jsx";
 import Itinerary from "./components/Itinerary/Itinerary.jsx";
+import ItineraryPublicView from "./components/Itinerary/ItineraryPublicView.jsx";
 import TrainPage from "./components/Train/TrainPage.jsx";
 import TrainSeatBooking from "./components/Train/TrainSeatBooking.jsx";
 import MyTrainBookings from "./components/Train/MyTrainBookings.jsx";
@@ -35,6 +39,10 @@ import CreatePost from "./components/SocialFeed/CreatePost.jsx";
 import PostsFeed from "./components/SocialFeed/PostsFeed.jsx";
 import SinglePostView from "./components/SocialFeed/SinglePostView.jsx";
 import EditPost from "./components/SocialFeed/EditPost.jsx";
+import SavedPostsPage from "./components/SocialFeed/SavedPostsPage.jsx";
+import LikedPostsPage from "./components/SocialFeed/LikedPostsPage.jsx";
+import LocationBrowser from "./components/General/LocationBrowser.jsx";
+import LocationDetail from "./components/General/LocationDetail.jsx";
 import PageNotFound from "./General/PageNotFound.jsx";
 import AdminLogin from "./components/Admin/AdminLogin.jsx";
 import AdminLayout from "./components/Admin/AdminLayout.jsx";
@@ -44,7 +52,20 @@ import AdminUsers from "./components/Admin/AdminUsers.jsx";
 import AdminBookings from "./components/Admin/AdminBookings.jsx";
 import AdminPosts from "./components/Admin/AdminPosts.jsx";
 import AdminAdministrators from "./components/Admin/AdminAdministrators.jsx";
+import AdminFlights from "./components/Admin/AdminFlights.jsx";
+import AdminTrains from "./components/Admin/AdminTrains.jsx";
+import AdminBuses from "./components/Admin/AdminBuses.jsx";
+import AdminAnnouncements from "./components/Admin/AdminAnnouncements.jsx";
+import AdminAuditLogs from "./components/Admin/AdminAuditLogs.jsx";
+import AdminSystemStatus from "./components/Admin/AdminSystemStatus.jsx";
+import AdminBackupManager from "./components/Admin/AdminBackupManager.jsx";
+import AdminLocations from "./components/Admin/AdminLocations.jsx";
+import AdminHotels from "./components/Admin/AdminHotels.jsx";
+import BookingHistory from "./components/Booking/BookingHistory.jsx";
+import HotelSearch from "./components/Hotel/HotelSearch.jsx";
 import "./components/Admin/admin.css";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 function App() {
   const dispatch = useDispatch();
@@ -80,7 +101,7 @@ function App() {
           return;
         }
 
-        const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`);
+        const res = await axios.post(`${API_BASE_URL}/auth/refresh`);
         if (res.status === 200 && mounted) {
           const token = res.data?.data?.accessToken;
           dispatch(setAccessToken(token));
@@ -100,6 +121,45 @@ function App() {
     return () => (mounted = false);
   }, [dispatch]);
 
+  useEffect(() => {
+    // socket handled in separate effect when `user` is available
+  }, [dispatch]);
+
+  const user = useSelector((s) => s.auth.user);
+
+  useEffect(() => {
+    let socket;
+    if (!user) return () => { };
+
+    try {
+      // Extract backend URL from API_BASE_URL and normalize trailing slashes
+      const backendUrl = String(API_BASE_URL || "http://localhost:5000/api").replace(/\/?api\/?$/, '').replace(/\/$/, '') || "http://localhost:5000";
+      socket = io(backendUrl, { withCredentials: true, transports: ['polling', 'websocket'], path: '/socket.io' });
+      socket.on('connect', () => {
+        socket.emit('join', user.userId || user._id || user.id);
+      });
+      socket.on('connect_error', (error) => {
+        console.error('socket connect error', error);
+      });
+      socket.on('disconnect', (reason) => {
+        console.warn('socket disconnected', reason);
+      });
+      socket.on('notification', (n) => {
+        try { dispatch(receiveNotification(n)); } catch (e) { console.error(e); }
+      });
+      socket.on('notification:announcement', (n) => {
+        try { dispatch(receiveNotification({ id: `ann-${Date.now()}`, title: n.title, message: n.message, createdAt: n.createdAt })); } catch (e) { console.error(e); }
+      });
+      dispatch(fetchUnreadCount());
+    } catch (e) {
+      console.error('socket init failed', e);
+    }
+
+    return () => {
+      try { if (socket) socket.disconnect(); } catch (e) { }
+    };
+  }, [user, dispatch]);
+
   return (
     <>
       <div className={`flex flex-col min-h-screen ${theme === "dark" ? "bg-stone-950 text-stone-100" : "bg-orange-50 text-stone-900"}`}>
@@ -113,11 +173,22 @@ function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="posts" element={<AdminPosts />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
               <Route path="administrators" element={<AdminAdministrators />} />
+              <Route path="flights" element={<AdminFlights />} />
+              <Route path="trains" element={<AdminTrains />} />
+              <Route path="buses" element={<AdminBuses />} />
+              <Route path="locations" element={<AdminLocations />} />
+              <Route path="audit-logs" element={<AdminAuditLogs />} />
+              <Route path="system-status" element={<AdminSystemStatus />} />
+              <Route path="backups" element={<AdminBackupManager />} />
+              <Route path="hotels" element={<AdminHotels />} />
             </Route>
             <Route exact path="/" element={<Home />} />
             <Route exact path="/login" element={<Login />} />
             <Route exact path="/signup" element={<Signup />} />
+            <Route exact path="/forgot-password" element={<ForgotPassword />} />
+            <Route exact path="/reset-password" element={<ForgotPassword />} />
             <Route
               exact
               path="/bookings"
@@ -127,6 +198,7 @@ function App() {
                 </ProtectedRoutes>
               }
             />
+            <Route path="/booking-history" element={<ProtectedRoutes><BookingHistory /></ProtectedRoutes>} />
             <Route
               exact
               path="/itinerary"
@@ -136,6 +208,7 @@ function App() {
                 </ProtectedRoutes>
               }
             />
+            <Route path="/itinerary/:id" element={<ItineraryPublicView />} />
             <Route exact path="/post" element={<PostsFeed />} />
             {/* Itinerary */}
             <Route
@@ -216,6 +289,28 @@ function App() {
                 </ProtectedRoutes>
               }
             />
+            {/* Saved Posts */}
+            <Route
+              path="/saved-posts"
+              element={
+                <ProtectedRoutes>
+                  <SavedPostsPage />
+                </ProtectedRoutes>
+              }
+            />
+            <Route
+              path="/liked-posts"
+              element={
+                <ProtectedRoutes>
+                  <LikedPostsPage />
+                </ProtectedRoutes>
+              }
+            />
+
+            {/* Locations */}
+            <Route path="/locations" element={<LocationBrowser />} />
+            <Route path="/location/:id" element={<LocationDetail />} />
+            <Route path="/hotels" element={<HotelSearch />} />
 
             {/* Separate Call for Search From Here {without Protection} */}
             <Route path="/train" element={<TrainPage />} />

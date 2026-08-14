@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { signupUser } from "../../../AllStatesFeatures/Authentication/authSlice";
+import { clearErrors, signupUser } from "../../../AllStatesFeatures/Authentication/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 import Loading from "../../General/Loading";
 import {
@@ -39,6 +39,7 @@ function Signup() {
 
   const loading = useSelector((s) => s.auth.loading);
   const isAuthenticated = useSelector((s) => s.auth.isAuthenticated);
+  const authError = useSelector((s) => s.auth.error);
 
   useEffect(() => {
     if (isAuthenticated) navigate("/", { replace: true });
@@ -46,11 +47,14 @@ function Signup() {
 
   if (loading) return <Loading message="Creating your account…, this may take a few moments." color="border-t-orange-500" />;
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
+    if (authError) dispatch(clearErrors());
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (authError) dispatch(clearErrors());
     const errs = {};
     if (!formData.name) errs.name = "Name is required";
     if (!formData.email) errs.email = "Email is required";
@@ -134,6 +138,8 @@ function Signup() {
               </button>
               {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
             </Field>
+
+            {authError ? <p className="text-xs text-red-500">{authError}</p> : null}
 
             <button
               type="submit"

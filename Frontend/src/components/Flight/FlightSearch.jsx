@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFlightsBetweenAirports } from "../../../AllStatesFeatures/Flight/AllFlightSlice";
+import { searchLocations } from "../../../AllStatesFeatures/Location/locationSlice";
 import Loading from "../../General/Loading";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -36,10 +37,27 @@ const FlightSearch = () => {
   const { flights, from, to, loading, error, date } = useSelector(
     (state) => state.flight
   );
+  const { searchResults } = useSelector((state) => state.locations);
   const navigate = useNavigate();
   const [source, setSource] = useState("");
   const [destination, setDestination] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
+  const [activeField, setActiveField] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    const query = activeField === "source" ? source : activeField === "destination" ? destination : "";
+    if (query.trim().length >= 2) {
+      setSearchLoading(true);
+      const timer = window.setTimeout(() => {
+        dispatch(searchLocations(query.trim())).finally(() => setSearchLoading(false));
+        setShowSuggestions(true);
+      }, 250);
+      return () => window.clearTimeout(timer);
+    }
+    setShowSuggestions(false);
+  }, [activeField, source, destination, dispatch]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -89,10 +107,38 @@ const FlightSearch = () => {
                     type="text"
                     value={source}
                     required
-                    onChange={(e) => setSource(e.target.value)}
+                    onChange={(e) => {
+                      setSource(e.target.value);
+                      setActiveField("source");
+                    }}
+                    onFocus={() => setActiveField("source")}
                     placeholder="e.g. Mumbai"
                     className={inputCls}
                   />
+                  {activeField === "source" && showSuggestions && (
+                    <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-orange-200 bg-white shadow-xl overflow-hidden">
+                      {searchLoading ? (
+                        <div className="p-3 text-sm text-stone-500">Searching locations…</div>
+                      ) : searchResults && searchResults.length > 0 ? (
+                        searchResults.slice(0, 6).map((location) => (
+                          <button
+                            key={location._id}
+                            type="button"
+                            onClick={() => {
+                              setSource(location.name);
+                              setShowSuggestions(false);
+                              setActiveField(null);
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm text-stone-800 hover:bg-orange-50"
+                          >
+                            {location.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-3 text-sm text-stone-500">No locations found.</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Field>
 
@@ -103,10 +149,38 @@ const FlightSearch = () => {
                     type="text"
                     value={destination}
                     required
-                    onChange={(e) => setDestination(e.target.value)}
+                    onChange={(e) => {
+                      setDestination(e.target.value);
+                      setActiveField("destination");
+                    }}
+                    onFocus={() => setActiveField("destination")}
                     placeholder="e.g. Delhi"
                     className={inputCls}
                   />
+                  {activeField === "destination" && showSuggestions && (
+                    <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-orange-200 bg-white shadow-xl overflow-hidden">
+                      {searchLoading ? (
+                        <div className="p-3 text-sm text-stone-500">Searching locations…</div>
+                      ) : searchResults && searchResults.length > 0 ? (
+                        searchResults.slice(0, 6).map((location) => (
+                          <button
+                            key={location._id}
+                            type="button"
+                            onClick={() => {
+                              setDestination(location.name);
+                              setShowSuggestions(false);
+                              setActiveField(null);
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm text-stone-800 hover:bg-orange-50"
+                          >
+                            {location.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-3 text-sm text-stone-500">No locations found.</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Field>
 

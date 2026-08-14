@@ -36,7 +36,7 @@ const contactDetails = [
     icon: Globe,
     label: "Portfolio",
     value: "Visit Portfolio",
-    link: "https://yogpote035.github.io/Portfolio-Website/",
+    link: "https://yogeshpote.vercel.app/",
     external: true,
   },
   {

@@ -19,6 +19,7 @@ import {
   Edit3,
   Upload,
   ArrowLeft,
+  Eye,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -105,9 +106,11 @@ export default function EditPost() {
     location: "",
     travelDate: null,
     tags: "",
+    visibility: "public",
     images: [],
   });
   const [oldImages, setOldImages] = useState([]);
+  const [imagesToRemove, setImagesToRemove] = useState(new Set());
   const [previews, setPreviews] = useState([]);
 
   useEffect(() => { dispatch(getSinglePost(id)); }, [dispatch, id]);
@@ -120,6 +123,7 @@ export default function EditPost() {
         location: posts.location || "",
         travelDate: posts.travelDate ? new Date(posts.travelDate) : null,
         tags: posts.tags ? posts.tags.join(", ") : "",
+        visibility: posts.visibility || "public",
         images: [],
       });
       setOldImages(posts.images || []);
@@ -132,9 +136,16 @@ export default function EditPost() {
     data.append("title", formData.title);
     data.append("description", formData.description);
     data.append("location", formData.location);
-    data.append("travelDate", formData.travelDate);
+    data.append("travelDate", formData.travelDate ? new Date(formData.travelDate).toISOString().split("T")[0] : "");
     data.append("tags", formData.tags);
+    data.append("visibility", formData.visibility || "public");
     formData.images.forEach((file) => data.append("images", file));
+
+    // Send images to remove
+    Array.from(imagesToRemove).forEach((idx) => {
+      data.append("imagesToRemove", oldImages[idx]);
+    });
+
     dispatch(updatePost({ id, formData: data, navigate }));
   };
 
@@ -149,8 +160,16 @@ export default function EditPost() {
     setPreviews((p) => p.filter((_, i) => i !== idx));
   };
 
-  const removeOldImage = (idx) => {
-    setOldImages((imgs) => imgs.filter((_, i) => i !== idx));
+  const toggleRemoveOldImage = (idx) => {
+    setImagesToRemove((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(idx)) {
+        newSet.delete(idx);
+      } else {
+        newSet.add(idx);
+      }
+      return newSet;
+    });
   };
 
   if (loading)
@@ -220,7 +239,7 @@ export default function EditPost() {
                 />
               </Field>
 
-              {/* Date + Tags */}
+              {/* Date + Visibility */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <Field label="Travel Date">
                   <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -234,16 +253,31 @@ export default function EditPost() {
                   </LocalizationProvider>
                 </Field>
 
-                <Field label="Tags">
-                  <IconInput
-                    icon={Tag}
-                    type="text"
-                    value={formData.tags}
-                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                    placeholder="travel, adventure, nature"
-                  />
+                <Field label="Visibility">
+                  <div className="relative">
+                    <Eye size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-orange-400 pointer-events-none" strokeWidth={2} />
+                    <select
+                      value={formData.visibility}
+                      onChange={(e) => setFormData({ ...formData, visibility: e.target.value })}
+                      className="w-full pl-10 pr-8 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-stone-800 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all appearance-none"
+                    >
+                      <option value="public">Public</option>
+                      <option value="followers">Followers</option>
+                      <option value="private">Private</option>
+                    </select>
+                  </div>
                 </Field>
               </div>
+
+              <Field label="Tags">
+                <IconInput
+                  icon={Tag}
+                  type="text"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="travel, adventure, nature"
+                />
+              </Field>
 
               {/* Upload new images */}
               <Field label="Upload New Images">
@@ -290,24 +324,50 @@ export default function EditPost() {
 
               {/* Current images */}
               {oldImages.length > 0 && (
-                <Field label={`Current Images (${oldImages.length})`}>
+                <Field label={`Current Images (${oldImages.length - imagesToRemove.size}/${oldImages.length})`}>
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-2.5">
-                    {oldImages.map((img, idx) => (
-                      <div
-                        key={idx}
-                        className="relative group aspect-square rounded-xl overflow-hidden border border-orange-200 hover:border-orange-400 transition-all"
-                      >
-                        <img src={img} alt="" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removeOldImage(idx)}
-                          className="absolute top-1 right-1 w-5 h-5 bg-white border border-orange-200 text-red-400 hover:text-red-500 hover:border-red-300 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                    {oldImages.map((img, idx) => {
+                      const isMarkedForRemoval = imagesToRemove.has(idx);
+                      return (
+                        <div
+                          key={idx}
+                          className={`relative group aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${isMarkedForRemoval
+                              ? "border-red-400 opacity-50 bg-red-50"
+                              : "border-orange-200 hover:border-orange-400"
+                            }`}
+                          onClick={() => toggleRemoveOldImage(idx)}
+                          title={isMarkedForRemoval ? "Click to keep" : "Click to remove"}
                         >
-                          <X size={10} strokeWidth={2.5} />
-                        </button>
-                      </div>
-                    ))}
+                          <img src={img} alt="" className="w-full h-full object-cover" />
+                          {isMarkedForRemoval && (
+                            <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                              <div className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                                REMOVE
+                              </div>
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRemoveOldImage(idx);
+                            }}
+                            className={`absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm border ${isMarkedForRemoval
+                                ? "bg-red-500 border-red-600 text-white"
+                                : "bg-white border-orange-200 text-red-400 hover:text-red-500 hover:border-red-300"
+                              }`}
+                          >
+                            <X size={10} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
+                  {imagesToRemove.size > 0 && (
+                    <p className="mt-2 text-xs text-red-600 font-medium">
+                      {imagesToRemove.size} image{imagesToRemove.size > 1 ? "s" : ""} marked for removal
+                    </p>
+                  )}
                 </Field>
               )}
 

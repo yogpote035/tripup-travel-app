@@ -11,7 +11,7 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import { FaPlane } from "react-icons/fa";
+import { FaPlane, FaHotel } from "react-icons/fa";
 
 const perforation =
   "repeating-linear-gradient(90deg,#e8622a 0,#e8622a 12px,transparent 12px,transparent 20px)";
@@ -66,6 +66,18 @@ const Home = () => {
       bg: "bg-orange-50",
       border: "border-orange-200",
       badge: "bg-orange-100 text-orange-600",
+    },
+    {
+      icon: <FaHotel className="w-7 h-7" />,
+      title: "Hotel Booking",
+      description: "Browse hotels and reserve rooms for your trip.",
+      path: "/hotels",
+      gate: "D4",
+      code: "HTL",
+      accent: "text-sky-600",
+      bg: "bg-sky-50",
+      border: "border-sky-200",
+      badge: "bg-sky-100 text-sky-600",
     },
   ];
 
@@ -211,7 +223,7 @@ const Home = () => {
 
               {/* Bottom barcode stub */}
               <div className="bg-stone-900 px-5 py-3 flex items-end gap-px h-10">
-                {[2,1,3,1,2,1,3,2,1,2,1,3,1,2,1,3,2,1,2,3].map((w, i) => (
+                {[2, 1, 3, 1, 2, 1, 3, 2, 1, 2, 1, 3, 1, 2, 1, 3, 2, 1, 2, 3].map((w, i) => (
                   <div
                     key={i}
                     className="bg-white rounded-sm"
@@ -307,7 +319,7 @@ const Home = () => {
 
           {/* Barcode */}
           <div className="flex justify-center items-end gap-px h-8 mt-12 opacity-20">
-            {[3,1,2,1,4,1,2,3,1,2,1,3,2,1,3,1,2,1,4,2,1,3,1,2,3,1,2].map((w, i) => (
+            {[3, 1, 2, 1, 4, 1, 2, 3, 1, 2, 1, 3, 2, 1, 3, 1, 2, 1, 4, 2, 1, 3, 1, 2, 3, 1, 2].map((w, i) => (
               <div
                 key={i}
                 className="bg-white rounded-sm"

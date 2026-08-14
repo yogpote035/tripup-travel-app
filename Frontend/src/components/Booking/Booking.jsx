@@ -1,8 +1,8 @@
-import { TrainFront, Bus, PlaneTakeoff, History, ArrowRight } from "lucide-react";
+import { TrainFront, Bus, PlaneTakeoff, History, ArrowRight,  } from "lucide-react";
 import { Link } from "react-router-dom";
 import Loading from "../../General/Loading";
 import { useSelector } from "react-redux";
-import { FaPlane } from "react-icons/fa";
+import { FaPlane, FaHotel, FaHome } from "react-icons/fa";
 
 const perforation =
   "repeating-linear-gradient(90deg,#e8622a 0,#e8622a 12px,transparent 12px,transparent 20px)";
@@ -45,6 +45,18 @@ const services = [
     bg: "bg-orange-50",
     border: "border-orange-200",
     badge: "bg-orange-100 text-orange-600",
+  },
+  {
+    icon: FaHome,
+    title: "Hotel Booking",
+    path: "/hotels",
+    gate: "D4",
+    code: "HTL",
+    description: "Browse hotels and reserve rooms for your trip",
+    accent: "text-sky-600",
+    bg: "bg-sky-50",
+    border: "border-sky-200",
+    badge: "bg-sky-100 text-sky-600",
   },
 ];
 
@@ -188,7 +200,7 @@ const Bookings = () => {
 
                 {/* Barcode footer */}
                 <div className="bg-stone-900 px-5 py-2.5 flex items-end gap-px h-9">
-                  {[2,1,3,1,2,1,3,2,1,2,1,3,1,2,1,3,2,1,2,3,1,2].map((w, i) => (
+                  {[2, 1, 3, 1, 2, 1, 3, 2, 1, 2, 1, 3, 1, 2, 1, 3, 2, 1, 2, 3, 1, 2].map((w, i) => (
                     <div
                       key={i}
                       className="bg-white rounded-sm"

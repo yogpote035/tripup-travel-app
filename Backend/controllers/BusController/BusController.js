@@ -1,6 +1,14 @@
 const BusModel = require("../../models/BusModel");
 const BusBookingModel = require("../../models/BusBookingModel");
 const nodemailer = require("nodemailer");
+const { sendNotification } = require('../../utils/socket');
+const Razorpay = require("razorpay");
+const { getConfig } = require("../../config/environment");
+const { verifyCheckoutSignature } = require("../../services/payment/RazorpayPaymentService");
+const { confirmExistingBooking } = require("../../services/payment/UniversalConfirmationService");
+const config = getConfig();
+const razorpayClient = config.razorpay?.keyId && config.razorpay?.keySecret
+  ? new Razorpay({ key_id: config.razorpay.keyId, key_secret: config.razorpay.keySecret }) : null;
 
 function parseTimeString(timeStr) {
   if (!timeStr || typeof timeStr !== "string") {
@@ -185,16 +193,26 @@ module.exports.bookBusSeats = async (req, res) => {
     const destIndex = route.indexOf(destination.toLowerCase());
 
     if (sourceIndex === -1 || destIndex === -1 || sourceIndex >= destIndex) {
-      return res.status(400).json({ message: "Invalid route sequence" });
+      return res.status(400).json({
+        message: "Invalid route sequence",
+        code: "INVALID_ROUTE_SEQUENCE",
+        busRoute: bus.route,
+        requested: { source, destination }
+      });
     }
 
-    // Get station data safely
-    const sourceData = stationMap[source] || stationMap[source.toLowerCase()];
-    const destData =
-      stationMap[destination] || stationMap[destination.toLowerCase()];
+    // Get station data safely using case-insensitive lookup
+    const sourceData = getStationData(stationMap, source);
+    const destData = getStationData(stationMap, destination);
 
     if (!sourceData || !destData) {
-      return res.status(400).json({ message: "Invalid source or destination in stationMap" });
+      const availableStations = Object.keys(stationMap).join(", ");
+      return res.status(400).json({
+        message: "Invalid source or destination",
+        code: "STATION_NOT_FOUND",
+        availableStations,
+        requested: { source, destination }
+      });
     }
 
     const distance = destData.distance - sourceData.distance;
@@ -204,23 +222,12 @@ module.exports.bookBusSeats = async (req, res) => {
     // Ensure all requested seats are available
     for (const p of passengers) {
       const seat = bus.seats.find((s) => s.seatNumber === p.seatNumber);
-      if (!seat || seat.isBooked) {
+      if (!seat || seat.isBooked || (seat.status && seat.status !== "Available")) {
         return res.status(409).json({
           message: `Seat ${p.seatNumber} is already booked or doesn't exist.`,
         });
       }
     }
-
-    // Update seat status
-    passengers.forEach((p) => {
-      const seat = bus.seats.find((s) => s.seatNumber === p.seatNumber);
-      seat.isBooked = true;
-      seat.passengerName = p.name;
-      seat.bookingTime = new Date();
-    });
-
-    bus.availableSeats -= passengers.length;
-    await bus.save();
 
     const booking = await BusBookingModel.create({
       bus: bus._id,
@@ -232,13 +239,36 @@ module.exports.bookBusSeats = async (req, res) => {
       farePerSeat: Math.round(farePerSeat),
       totalFare,
       passengers,
-      status: "booked", //caus an error check
+      status: "pending",
+      payment: { provider: "razorpay", status: "pending", originalMethod: req.body.paymentMethod || null },
     });
-
-    return res.status(200).json({ message: "Booking successful" });
+    if (!razorpayClient) return res.status(500).json({ message: "Razorpay is not configured on the server." });
+    const order = await razorpayClient.orders.create({
+      amount: Math.round(totalFare * 100), currency: "INR", receipt: `bus_booking_${booking._id}`, payment_capture: 1,
+      notes: { bookingId: booking._id.toString(), bookingType: "bus" },
+    });
+    booking.payment = { ...booking.payment, orderId: order.id };
+    await booking.save();
+    return res.status(201).json({ message: "Payment required to complete booking", data: { booking, payment: { order, paymentKeyId: config.razorpay.keyId } } });
   } catch (error) {
     console.error("Error during booking:", error);
     return res.status(500).json({ message: "Server error during booking" });
+  }
+};
+
+module.exports.confirmBusBooking = async (req, res) => {
+  try {
+    const { bookingId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+    if (!bookingId || !razorpay_payment_id || !razorpay_order_id || !razorpay_signature) return res.status(400).json({ message: "Payment verification fields are required" });
+    const booking = await BusBookingModel.findById(bookingId);
+    if (!booking) return res.status(404).json({ message: "Pending bus booking not found" });
+    if (String(booking.userId) !== String(req.user?.userId)) return res.status(403).json({ message: "You are not authorized to confirm this booking" });
+    if (!verifyCheckoutSignature({ orderId: razorpay_order_id, paymentId: razorpay_payment_id, signature: razorpay_signature })) return res.status(400).json({ message: "Payment verification failed" });
+    const confirmed = await confirmExistingBooking({ bookingId, bookingType: "bus", payment: { id: razorpay_payment_id }, orderId: razorpay_order_id });
+    return res.json({ booking: confirmed, message: "Bus booking successful" });
+  } catch (error) {
+    console.error("Bus booking confirmation failed:", error.message);
+    return res.status(500).json({ message: "Bus booking confirmation failed" });
   }
 };
 
@@ -246,11 +276,21 @@ module.exports.getMyBusBookings = async (req, res) => {
   try {
     const bookings = await BusBookingModel.find({
       userId: req.header("userId"),
-    })
-      .populate("bus", "busNumber company")
-      .sort({ bookingDate: -1 });
+    }).sort({ bookingDate: -1 }).lean();
 
-    res.status(200).json(bookings);
+    const busIds = [...new Set(bookings.map((booking) => booking && (booking.bus || booking.busId)).filter(Boolean))];
+    const busMap = new Map(
+      (await Promise.all(busIds.map(async (busId) => BusModel.findById(busId)))).filter(Boolean).map((bus) => [(bus._id || bus.id), bus])
+    );
+
+    const enrichedBookings = bookings.map((booking) => {
+      if (booking && booking.bus && busMap.has(booking.bus)) {
+        booking.bus = busMap.get(booking.bus);
+      }
+      return booking;
+    });
+
+    res.status(200).json(enrichedBookings);
   } catch (error) {
     console.error("Fetch Bookings Error:", error);
     res.status(500).json({ message: "Failed to fetch bookings" });
@@ -265,11 +305,14 @@ module.exports.downloadTicket = async (req, res) => {
       return res.status(400).json({ message: "Booking ID is required" });
     }
 
-    const booking = await BusBookingModel.findById(bookingId).populate("bus");
+    const booking = await BusBookingModel.findById(bookingId);
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
+
+    const bus = booking.bus ? await BusModel.findById(booking.bus) : null;
+    if (bus) booking.bus = bus;
 
     const html = `
 <!DOCTYPE html>
@@ -314,33 +357,28 @@ module.exports.downloadTicket = async (req, res) => {
   <body>
   <div class="header"> Bus Ticket</div>
     <div class="ticket">
-      <div class="section"><span class="label">Bus:</span> ${
-        booking.bus.company
+      <div class="section"><span class="label">Bus:</span> ${booking.bus.company
       } (${booking.bus.busNumber})</div>
-      <div class="section"><span class="label">Route:</span> ${
-        booking.source
+      <div class="section"><span class="label">Route:</span> ${booking.source
       } ➝ ${booking.destination}</div>
       <div class="section"><span class="label">Date:</span> ${new Date(
         booking.journeyDate
       ).toDateString()}</div>
-      <div class="section"><span class="label">Fare:</span> ₹${
-        booking.totalFare
+      <div class="section"><span class="label">Fare:</span> ₹${booking.totalFare
       } (₹${booking.farePerSeat}/seat)</div> 
-       <div class="section"><span class="label">Status:</span> ${
-         booking.status
-       }</div>
+       <div class="section"><span class="label">Status:</span> ${booking.status
+      }</div>
 
       <div class="section">
         <span class="label">Passengers:</span>
         <ul>
           ${booking.passengers
-            .map(
-              (p, i) =>
-                `<li>${i + 1}. ${p.name} - Seat ${p.seatNumber} (${
-                  p.gender
-                })</li>`
-            )
-            .join("")}
+        .map(
+          (p, i) =>
+            `<li>${i + 1}. ${p.name} - Seat ${p.seatNumber} (${p.gender
+            })</li>`
+        )
+        .join("")}
         </ul>
       </div>
     </div>
@@ -404,9 +442,12 @@ module.exports.mailTicket = async (req, res) => {
   const { bookingId } = req.query;
 
   try {
-    const booking = await BusBookingModel.findById(bookingId).populate("bus");
+    const booking = await BusBookingModel.findById(bookingId);
 
     if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    const bus = booking.bus ? await BusModel.findById(booking.bus) : null;
+    if (bus) booking.bus = bus;
 
     // Generate PDF
     const html = `
@@ -452,32 +493,27 @@ module.exports.mailTicket = async (req, res) => {
   <body>
   <div class="header"> Bus Ticket</div>
     <div class="ticket">
-      <div class="section"><span class="label">Bus:</span> ${
-        booking.bus.company
+      <div class="section"><span class="label">Bus:</span> ${booking.bus.company
       } (${booking.bus.busNumber})</div>
-      <div class="section"><span class="label">Route:</span> ${
-        booking.source
+      <div class="section"><span class="label">Route:</span> ${booking.source
       } ➝ ${booking.destination}</div>
       <div class="section"><span class="label">Date:</span> ${new Date(
         booking.journeyDate
       ).toDateString()}</div>
-      <div class="section"><span class="label">Fare:</span> ₹${
-        booking.totalFare
+      <div class="section"><span class="label">Fare:</span> ₹${booking.totalFare
       } (₹${booking.farePerSeat}/seat)</div> 
-       <div class="section"><span class="label">Status:</span> ${
-         booking.status
-       }</div>
+       <div class="section"><span class="label">Status:</span> ${booking.status
+      }</div>
       <div class="section">
         <span class="label">Passengers:</span>
         <ul>
           ${booking.passengers
-            .map(
-              (p, i) =>
-                `<li>${i + 1}. ${p.name} - Seat ${p.seatNumber} (${
-                  p.gender
-                })</li>`
-            )
-            .join("")}
+        .map(
+          (p, i) =>
+            `<li>${i + 1}. ${p.name} - Seat ${p.seatNumber} (${p.gender
+            })</li>`
+        )
+        .join("")}
         </ul>
       </div>
     </div>
@@ -574,6 +610,7 @@ module.exports.cancelBusBooking = async (req, res) => {
       const seat = bus.seats.find((s) => s.seatNumber === passenger.seatNumber);
       if (seat) {
         seat.isBooked = false;
+        seat.status = "Available";
         seat.passengerName = null;
         seat.bookingTime = null;
       }
@@ -583,6 +620,12 @@ module.exports.cancelBusBooking = async (req, res) => {
 
     booking.status = "cancelled";
     await booking.save(); //for storing History we don't delete it
+
+    try {
+      await sendNotification(booking.userId, { type: 'booking_cancelled', title: 'Bus Booking Cancelled', message: `Your bus booking for ${booking.journeyDate?.toString?.() || ''} has been cancelled`, meta: { bookingId: booking._id, busId: booking.bus } });
+    } catch (err) {
+      console.error('notify error', err.message);
+    }
 
     return res.status(200).json({ message: "Booking cancelled successfully" });
   } catch (error) {

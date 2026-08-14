@@ -34,6 +34,8 @@
     "react-router-dom": "^7.7.0",
     "react-tailwindcss-datepicker": "^2.0.0",
     "react-toastify": "^11.0.5",
+    "react-window": "^1.8.8",
+    "socket.io-client": "^4.7.2",
     "tailwindcss": "^4.1.11"
   },
   "devDependencies": {

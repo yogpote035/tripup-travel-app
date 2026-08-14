@@ -71,6 +71,15 @@ export const {
 
 export default busBookingSlice.reducer;
 
+const loadRazorpayScript = () => new Promise((resolve, reject) => {
+  if (window.Razorpay) return resolve();
+  const script = document.createElement("script");
+  script.src = "https://checkout.razorpay.com/v1/checkout.js";
+  script.onload = resolve;
+  script.onerror = () => reject(new Error("Unable to load Razorpay SDK"));
+  document.body.appendChild(script);
+});
+
 export const bookBusSeats =
   (bookingData, navigate) => async (dispatch, getState) => {
     dispatch(bookingRequest());
@@ -87,6 +96,40 @@ export const bookBusSeats =
           },
         }
       );
+      if (response.status === 201) {
+        const booking = response.data?.data?.booking;
+        const payment = response.data?.data?.payment;
+        if (!booking || !payment?.order || !payment?.paymentKeyId) throw new Error("Payment order could not be created");
+        await loadRazorpayScript();
+        const razorpay = new window.Razorpay({
+          key: payment.paymentKeyId,
+          amount: payment.order.amount,
+          currency: payment.order.currency,
+          name: "TripUp Buses",
+          description: `Bus booking for ${bookingData.source} to ${bookingData.destination}`,
+          order_id: payment.order.id,
+          handler: async (paymentResponse) => {
+            try {
+              await axios.post(`${import.meta.env.VITE_API_BASE_URL}/bus/confirmBusBooking`, {
+                bookingId: booking._id,
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_signature: paymentResponse.razorpay_signature,
+              }, { headers: { Authorization: `Bearer ${token || localStorage.getItem("token") || ""}` } });
+              dispatch(bookingSuccess());
+              toast.success("Bus booking successful!");
+              navigate("/bus-bookings");
+            } catch (error) {
+              dispatch(bookingFailure("Payment received. Your booking is being confirmed."));
+              toast.info("Payment received. Your booking is being confirmed. Please check your bookings shortly.");
+            }
+          },
+          modal: { ondismiss: () => { dispatch(bookingFailure("Payment window closed before completion.")); toast.error("Payment window closed before completion."); } },
+          theme: { color: "#f97316" },
+        });
+        razorpay.open();
+        return;
+      }
       if (response.status === 406) {
         const msg = response.data?.message || "Missing required booking fields";
         dispatch(bookingFailure(msg));

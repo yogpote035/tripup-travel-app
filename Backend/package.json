@@ -7,7 +7,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test test/sql-smoke.test.js test/flight-seat-normalisation.test.js test/flight-booking-seat-update.test.js",
+    "seed:locations": "node ./utils/seedLocations.js"
   },
   "dependencies": {
     "@google/genai": "^1.13.0",
@@ -18,19 +19,30 @@
     "bcryptjs": "^3.0.2",
     "clipboardy": "^4.0.0",
     "cloudinary": "^2.7.0",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "express-rate-limit": "^8.0.1",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
     "jose": "^6.0.12",
     "libphonenumber-js": "^1.12.10",
-    "mongoose": "^8.16.4",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
+    "mysql2": "^3.23.1",
+    "node-schedule": "^2.1.1",
     "nodemailer": "^7.0.5",
     "puppeteer": "^24.16.0",
-    "puppeteer-core": "^24.16.0"
+    "puppeteer-core": "^24.16.0",
+    "razorpay": "^2.0.0",
+    "socket.io": "^4.8.3",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "xss-clean": "^0.1.4"
   }
 }

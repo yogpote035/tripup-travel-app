@@ -13,10 +13,14 @@ import {
   FaBus,
   FaTrain,
   FaHome,
+  FaMapMarkerAlt,
+  FaBookmark,
+  FaHeart,
 } from "react-icons/fa";
 import { FiMoon, FiSun } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import { toggleTheme } from "../../AllStatesFeatures/Theme/ThemeSlice";
+import NotificationsPanel from '../components/Notifications/NotificationsPanel';
 
 /* ── Small reusable helpers ── */
 
@@ -70,7 +74,7 @@ const Navbar = () => {
     try {
       if (theme === "dark") document.documentElement.classList.add("dark");
       else document.documentElement.classList.remove("dark");
-    } catch (e) {}
+    } catch (e) { }
   }, [theme]);
   const navigate = useNavigate();
   useEffect(() => {
@@ -122,7 +126,6 @@ const Navbar = () => {
           </div>
 
           <StubDivider />
-
           {/* Theme toggle */}
           <div className="hidden md:flex items-center gap-2">
             <button
@@ -133,6 +136,10 @@ const Navbar = () => {
               {theme === "dark" ? <FiSun size={16} /> : <FiMoon size={16} />}
               {theme === "dark" ? "Light" : "Dark"}
             </button>
+          </div>
+
+          <div className="hidden md:flex items-center ml-3">
+            <NotificationsPanel />
           </div>
 
           {/* Desktop nav links */}
@@ -212,38 +219,54 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile-only nav links */}
-        <div className="md:hidden px-4 pt-4 pb-3 border-b-2 border-dashed border-orange-200">
-          <p className="text-xs font-semibold tracking-widest text-stone-400 uppercase mb-2">
-            Navigate
-          </p>
-          {[
-            { to: "/", icon: <FaHome className="text-orange-500" />, label: "Home" },
-            { to: "/train", icon: <FaTrain className="text-orange-500" />, label: "Train" },
-            { to: "/bus", icon: <FaBus className="text-orange-500" />, label: "Bus" },
-            { to: "/flight", icon: <FaPlane className="text-orange-500" />, label: "Flight" },
-          ].map(({ to, icon, label }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={toggleSidebar}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-orange-100 text-stone-700 hover:text-orange-600 transition-all text-sm font-semibold mb-1"
-            >
-              <span className="w-7 h-7 flex items-center justify-center bg-orange-100 rounded-md text-base">
-                {icon}
-              </span>
-              {label}
-            </Link>
-          ))}
-        </div>
+        {/* Sidebar menu: mobile nav + auth section (scrollable, hidden scrollbar) */}
+        <div className="user-sidebar-menu">
+          <div className="md:hidden px-4 pt-4 pb-3 border-b-2 border-dashed border-orange-200">
+            <p className="text-xs font-semibold tracking-widest text-stone-400 uppercase mb-2">
+              Navigate
+            </p>
+            {
+              [
+                { to: "/", icon: <FaHome className="text-orange-500" />, label: "Home" },
+                { to: "/train", icon: <FaTrain className="text-orange-500" />, label: "Train" },
+                { to: "/bus", icon: <FaBus className="text-orange-500" />, label: "Bus" },
+                { to: "/flight", icon: <FaPlane className="text-orange-500" />, label: "Flight" },
+                { to: "/locations", icon: <FaMapMarkerAlt className="text-orange-500" />, label: "Locations" },
+                { to: "/saved-posts", icon: <FaBookmark className="text-orange-500" />, label: "Saved Posts", authOnly: true },
+                { to: "/liked-posts", icon: <FaHeart className="text-red-400" />, label: "Liked Posts", authOnly: true },
+              ].filter(item => !item.authOnly || user)
+               .map(({ to, icon, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={toggleSidebar}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-orange-100 text-stone-700 hover:text-orange-600 transition-all text-sm font-semibold mb-1"
+                >
+                  <span className="w-7 h-7 flex items-center justify-center bg-orange-100 rounded-md text-base">
+                    {icon}
+                  </span>
+                  {label}
+                </Link>
+              ))
+            }
+          </div>
 
-        {/* Auth section */}
-        <div className="px-4 pt-4 pb-3">
+          {/* Auth section */}
+          <div className="px-4 pt-4 pb-3">
           <p className="text-xs font-semibold tracking-widest text-stone-400 uppercase mb-2">
             Passenger
           </p>
           {user ? (
             <>
+              <SidebarLink to="/locations" icon={<FaMapMarkerAlt />} onClick={toggleSidebar}>
+                Explore Locations
+              </SidebarLink>
+              <SidebarLink to="/saved-posts" icon={<FaBookmark />} onClick={toggleSidebar}>
+                Saved Posts
+              </SidebarLink>
+              <SidebarLink to="/liked-posts" icon={<FaHeart />} onClick={toggleSidebar}>
+                Liked Posts
+              </SidebarLink>
               <SidebarLink to="/profile" icon={<FaUser />} onClick={toggleSidebar}>
                 View Profile
               </SidebarLink>
@@ -286,6 +309,9 @@ const Navbar = () => {
             {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           </button>
         </div>
+        </div>
+
+        {/* end .user-sidebar-menu wrapper */}
 
         {/* Barcode footer */}
         <div className="mt-auto bg-stone-900 px-5 py-4">

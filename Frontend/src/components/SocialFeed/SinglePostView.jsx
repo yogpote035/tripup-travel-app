@@ -5,8 +5,10 @@ import {
   getSinglePost,
   deletePost,
   toggleLike,
+  toggleBookmark,
   addComment,
   deleteComment,
+  reviewLocation,
 } from "../../../AllStatesFeatures/SocialFeed/SocialFeedSlice";
 import Loading from "../../General/Loading";
 import {
@@ -23,6 +25,11 @@ import {
   Send,
   AlertTriangle,
   User,
+  Bookmark,
+  Star,
+  Eye,
+  Lock,
+  Users,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { toast } from "react-toastify";
@@ -36,8 +43,10 @@ export default function SinglePostView() {
   const [actionMsg, setActionMsg] = useState("");
   const [commentText, setCommentText] = useState("");
   const [currentImage, setCurrentImage] = useState(0);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
 
-  const { singlePost: posts, loading, error, like, comments } =
+  const { singlePost: posts, loading, error, like, bookmark, comments } =
     useSelector((state) => state.socialFeed);
 
   const currentUser =
@@ -74,6 +83,13 @@ export default function SinglePostView() {
     setCommentText("");
   };
 
+  const handleReviewSubmit = (e) => {
+    e.preventDefault();
+    if (!reviewText.trim()) return;
+    dispatch(reviewLocation(posts._id, { rating: reviewRating, review: reviewText }));
+    setReviewText("");
+  };
+
   const prevImage = () =>
     setCurrentImage((p) => (p === 0 ? posts.images.length - 1 : p - 1));
   const nextImage = () =>
@@ -103,6 +119,13 @@ export default function SinglePostView() {
     );
 
   const isAuthor = posts?.author?.id?.toString() === currentUser?.toString();
+  const visibilityBadge =
+    posts?.visibility === "private"
+      ? { label: "Private", icon: Lock }
+      : posts?.visibility === "followers"
+        ? { label: "Followers", icon: Users }
+        : { label: "Public", icon: Eye };
+  const VisibilityIcon = visibilityBadge.icon;
 
   return (
     <div className="min-h-screen bg-orange-50 py-10 px-4">
@@ -184,6 +207,17 @@ export default function SinglePostView() {
               </span>
             </div>
 
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="inline-flex items-center gap-1.5 text-sm text-stone-500 font-medium bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-full">
+                <VisibilityIcon size={14} className="text-orange-400" />
+                {visibilityBadge.label}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-sm text-stone-500 font-medium bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-full">
+                <Star size={14} className="text-orange-400" />
+                {posts?.locationRating ? posts.locationRating.toFixed(1) : "No ratings yet"}
+              </span>
+            </div>
+
             {/* Tags */}
             {posts?.tags?.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-5">
@@ -235,19 +269,76 @@ export default function SinglePostView() {
               )}
             </div>
 
-            {/* Like */}
-            <button
-              onClick={() => dispatch(toggleLike(posts._id))}
-              disabled={!currentUser}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                like?.liked
-                  ? "bg-orange-500 hover:bg-orange-400 text-white"
-                  : "bg-white border border-orange-200 hover:border-orange-400 hover:bg-orange-50 text-stone-600"
-              } ${!currentUser ? "opacity-50 cursor-not-allowed" : "active:scale-95"}`}
-            >
-              <Heart size={14} strokeWidth={2} fill={like?.liked ? "currentColor" : "none"} />
-              {like?.likesCount || 0} {like?.likesCount === 1 ? "like" : "likes"}
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => dispatch(toggleLike(posts._id))}
+                disabled={!currentUser}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  like?.liked
+                    ? "bg-orange-500 hover:bg-orange-400 text-white"
+                    : "bg-white border border-orange-200 hover:border-orange-400 hover:bg-orange-50 text-stone-600"
+                } ${!currentUser ? "opacity-50 cursor-not-allowed" : "active:scale-95"}`}
+              >
+                <Heart size={14} strokeWidth={2} fill={like?.liked ? "currentColor" : "none"} />
+                {like?.likesCount || 0} {like?.likesCount === 1 ? "like" : "likes"}
+              </button>
+              <button
+                onClick={() => dispatch(toggleBookmark(posts._id))}
+                disabled={!currentUser}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  bookmark?.bookmarked
+                    ? "bg-stone-900 hover:bg-stone-800 text-white"
+                    : "bg-white border border-orange-200 hover:border-orange-400 hover:bg-orange-50 text-stone-600"
+                } ${!currentUser ? "opacity-50 cursor-not-allowed" : "active:scale-95"}`}
+              >
+                <Bookmark size={14} strokeWidth={2} fill={bookmark?.bookmarked ? "currentColor" : "none"} />
+                {bookmark?.bookmarksCount || 0} saved
+              </button>
+            </div>
+          </div>
+
+          <div className="border-t border-orange-100 px-6 py-6 space-y-6">
+            <div>
+              <h2 className="text-sm font-semibold text-stone-700 flex items-center gap-2 mb-3">
+                <Star size={14} className="text-orange-500" />
+                Location Review
+              </h2>
+              <form onSubmit={handleReviewSubmit} className="space-y-3">
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setReviewRating(value)}
+                      className={`rounded-full px-3 py-1.5 text-sm font-semibold border transition-all ${reviewRating === value ? "bg-orange-500 text-white border-orange-500" : "bg-white border-orange-200 text-stone-600 hover:border-orange-400"}`}
+                    >
+                      {value}★
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  placeholder="Share how this place felt for you…"
+                  rows={3}
+                  className="w-full px-4 py-2.5 rounded-lg bg-orange-50 border border-orange-200 text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all resize-none"
+                />
+                <button type="submit" className="px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-400 transition-all">
+                  Submit review
+                </button>
+              </form>
+            </div>
+            <div className="space-y-3">
+              {(posts?.locationReviews || []).length > 0 ? posts.locationReviews.map((review) => (
+                <div key={review._id || `${review.user?.id}-${review.createdAt}`} className="rounded-xl border border-orange-100 bg-orange-50 p-4 text-sm">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-semibold text-stone-700">{review.user?.name || "Traveller"}</span>
+                    <span className="text-orange-500 font-semibold">{review.rating}★</span>
+                  </div>
+                  <p className="text-stone-600">{review.review}</p>
+                </div>
+              )) : <p className="text-sm text-stone-400">No location reviews yet.</p>}
+            </div>
           </div>
 
           {/* Comments */}
@@ -303,7 +394,7 @@ export default function SinglePostView() {
                     {comment.user.id === currentUser && (
                       <button
                         onClick={() => {
-                          dispatch(deleteComment(posts._id, comment._id, navigate));
+                          dispatch(deleteComment(posts._id, comment._id));
                           setActionMsg("Deleting comment…");
                         }}
                         className="shrink-0 text-stone-300 hover:text-red-400 transition-colors p-1"

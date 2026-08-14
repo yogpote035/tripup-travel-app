@@ -80,26 +80,98 @@ export const {
 
 export default bookingSlice.reducer;
 //for booking train seat
+const loadRazorpayScript = () =>
+  new Promise((resolve, reject) => {
+    if (window.Razorpay) return resolve(true);
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error("Unable to load Razorpay SDK"));
+    document.body.appendChild(script);
+  });
+
 export const bookTrainSeats =
   (bookingData, navigate) => async (dispatch, getState) => {
     dispatch(bookingRequest());
-    const token = getState().auth.accessToken;
+    const token = getState().auth.accessToken || localStorage.getItem("token");
 
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/train/train-book-seat`,
-        bookingData,
+        {
+          ...bookingData,
+        },
         {
           headers: {
-            Authorization: `Bearer ${token || localStorage.getItem("token") || ""}`,
+            Authorization: `Bearer ${token || ""}`,
           },
         }
       );
-      dispatch(bookingSuccess(response.data.booking));
-      navigate("/train-bookings");
-      toast.success(response.data.message || "Booking successful!");
+
+      const booking = response.data?.data?.booking;
+      const paymentOrder = response.data?.data?.payment?.order;
+      const paymentKeyId = response.data?.data?.payment?.paymentKeyId;
+
+      if (!booking || !paymentOrder || !paymentKeyId) {
+        throw new Error(response.data?.message || "Payment order could not be created");
+      }
+
+      await loadRazorpayScript();
+
+      const razorpay = new window.Razorpay({
+        key: paymentKeyId,
+        amount: paymentOrder.amount,
+        currency: paymentOrder.currency,
+        name: "TripUp Trains",
+        description: `Train booking for ${bookingData.from} → ${bookingData.to}`,
+        order_id: paymentOrder.id,
+        handler: async (paymentResponse) => {
+          try {
+            const confirmRes = await axios.post(
+              `${import.meta.env.VITE_API_BASE_URL}/train/train-book-seat/confirm`,
+              {
+                bookingId: booking._id,
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_signature: paymentResponse.razorpay_signature,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token || ""}`,
+                },
+              }
+            );
+
+            dispatch(bookingSuccess(confirmRes.data?.booking || booking));
+            toast.success(confirmRes.data?.message || "Train booking successful!");
+            navigate("/train-bookings");
+          } catch (confirmationError) {
+            const msg = "Payment received. Your booking is being confirmed. Please check your bookings shortly.";
+            dispatch(bookingFailure(msg));
+            toast.info(msg);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            const msg = "Payment window closed before completion.";
+            dispatch(bookingFailure(msg));
+            toast.error(msg);
+          },
+        },
+        prefill: {
+          name: bookingData.passengerNames?.[0] || "",
+          email: bookingData.email || "",
+          contact: bookingData.phone || "",
+        },
+        theme: {
+          color: "#f97316",
+        },
+      });
+
+      razorpay.open();
     } catch (error) {
-      const msg = error.response?.data?.message || "Booking failed";
+      const msg = error.response?.data?.message || error.message || "Booking failed";
       dispatch(bookingFailure(msg));
       toast.error(msg);
     }

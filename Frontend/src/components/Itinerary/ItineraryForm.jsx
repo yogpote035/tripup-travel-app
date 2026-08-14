@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-toastify";
 import { generateItinerary } from "../../../AllStatesFeatures/Itinerary/AllItinerarySlice";
+import { searchLocations } from "../../../AllStatesFeatures/Location/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../General/Loading";
@@ -8,6 +9,8 @@ import {
   MapPin, Calendar, Heart, Users, Wallet,
   Sunrise, Sunset, Bus, Sparkles, AlertTriangle,
   ArrowRight, ChevronLeft, ChevronRight, ChevronDown, Check,
+  Leaf, UtensilsCrossed, Landmark, MoonStar,
+  MountainSnow, ShoppingBag, HeartHandshake,
 } from "lucide-react";
 
 // ─── Font + animation injection ───────────────────────────────────────────────
@@ -39,6 +42,38 @@ const FontLoader = () => (
 
     .tp-sel { background:linear-gradient(135deg,#E8694A,#D44F30)!important; color:white!important; font-weight:600!important; }
 
+    .premium-shell {
+      background:
+        radial-gradient(circle at top left, rgba(232, 105, 74, 0.10), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(201, 168, 124, 0.14), transparent 22%),
+        linear-gradient(180deg, #f9f3ee 0%, #fffaf8 36%, #faf7f2 100%);
+    }
+    .premium-card {
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(146,120,94,0.12);
+      box-shadow: 0 30px 80px rgba(52, 34, 20, 0.08), 0 4px 18px rgba(52, 34, 20, 0.04);
+    }
+    .premium-header {
+      background: linear-gradient(135deg, rgba(255,244,238,0.96) 0%, rgba(255,255,255,0.93) 42%, rgba(252,247,243,0.90) 100%);
+      border-bottom: 1px solid rgba(122,99,83,0.08);
+    }
+    .premium-step {
+      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(232,105,74,0.14);
+      box-shadow: 0 6px 18px rgba(232,105,74,0.06);
+    }
+    .premium-field {
+      background: linear-gradient(180deg, #fffaf7 0%, #fdf9f5 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+    }
+    .premium-button {
+      background: linear-gradient(135deg, #f39d77 0%, #ea6e47 30%, #d95d3d 100%);
+      box-shadow: 0 16px 32px rgba(232, 105, 74, 0.28);
+    }
+    .premium-button:hover {
+      box-shadow: 0 20px 40px rgba(232, 105, 74, 0.34);
+    }
     .trig-base {
       width:100%; display:flex; align-items:center; gap:12px;
       padding:11px 16px; border-radius:12px; border:1.5px solid #e7ddd3;
@@ -52,82 +87,82 @@ const FontLoader = () => (
 );
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const MONTHS = ["January","February","March","April","May","June",
-                "July","August","September","October","November","December"];
-const WD     = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+const MONTHS = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
+const WD = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-const sameDay   = (a,b) => a&&b && a.toDateString()===b.toDateString();
-const isBetween = (d,s,e)=> s&&e && d>s && d<e;
-const toISO     = d => !d?"": `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-const fmtDate   = d => d?.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
-const diffDays  = (s,e)=> s&&e ? Math.round((e-s)/86400000) : 0;
+const sameDay = (a, b) => a && b && a.toDateString() === b.toDateString();
+const isBetween = (d, s, e) => s && e && d > s && d < e;
+const toISO = d => !d ? "" : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const fmtDate = d => d?.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+const diffDays = (s, e) => s && e ? Math.round((e - s) / 86400000) : 0;
 
-function buildCells(y,m){
-  const cells=[], first=new Date(y,m,1).getDay(), tot=new Date(y,m+1,0).getDate(), prev=new Date(y,m,0).getDate();
-  for(let i=first-1;i>=0;i--) cells.push({d:new Date(m===0?y-1:y,m===0?11:m-1,prev-i),other:true});
-  for(let d=1;d<=tot;d++)      cells.push({d:new Date(y,m,d),other:false});
-  while(cells.length<42)       cells.push({d:new Date(m===11?y+1:y,m===11?0:m+1,cells.length-first-tot+1),other:true});
+function buildCells(y, m) {
+  const cells = [], first = new Date(y, m, 1).getDay(), tot = new Date(y, m + 1, 0).getDate(), prev = new Date(y, m, 0).getDate();
+  for (let i = first - 1; i >= 0; i--) cells.push({ d: new Date(m === 0 ? y - 1 : y, m === 0 ? 11 : m - 1, prev - i), other: true });
+  for (let d = 1; d <= tot; d++)      cells.push({ d: new Date(y, m, d), other: false });
+  while (cells.length < 42) cells.push({ d: new Date(m === 11 ? y + 1 : y, m === 11 ? 0 : m + 1, cells.length - first - tot + 1), other: true });
   return cells;
 }
 
-function useOutside(ref,cb){
-  useEffect(()=>{
-    const h=e=>{ if(ref.current&&!ref.current.contains(e.target)) cb(); };
-    document.addEventListener("mousedown",h);
-    return ()=>document.removeEventListener("mousedown",h);
-  },[cb]);
+function useOutside(ref, cb) {
+  useEffect(() => {
+    const h = e => { if (ref.current && !ref.current.contains(e.target)) cb(); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [cb]);
 }
 
 // ═══════════════════════════════════════════════════════════
 // DATE RANGE PICKER
 // ═══════════════════════════════════════════════════════════
-function DateRangePicker({ onChange, hasError }){
-  const today=new Date(); today.setHours(0,0,0,0);
-  const [open,setOpen]   = useState(false);
-  const [vy,setVy]       = useState(today.getFullYear());
-  const [vm,setVm]       = useState(today.getMonth());
-  const [start,setStart] = useState(null);
-  const [end,setEnd]     = useState(null);
-  const [hov,setHov]     = useState(null);
-  const [phase,setPhase] = useState("start");
+function DateRangePicker({ onChange, hasError }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const [open, setOpen] = useState(false);
+  const [vy, setVy] = useState(today.getFullYear());
+  const [vm, setVm] = useState(today.getMonth());
+  const [start, setStart] = useState(null);
+  const [end, setEnd] = useState(null);
+  const [hov, setHov] = useState(null);
+  const [phase, setPhase] = useState("start");
   const ref = useRef(null);
-  useOutside(ref,()=>setOpen(false));
+  useOutside(ref, () => setOpen(false));
 
-  const prevM=()=>{ vm===0?(setVm(11),setVy(y=>y-1)):setVm(v=>v-1); };
-  const nextM=()=>{ vm===11?(setVm(0),setVy(y=>y+1)):setVm(v=>v+1); };
+  const prevM = () => { vm === 0 ? (setVm(11), setVy(y => y - 1)) : setVm(v => v - 1); };
+  const nextM = () => { vm === 11 ? (setVm(0), setVy(y => y + 1)) : setVm(v => v + 1); };
 
-  const pick=d=>{
-    if(d<today&&!sameDay(d,today)) return;
-    if(phase==="start"||(start&&end)){
+  const pick = d => {
+    if (d < today && !sameDay(d, today)) return;
+    if (phase === "start" || (start && end)) {
       setStart(d); setEnd(null); setPhase("end");
     } else {
-      const s=d<start?d:start, e=d<start?start:d;
+      const s = d < start ? d : start, e = d < start ? start : d;
       setStart(s); setEnd(e); setPhase("start"); setOpen(false);
-      onChange({startDate:toISO(s),endDate:toISO(e)});
+      onChange({ startDate: toISO(s), endDate: toISO(e) });
     }
   };
 
-  const clear=()=>{ setStart(null);setEnd(null);setPhase("start");onChange({startDate:"",endDate:""}); };
-  const effEnd = end||hov;
-  const nights = diffDays(start,end);
-  const cells  = buildCells(vy,vm);
+  const clear = () => { setStart(null); setEnd(null); setPhase("start"); onChange({ startDate: "", endDate: "" }); };
+  const effEnd = end || hov;
+  const nights = diffDays(start, end);
+  const cells = buildCells(vy, vm);
 
   return (
     <div className="relative" ref={ref}>
       {/* Trigger */}
       <button type="button"
-        className={`trig-base ${open?"trig-open":""} ${hasError?"trig-err":""}`}
-        onClick={()=>setOpen(v=>!v)}>
+        className={`trig-base ${open ? "trig-open" : ""} ${hasError ? "trig-err" : ""}`}
+        onClick={() => setOpen(v => !v)}>
         <span className="flex items-center justify-center w-7 h-7 bg-orange-50 rounded-[8px] flex-shrink-0">
-          <Calendar size={14} color="#E8694A" strokeWidth={2.2}/>
+          <Calendar size={14} color="#E8694A" strokeWidth={2.2} />
         </span>
         <span className="flex-1 min-w-0 font-dm">
-          {start&&end ? (
+          {start && end ? (
             <span className="flex items-center gap-2 flex-wrap text-stone-700 font-medium">
               <span>{fmtDate(start)}</span>
               <span className="text-orange-400 font-bold text-base leading-none">→</span>
               <span>{fmtDate(end)}</span>
-              <span className="text-stone-400 text-xs font-normal">· {nights} night{nights!==1?"s":""}</span>
+              <span className="text-stone-400 text-xs font-normal">· {nights} night{nights !== 1 ? "s" : ""}</span>
             </span>
           ) : start ? (
             <span className="text-stone-700 font-medium">{fmtDate(start)} <span className="text-stone-400 font-normal">→ Pick end date</span></span>
@@ -136,7 +171,7 @@ function DateRangePicker({ onChange, hasError }){
           )}
         </span>
         <ChevronDown size={15} className="text-stone-400 flex-shrink-0 transition-transform duration-200"
-          style={{transform:open?"rotate(180deg)":"none"}}/>
+          style={{ transform: open ? "rotate(180deg)" : "none" }} />
       </button>
 
       {/* Panel */}
@@ -149,7 +184,7 @@ function DateRangePicker({ onChange, hasError }){
             <button type="button" onClick={prevM}
               className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 text-stone-500
                 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-500 transition-all">
-              <ChevronLeft size={14}/>
+              <ChevronLeft size={14} />
             </button>
             <span className="font-serif-display text-lg font-bold tracking-tight text-stone-700">
               {MONTHS[vm]} <span className="text-stone-400 font-normal text-base">{vy}</span>
@@ -157,43 +192,43 @@ function DateRangePicker({ onChange, hasError }){
             <button type="button" onClick={nextM}
               className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 text-stone-500
                 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-500 transition-all">
-              <ChevronRight size={14}/>
+              <ChevronRight size={14} />
             </button>
           </div>
 
           {/* Weekdays */}
           <div className="grid grid-cols-7 px-3 pt-3 pb-1">
-            {WD.map(d=>(
+            {WD.map(d => (
               <div key={d} className="text-center text-[0.62rem] font-bold tracking-widest uppercase text-stone-400 py-1 font-dm">{d}</div>
             ))}
           </div>
 
           {/* Days */}
           <div className="grid grid-cols-7 px-3 pb-4 gap-y-0.5">
-            {cells.map(({d,other},i)=>{
-              const isPast  = d<today&&!sameDay(d,today);
-              const isStart = sameDay(d,start);
-              const isEnd   = sameDay(d,end);
-              const inRange = start&&effEnd&&isBetween(d,start,effEnd);
-              const isToday = sameDay(d,today);
+            {cells.map(({ d, other }, i) => {
+              const isPast = d < today && !sameDay(d, today);
+              const isStart = sameDay(d, start);
+              const isEnd = sameDay(d, end);
+              const inRange = start && effEnd && isBetween(d, start, effEnd);
+              const isToday = sameDay(d, today);
 
-              let cls="relative flex items-center justify-center h-9 text-sm font-dm border-none cursor-pointer transition-all duration-100 ";
-              if(other)        cls+="text-stone-300 cursor-default pointer-events-none ";
-              else if(isPast)  cls+="text-stone-300 cursor-not-allowed opacity-40 ";
-              else if(isStart) cls+="cal-range-start ";
-              else if(isEnd)   cls+="cal-range-end ";
-              else if(inRange) cls+="cal-range-mid cursor-pointer ";
-              else             cls+="text-stone-600 hover:bg-orange-50 hover:text-orange-500 rounded-lg ";
+              let cls = "relative flex items-center justify-center h-9 text-sm font-dm border-none cursor-pointer transition-all duration-100 ";
+              if (other) cls += "text-stone-300 cursor-default pointer-events-none ";
+              else if (isPast) cls += "text-stone-300 cursor-not-allowed opacity-40 ";
+              else if (isStart) cls += "cal-range-start ";
+              else if (isEnd) cls += "cal-range-end ";
+              else if (inRange) cls += "cal-range-mid cursor-pointer ";
+              else cls += "text-stone-600 hover:bg-orange-50 hover:text-orange-500 rounded-lg ";
 
               return (
                 <button key={i} type="button" className={cls}
-                  onClick={()=>!other&&!isPast&&pick(d)}
-                  onMouseEnter={()=>{ if(start&&!end) setHov(d); }}
-                  onMouseLeave={()=>setHov(null)}
-                  disabled={isPast||other}>
+                  onClick={() => !other && !isPast && pick(d)}
+                  onMouseEnter={() => { if (start && !end) setHov(d); }}
+                  onMouseLeave={() => setHov(null)}
+                  disabled={isPast || other}>
                   {d.getDate()}
-                  {isToday&&!isStart&&!isEnd&&(
-                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-orange-400"/>
+                  {isToday && !isStart && !isEnd && (
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-orange-400" />
                   )}
                 </button>
               );
@@ -204,8 +239,8 @@ function DateRangePicker({ onChange, hasError }){
           <div className="flex items-center justify-between px-5 py-3 border-t border-stone-100 bg-stone-50/80">
             <span className="text-xs text-stone-500 font-dm">
               {!start ? "Click to choose start date"
-               : !end ? "Now pick your end date"
-               : <><span className="text-orange-500 font-semibold">{nights} night{nights!==1?"s":""}</span> selected</>}
+                : !end ? "Now pick your end date"
+                  : <><span className="text-orange-500 font-semibold">{nights} night{nights !== 1 ? "s" : ""}</span> selected</>}
             </span>
             <button type="button" onClick={clear}
               className="text-xs font-semibold text-stone-400 hover:text-orange-500 transition-colors font-dm">
@@ -221,37 +256,37 @@ function DateRangePicker({ onChange, hasError }){
 // ═══════════════════════════════════════════════════════════
 // TIME PICKER
 // ═══════════════════════════════════════════════════════════
-function TimePicker({ value, onChange, placeholder, icon: Icon, hasError }){
-  const [open,setOpen] = useState(false);
-  const ref=useRef(null), hrRef=useRef(null), minRef=useRef(null);
-  useOutside(ref,()=>setOpen(false));
+function TimePicker({ value, onChange, placeholder, icon: Icon, hasError }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null), hrRef = useRef(null), minRef = useRef(null);
+  useOutside(ref, () => setOpen(false));
 
-  const parse=v=>{
-    if(!v) return {h:8,m:0,ap:"AM"};
-    const [hh,mm]=v.split(":").map(Number);
-    return {h:hh===0?12:hh>12?hh-12:hh, m:mm, ap:hh<12?"AM":"PM"};
+  const parse = v => {
+    if (!v) return { h: 8, m: 0, ap: "AM" };
+    const [hh, mm] = v.split(":").map(Number);
+    return { h: hh === 0 ? 12 : hh > 12 ? hh - 12 : hh, m: mm, ap: hh < 12 ? "AM" : "PM" };
   };
-  const {h,m,ap}=parse(value);
-  const to24=(hh,mm,a)=>{ let h24=hh%12; if(a==="PM") h24+=12; return `${String(h24).padStart(2,"0")}:${String(mm).padStart(2,"0")}`; };
+  const { h, m, ap } = parse(value);
+  const to24 = (hh, mm, a) => { let h24 = hh % 12; if (a === "PM") h24 += 12; return `${String(h24).padStart(2, "0")}:${String(mm).padStart(2, "0")}`; };
 
-  useEffect(()=>{
-    if(open) setTimeout(()=>{
-      hrRef.current?.querySelector(".tp-sel")?.scrollIntoView({block:"center",behavior:"smooth"});
-      minRef.current?.querySelector(".tp-sel")?.scrollIntoView({block:"center",behavior:"smooth"});
-    },80);
-  },[open]);
+  useEffect(() => {
+    if (open) setTimeout(() => {
+      hrRef.current?.querySelector(".tp-sel")?.scrollIntoView({ block: "center", behavior: "smooth" });
+      minRef.current?.querySelector(".tp-sel")?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 80);
+  }, [open]);
 
-  const HOURS=[...Array(12)].map((_,i)=>i+1);
-  const MINS =[...Array(12)].map((_,i)=>i*5);
-  const display=value?`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")} ${ap}`:null;
+  const HOURS = [...Array(12)].map((_, i) => i + 1);
+  const MINS = [...Array(12)].map((_, i) => i * 5);
+  const display = value ? `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")} ${ap}` : null;
 
   return (
     <div className="relative" ref={ref}>
       <button type="button"
-        className={`trig-base ${open?"trig-open":""} ${hasError?"trig-err":""}`}
-        onClick={()=>setOpen(v=>!v)}>
+        className={`trig-base ${open ? "trig-open" : ""} ${hasError ? "trig-err" : ""}`}
+        onClick={() => setOpen(v => !v)}>
         <span className="flex items-center justify-center w-7 h-7 bg-orange-50 rounded-[8px] flex-shrink-0">
-          <Icon size={14} color="#E8694A" strokeWidth={2.2}/>
+          <Icon size={14} color="#E8694A" strokeWidth={2.2} />
         </span>
         <span className="flex-1 font-dm">
           {display
@@ -259,7 +294,7 @@ function TimePicker({ value, onChange, placeholder, icon: Icon, hasError }){
             : <span className="text-stone-400">{placeholder}</span>}
         </span>
         <ChevronDown size={15} className="text-stone-400 transition-transform duration-200"
-          style={{transform:open?"rotate(180deg)":"none"}}/>
+          style={{ transform: open ? "rotate(180deg)" : "none" }} />
       </button>
 
       {open && (
@@ -270,32 +305,32 @@ function TimePicker({ value, onChange, placeholder, icon: Icon, hasError }){
           <div className="px-4 py-3 bg-gradient-to-br from-stone-50 to-orange-50/30 border-b border-stone-100">
             <p className="text-[0.62rem] font-bold uppercase tracking-[.12em] text-stone-400 font-dm mb-0.5">{placeholder}</p>
             <p className="font-serif-display text-2xl font-bold text-orange-500 leading-none tracking-tight">
-              {display||"—"}
+              {display || "—"}
             </p>
           </div>
 
           {/* Columns */}
           <div className="flex border-b border-stone-100">
             {/* Hours */}
-            <div ref={hrRef} className="flex-1 max-h-48 overflow-y-auto scrollbar-hide border-r border-stone-100 py-1">
-              <div className="text-center text-[0.58rem] font-bold tracking-[.14em] uppercase text-stone-300 py-1.5 sticky top-0 bg-white font-dm">HR</div>
-              {HOURS.map(hh=>(
-                <button key={hh} type="button" onClick={()=>onChange(to24(hh,m,ap))}
+            <div ref={hrRef} className="flex-1 border-r border-stone-100 py-1">
+              <div className="text-center text-[0.58rem] font-bold tracking-[.14em] uppercase text-stone-300 py-1.5 bg-white font-dm">HR</div>
+              {HOURS.map(hh => (
+                <button key={hh} type="button" onClick={() => onChange(to24(hh, m, ap))}
                   className={`w-full h-9 text-sm font-dm font-medium transition-colors
-                    ${hh===h?"tp-sel":"text-stone-600 hover:bg-orange-50 hover:text-orange-500"}`}>
-                  {String(hh).padStart(2,"0")}
+                    ${hh === h ? "tp-sel" : "text-stone-600 hover:bg-orange-50 hover:text-orange-500"}`}>
+                  {String(hh).padStart(2, "0")}
                 </button>
               ))}
             </div>
 
             {/* Minutes */}
-            <div ref={minRef} className="flex-1 max-h-48 overflow-y-auto scrollbar-hide border-r border-stone-100 py-1">
-              <div className="text-center text-[0.58rem] font-bold tracking-[.14em] uppercase text-stone-300 py-1.5 sticky top-0 bg-white font-dm">MIN</div>
-              {MINS.map(mm=>(
-                <button key={mm} type="button" onClick={()=>onChange(to24(h,mm,ap))}
+            <div ref={minRef} className="flex-1 border-r border-stone-100 py-1">
+              <div className="text-center text-[0.58rem] font-bold tracking-[.14em] uppercase text-stone-300 py-1.5 bg-white font-dm">MIN</div>
+              {MINS.map(mm => (
+                <button key={mm} type="button" onClick={() => onChange(to24(h, mm, ap))}
                   className={`w-full h-9 text-sm font-dm font-medium transition-colors
-                    ${mm===m?"tp-sel":"text-stone-600 hover:bg-orange-50 hover:text-orange-500"}`}>
-                  {String(mm).padStart(2,"0")}
+                    ${mm === m ? "tp-sel" : "text-stone-600 hover:bg-orange-50 hover:text-orange-500"}`}>
+                  {String(mm).padStart(2, "0")}
                 </button>
               ))}
             </div>
@@ -303,10 +338,10 @@ function TimePicker({ value, onChange, placeholder, icon: Icon, hasError }){
             {/* AM / PM */}
             <div className="w-16 flex flex-col py-1">
               <div className="text-center text-[0.58rem] font-bold tracking-[.14em] uppercase text-stone-300 py-1.5 bg-white font-dm">—</div>
-              {["AM","PM"].map(a=>(
-                <button key={a} type="button" onClick={()=>onChange(to24(h,m,a))}
+              {["AM", "PM"].map(a => (
+                <button key={a} type="button" onClick={() => onChange(to24(h, m, a))}
                   className={`flex-1 text-xs font-dm font-bold tracking-widest transition-colors
-                    ${a===ap?"tp-sel":"text-stone-500 hover:bg-orange-50 hover:text-orange-500"}`}>
+                    ${a === ap ? "tp-sel" : "text-stone-500 hover:bg-orange-50 hover:text-orange-500"}`}>
                   {a}
                 </button>
               ))}
@@ -315,11 +350,11 @@ function TimePicker({ value, onChange, placeholder, icon: Icon, hasError }){
 
           {/* Done button */}
           <div className="flex justify-end px-4 py-2.5 bg-stone-50">
-            <button type="button" onClick={()=>setOpen(false)}
+            <button type="button" onClick={() => setOpen(false)}
               className="flex items-center gap-1.5 text-[0.72rem] font-bold uppercase tracking-widest font-dm
                 text-orange-500 bg-orange-50 border border-orange-200 rounded-full px-4 py-1.5
                 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all">
-              <Check size={11} strokeWidth={3}/> Done
+              <Check size={11} strokeWidth={3} /> Done
             </button>
           </div>
         </div>
@@ -331,37 +366,37 @@ function TimePicker({ value, onChange, placeholder, icon: Icon, hasError }){
 // ═══════════════════════════════════════════════════════════
 // CUSTOM SELECT
 // ═══════════════════════════════════════════════════════════
-function CustomSelect({ options, value, onChange, placeholder, hasError }){
-  const [open,setOpen]=useState(false);
-  const ref=useRef(null);
-  useOutside(ref,()=>setOpen(false));
-  const sel=options.find(o=>o.value===value);
+function CustomSelect({ options, value, onChange, placeholder, hasError }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useOutside(ref, () => setOpen(false));
+  const sel = options.find(o => o.value === value);
 
   return (
     <div className="relative" ref={ref}>
       <button type="button"
-        className={`trig-base ${open?"trig-open":""} ${hasError?"trig-err":""}`}
-        onClick={()=>setOpen(v=>!v)}>
-        <span className={`flex-1 font-dm ${sel?"text-stone-700 font-medium":"text-stone-400"}`}>
+        className={`trig-base ${open ? "trig-open" : ""} ${hasError ? "trig-err" : ""}`}
+        onClick={() => setOpen(v => !v)}>
+        <span className={`flex-1 font-dm ${sel ? "text-stone-700 font-medium" : "text-stone-400"}`}>
           {sel ? `${sel.emoji} ${sel.label}` : placeholder}
         </span>
         <ChevronDown size={15} className="text-stone-400 flex-shrink-0 transition-transform duration-200"
-          style={{transform:open?"rotate(180deg)":"none"}}/>
+          style={{ transform: open ? "rotate(180deg)" : "none" }} />
       </button>
 
       {open && (
         <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white border-[1.5px] border-stone-200 rounded-xl overflow-hidden anim-pop
           shadow-[0_12px_40px_rgba(26,18,8,.11),0_4px_12px_rgba(26,18,8,.06)]">
-          {options.map(o=>(
+          {options.map(o => (
             <button key={o.value} type="button"
-              onClick={()=>{ onChange(o.value); setOpen(false); }}
+              onClick={() => { onChange(o.value); setOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-dm transition-colors text-left
-                ${o.value===value
+                ${o.value === value
                   ? "bg-orange-50 text-orange-600 font-semibold"
                   : "text-stone-600 hover:bg-stone-50 hover:text-stone-800"}`}>
               <span className="text-base">{o.emoji}</span>
               <span className="flex-1">{o.label}</span>
-              {o.value===value && <Check size={14} className="text-orange-500" strokeWidth={2.5}/>}
+              {o.value === value && <Check size={14} className="text-orange-500" strokeWidth={2.5} />}
             </button>
           ))}
         </div>
@@ -375,7 +410,7 @@ function CustomSelect({ options, value, onChange, placeholder, hasError }){
 // ═══════════════════════════════════════════════════════════
 const FieldError = ({ msg }) => msg ? (
   <span className="flex items-center gap-1.5 text-red-500 text-xs font-medium font-dm mt-0.5">
-    <AlertTriangle size={11}/> {msg}
+    <AlertTriangle size={11} /> {msg}
   </span>
 ) : null;
 
@@ -385,7 +420,7 @@ const FieldError = ({ msg }) => msg ? (
 const SectionLabel = ({ icon: Icon, children, required }) => (
   <label className="flex items-center gap-2 text-sm font-semibold text-stone-700 font-dm">
     <span className="flex items-center justify-center w-6 h-6 bg-orange-50 rounded-[7px] flex-shrink-0">
-      <Icon size={13} color="#E8694A" strokeWidth={2.3}/>
+      <Icon size={13} color="#E8694A" strokeWidth={2.3} />
     </span>
     {children}
     {required && <span className="text-orange-400 text-[0.65rem] ml-0.5">*</span>}
@@ -397,127 +432,174 @@ const SectionLabel = ({ icon: Icon, children, required }) => (
 // ═══════════════════════════════════════════════════════════
 const ItineraryForm = () => {
   const { loading, error } = useSelector((state) => state.itinerary);
+  const { loading: locationLoading, searchResults } = useSelector((state) => state.locations);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    destination:"", startDate:"", endDate:"",
-    interests:[], tripType:"", startTime:"",
-    endTime:"", budget:"", transportMode:"",
+    origin: "", destination: "", startDate: "", endDate: "",
+    interests: [], tripType: "", startTime: "",
+    endTime: "", budget: "", transportMode: "",
   });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeSearchField, setActiveSearchField] = useState(null);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const originRef = useRef(null);
+  const destinationRef = useRef(null);
+  const suggestionsRef = useRef(null);
   const [touched, setTouched] = useState({});
-  const touch = f => setTouched(p=>({...p,[f]:true}));
+  const touch = f => setTouched(p => ({ ...p, [f]: true }));
+
+  const handleLocationInputChange = (field, value) => {
+    setFormData((p) => ({ ...p, [field]: value }));
+    setSearchTerm(value);
+    setActiveSearchField(field);
+    setShowLocationSuggestions(value.trim().length >= 2);
+  };
+
+  const handleSelectLocation = (field, locationName) => {
+    setFormData((p) => ({ ...p, [field]: locationName }));
+    setSearchTerm(locationName);
+    setActiveSearchField(null);
+    setShowLocationSuggestions(false);
+  };
+
+  useEffect(() => {
+    if (activeSearchField && searchTerm.trim().length >= 2) {
+      const timer = window.setTimeout(() => {
+        dispatch(searchLocations(searchTerm.trim()));
+        setShowLocationSuggestions(true);
+      }, 250);
+      return () => window.clearTimeout(timer);
+    }
+    setShowLocationSuggestions(false);
+  }, [activeSearchField, searchTerm, dispatch]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target) &&
+        originRef.current &&
+        !originRef.current.contains(event.target) &&
+        destinationRef.current &&
+        !destinationRef.current.contains(event.target)
+      ) {
+        setShowLocationSuggestions(false);
+        setActiveSearchField(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const INTERESTS = [
-    {value:"nature",   icon:"🌿",label:"Nature"},
-    {value:"food",     icon:"🍜",label:"Food"},
-    {value:"heritage", icon:"🏛️",label:"Heritage"},
-    {value:"nightlife",icon:"🌃",label:"Nightlife"},
-    {value:"adventure",icon:"🏔️",label:"Adventure"},
-    {value:"shopping", icon:"🛍️",label:"Shopping"},
-    {value:"romantic", icon:"💑",label:"Romantic"},
+    { value: "nature", icon: Leaf, label: "Nature" },
+    { value: "food", icon: UtensilsCrossed, label: "Food" },
+    { value: "heritage", icon: Landmark, label: "Heritage" },
+    { value: "nightlife", icon: MoonStar, label: "Nightlife" },
+    { value: "adventure", icon: MountainSnow, label: "Adventure" },
+    { value: "shopping", icon: ShoppingBag, label: "Shopping" },
+    { value: "romantic", icon: HeartHandshake, label: "Romantic" },
   ];
   const TRIP_TYPES = [
-    {value:"solo",   emoji:"🧳",label:"Solo"},
-    {value:"couple", emoji:"💑",label:"Couple"},
-    {value:"family", emoji:"👨‍👩‍👧‍👦",label:"Family"},
-    {value:"friends",emoji:"👯",label:"Friends"},
+    { value: "solo", emoji: "🧳", label: "Solo" },
+    { value: "couple", emoji: "💑", label: "Couple" },
+    { value: "family", emoji: "👨‍👩‍👧‍👦", label: "Family" },
+    { value: "friends", emoji: "👯", label: "Friends" },
   ];
   const BUDGETS = [
-    {value:"low",   emoji:"💵",label:"Low"},
-    {value:"medium",emoji:"💴",label:"Medium"},
-    {value:"high",  emoji:"💎",label:"High"},
+    { value: "low", emoji: "💵", label: "Low" },
+    { value: "medium", emoji: "💴", label: "Medium" },
+    { value: "high", emoji: "💎", label: "High" },
   ];
   const TRANSPORT = [
-    {value:"public", emoji:"🚌",label:"Public Transport"},
-    {value:"private",emoji:"🚙",label:"Private Vehicle"},
-    {value:"walking",emoji:"🚶",label:"Walking"},
+    { value: "public", emoji: "🚌", label: "Public Transport" },
+    { value: "private", emoji: "🚙", label: "Private Vehicle" },
+    { value: "walking", emoji: "🚶", label: "Walking" },
   ];
 
   const toggleInterest = v => {
-    setFormData(p=>({...p, interests: p.interests.includes(v) ? p.interests.filter(i=>i!==v) : [...p.interests,v]}));
+    setFormData(p => ({ ...p, interests: p.interests.includes(v) ? p.interests.filter(i => i !== v) : [...p.interests, v] }));
     touch("interests");
   };
 
   const validate = () => {
-    const e=[];
-    if(!formData.destination.trim()) e.push("Destination is required");
-    if(!formData.startDate)          e.push("Start date is required");
-    if(!formData.endDate)            e.push("End date is required");
-    if(!formData.interests.length)   e.push("Select at least one interest");
-    if(!formData.tripType)           e.push("Trip type is required");
-    if(!formData.startTime)          e.push("Start time is required");
-    if(!formData.endTime)            e.push("End time is required");
-    if(!formData.budget)             e.push("Budget is required");
-    if(!formData.transportMode)      e.push("Transport mode is required");
-    if(formData.startTime&&formData.endTime&&formData.startTime>=formData.endTime)
+    const e = [];
+    if (!formData.origin.trim()) e.push("Starting location is required");
+    if (!formData.destination.trim()) e.push("Destination is required");
+    if (!formData.startDate) e.push("Start date is required");
+    if (!formData.endDate) e.push("End date is required");
+    if (!formData.interests.length) e.push("Select at least one interest");
+    if (!formData.tripType) e.push("Trip type is required");
+    if (!formData.startTime) e.push("Start time is required");
+    if (!formData.endTime) e.push("End time is required");
+    if (!formData.budget) e.push("Budget is required");
+    if (!formData.transportMode) e.push("Transport mode is required");
+    if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime)
       e.push("End time must be after start time");
     return e;
   };
 
   const handleSubmit = e => {
     e.preventDefault();
-    const keys=["destination","startDate","endDate","interests","tripType","startTime","endTime","budget","transportMode"];
-    setTouched(Object.fromEntries(keys.map(k=>[k,true])));
-    const errors=validate();
-    if(errors.length){ errors.forEach(err=>toast.warn(err)); return; }
-    dispatch(generateItinerary(formData,navigate));
+    const keys = ["origin", "destination", "startDate", "endDate", "interests", "tripType", "startTime", "endTime", "budget", "transportMode"];
+    setTouched(Object.fromEntries(keys.map(k => [k, true])));
+    const errors = validate();
+    if (errors.length) { errors.forEach(err => toast.warn(err)); return; }
+    dispatch(generateItinerary(formData, navigate));
   };
 
   const fe = {
-    destination:   touched.destination&&!formData.destination.trim()?"Destination is required":"",
-    dates:         touched.startDate&&(!formData.startDate||!formData.endDate)?"Please select trip dates":"",
-    interests:     touched.interests&&!formData.interests.length?"Select at least one interest":"",
-    tripType:      touched.tripType&&!formData.tripType?"Trip type is required":"",
-    budget:        touched.budget&&!formData.budget?"Budget is required":"",
-    startTime:     touched.startTime&&!formData.startTime?"Start time is required":"",
-    endTime:       touched.endTime&&!formData.endTime?"End time is required"
-                   :(touched.endTime&&formData.startTime&&formData.endTime&&formData.startTime>=formData.endTime
-                     ?"End time must be after start time":""),
-    transportMode: touched.transportMode&&!formData.transportMode?"Transport mode is required":"",
+    origin: touched.origin && !formData.origin.trim() ? "Starting location is required" : "", destination: touched.destination && !formData.destination.trim() ? "Destination is required" : "",
+    dates: touched.startDate && (!formData.startDate || !formData.endDate) ? "Please select trip dates" : "",
+    interests: touched.interests && !formData.interests.length ? "Select at least one interest" : "",
+    tripType: touched.tripType && !formData.tripType ? "Trip type is required" : "",
+    budget: touched.budget && !formData.budget ? "Budget is required" : "",
+    startTime: touched.startTime && !formData.startTime ? "Start time is required" : "",
+    endTime: touched.endTime && !formData.endTime ? "End time is required"
+      : (touched.endTime && formData.startTime && formData.endTime && formData.startTime >= formData.endTime
+        ? "End time must be after start time" : ""),
+    transportMode: touched.transportMode && !formData.transportMode ? "Transport mode is required" : "",
   };
 
-  if(loading) return <Loading message="Generating your perfect itinerary…" color="border-t-orange-400"/>;
+  if (loading) return <Loading message="Generating your perfect itinerary…" color="border-t-orange-400" />;
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] font-dm py-12 px-4"
-      style={{backgroundImage:`
-        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(232,105,74,0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 85% 10%, rgba(201,168,124,0.09) 0%, transparent 55%)
-      `}}>
-      <FontLoader/>
+    <div className="itinerary-experience premium-shell min-h-screen font-dm py-12 px-4 md:px-6">
+      <FontLoader />
 
       <form onSubmit={handleSubmit} noValidate
-        className="max-w-3xl mx-auto bg-white border-[1.5px] border-stone-100 rounded-3xl overflow-hidden anim-fade
-          shadow-[0_10px_40px_rgba(26,18,8,.10),0_4px_12px_rgba(26,18,8,.06)]">
+        className="premium-card max-w-4xl mx-auto rounded-[30px] overflow-hidden anim-fade">
 
         {/* ── HEADER ── */}
-        <div className="text-center px-8 pt-10 pb-8 bg-gradient-to-b from-[#FDF5EE] to-white border-b border-stone-100">
-          <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-500
-            text-[0.68rem] font-bold tracking-[.12em] uppercase px-3.5 py-1.5 rounded-full mb-5 font-dm">
-            <Sparkles size={10}/> AI-Powered
+        <div className="premium-header text-center px-6 md:px-10 pt-9 md:pt-12 pb-8 md:pb-10">
+          <div className="inline-flex items-center gap-2 bg-white/75 border border-orange-200 text-orange-600
+            text-[0.68rem] font-bold tracking-[.14em] uppercase px-4 py-2 rounded-full mb-5 font-dm
+            shadow-[0_8px_20px_rgba(232,105,74,0.08)]">
+            <Sparkles size={10} /> Curated by AI
           </div>
 
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-[18px] mb-5
-            bg-gradient-to-br from-orange-400 to-orange-600
-            shadow-[0_8px_24px_rgba(232,105,74,0.30)]">
-            <MapPin size={30} color="white" strokeWidth={2.2}/>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] mb-5
+            bg-gradient-to-br from-[#f4b28e] via-[#ea7a4d] to-[#d95d3d]
+            shadow-[0_16px_36px_rgba(232,105,74,0.30)]">
+            <MapPin size={30} color="white" strokeWidth={2.2} />
           </div>
 
-          <h2 className="font-serif-display text-4xl font-bold text-stone-800 leading-tight tracking-tight mb-2">
-            Plan Your <em className="text-orange-500">Dream Trip</em>
+          <h2 className="font-serif-display text-4xl md:text-5xl font-bold text-stone-800 leading-[0.96] tracking-[-0.04em] mb-3">
+            Design your <em className="text-orange-500">signature escape</em>
           </h2>
-          <p className="text-stone-400 text-sm font-light font-dm">
-            Answer a few questions and let AI craft your perfect itinerary
+          <p className="max-w-xl mx-auto text-stone-500 text-sm md:text-[0.96rem] font-light font-dm leading-6">
+            Tell us where you’re starting, what you love, and how you want to travel — we’ll shape a premium itinerary around it.
           </p>
 
           {/* Step dots */}
-          <div className="flex items-center justify-center gap-1 mt-6 flex-wrap">
-            {["Destination","Dates","Interests","Details"].map((s,i)=>(
-              <span key={s} className="flex items-center gap-1">
-                {i>0 && <span className="w-6 h-px bg-stone-200"/>}
-                <span className="flex items-center gap-1.5 text-[0.72rem] font-semibold text-orange-500 font-dm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_0_3px_rgba(232,105,74,0.15)]"/>
+          <div className="flex items-center justify-center gap-2 mt-7 flex-wrap">
+            {["Destination", "Dates", "Interests", "Details"].map((s, i) => (
+              <span key={s} className="flex items-center gap-2">
+                {i > 0 && <span className="w-6 h-px bg-stone-200" />}
+                <span className="premium-step inline-flex items-center gap-2 text-[0.72rem] font-semibold text-orange-600 font-dm px-3 py-1.5 rounded-full">
+                  <span className="w-2 h-2 rounded-full bg-orange-400 shadow-[0_0_0_4px_rgba(232,105,74,0.12)]" />
                   {s}
                 </span>
               </span>
@@ -528,47 +610,132 @@ const ItineraryForm = () => {
         {/* ── FORM BODY ── */}
         <div className="px-8 py-8 flex flex-col gap-7">
 
+          {/* Starting location */}
+          <div className="relative flex flex-col gap-2" ref={originRef}>
+            <SectionLabel icon={MapPin} required>Starting location</SectionLabel>
+            <input
+              name="origin"
+              value={formData.origin}
+              autoComplete="off"
+              onChange={(e) => {
+                handleLocationInputChange("origin", e.target.value);
+                touch("origin");
+              }}
+              onFocus={() => {
+                setActiveSearchField("origin");
+                setShowLocationSuggestions(searchTerm.trim().length >= 2);
+              }}
+              onBlur={() => touch("origin")}
+              placeholder="Where are you starting from? e.g. Mumbai, Delhi, New York…"
+              className={[
+                "premium-field w-full px-4 py-3.5 rounded-2xl border-[1.5px] text-stone-800 text-sm font-dm outline-none",
+                "transition-all duration-200 placeholder:text-stone-400",
+                "hover:border-orange-200 hover:bg-white",
+                "focus:border-orange-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(232,105,74,0.10)]",
+                fe.origin ? "border-orange-300 bg-orange-50/30" : "border-stone-200",
+              ].join(" ")}
+            />
+            {activeSearchField === "origin" && showLocationSuggestions && (
+              <div
+                ref={suggestionsRef}
+                className="absolute z-50 top-full left-0 right-0 mt-2 rounded-2xl border border-orange-200 bg-white shadow-xl overflow-hidden"
+              >
+                {locationLoading ? (
+                  <div className="p-3 text-sm text-stone-500">Searching locations…</div>
+                ) : searchResults && searchResults.length > 0 ? (
+                  searchResults.map((location) => (
+                    <button
+                      key={location._id}
+                      type="button"
+                      onClick={() => handleSelectLocation("origin", location.name)}
+                      className="w-full text-left px-4 py-3 text-sm text-stone-800 hover:bg-orange-50"
+                    >
+                      {location.name}
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-3 text-sm text-stone-500">No locations found.</div>
+                )}
+              </div>
+            )}
+            <FieldError msg={fe.origin} />
+          </div>
+
+          <hr className="border-stone-100" />
+
           {/* Destination */}
-          <div className="flex flex-col gap-2">
+          <div className="relative flex flex-col gap-2" ref={destinationRef}>
             <SectionLabel icon={MapPin} required>Destination</SectionLabel>
             <input
-              name="destination" value={formData.destination} autoComplete="off"
-              onChange={e=>{ setFormData(p=>({...p,destination:e.target.value})); touch("destination"); }}
-              onBlur={()=>touch("destination")}
+              name="destination"
+              value={formData.destination}
+              autoComplete="off"
+              onChange={(e) => {
+                handleLocationInputChange("destination", e.target.value);
+                touch("destination");
+              }}
+              onFocus={() => {
+                setActiveSearchField("destination");
+                setShowLocationSuggestions(searchTerm.trim().length >= 2);
+              }}
+              onBlur={() => touch("destination")}
               placeholder="Where are you heading? e.g. Paris, Bali, Tokyo…"
               className={[
-                "w-full px-4 py-3 rounded-xl border-[1.5px] bg-stone-50 text-stone-800 text-sm font-dm outline-none",
+                "premium-field w-full px-4 py-3.5 rounded-2xl border-[1.5px] text-stone-800 text-sm font-dm outline-none",
                 "transition-all duration-200 placeholder:text-stone-400",
                 "hover:border-orange-200 hover:bg-white",
                 "focus:border-orange-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(232,105,74,0.10)]",
                 fe.destination ? "border-orange-300 bg-orange-50/30" : "border-stone-200",
               ].join(" ")}
             />
-            <FieldError msg={fe.destination}/>
+            {activeSearchField === "destination" && showLocationSuggestions && (
+              <div
+                ref={suggestionsRef}
+                className="absolute z-50 top-full left-0 right-0 mt-2 rounded-2xl border border-orange-200 bg-white shadow-xl overflow-hidden"
+              >
+                {locationLoading ? (
+                  <div className="p-3 text-sm text-stone-500">Searching locations…</div>
+                ) : searchResults && searchResults.length > 0 ? (
+                  searchResults.map((location) => (
+                    <button
+                      key={location._id}
+                      type="button"
+                      onClick={() => handleSelectLocation("destination", location.name)}
+                      className="w-full text-left px-4 py-3 text-sm text-stone-800 hover:bg-orange-50"
+                    >
+                      {location.name}
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-3 text-sm text-stone-500">No locations found.</div>
+                )}
+              </div>
+            )}
+            <FieldError msg={fe.destination} />
           </div>
 
-          <hr className="border-stone-100"/>
+          <hr className="border-stone-100" />
 
           {/* Trip Dates */}
           <div className="flex flex-col gap-2">
             <SectionLabel icon={Calendar} required>Trip Dates</SectionLabel>
             <DateRangePicker
-              onChange={({startDate,endDate})=>{ setFormData(p=>({...p,startDate,endDate})); touch("startDate"); touch("endDate"); }}
+              onChange={({ startDate, endDate }) => { setFormData(p => ({ ...p, startDate, endDate })); touch("startDate"); touch("endDate"); }}
               hasError={!!fe.dates}
             />
-            <FieldError msg={fe.dates}/>
+            <FieldError msg={fe.dates} />
           </div>
 
-          <hr className="border-stone-100"/>
+          <hr className="border-stone-100" />
 
           {/* Interests */}
           <div className="flex flex-col gap-2.5">
             <SectionLabel icon={Heart} required>Your Interests</SectionLabel>
             <div className="flex flex-wrap gap-2">
-              {INTERESTS.map(({value,icon,label})=>{
-                const active=formData.interests.includes(value);
+              {INTERESTS.map(({ value, icon: Icon, label }) => {
+                const active = formData.interests.includes(value);
                 return (
-                  <button key={value} type="button" onClick={()=>toggleInterest(value)}
+                  <button key={value} type="button" onClick={() => toggleInterest(value)}
                     className={[
                       "interest-pill inline-flex items-center gap-2 px-4 py-2.5 rounded-full",
                       "border-[1.5px] text-sm font-medium font-dm outline-none select-none",
@@ -576,16 +743,18 @@ const ItineraryForm = () => {
                         ? "interest-pill-active bg-gradient-to-br from-orange-400 to-orange-600 border-orange-500 text-white shadow-[0_4px_14px_rgba(232,105,74,0.28)]"
                         : "bg-stone-50 border-stone-200 text-stone-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600",
                     ].join(" ")}>
-                    <span className="text-base leading-none">{icon}</span>
+                    <span className="flex items-center justify-center leading-none">
+                      <Icon size={15} strokeWidth={2.2} />
+                    </span>
                     {label}
                   </button>
                 );
               })}
             </div>
-            <FieldError msg={fe.interests}/>
+            <FieldError msg={fe.interests} />
           </div>
 
-          <hr className="border-stone-100"/>
+          <hr className="border-stone-100" />
 
           {/* Grid: Trip Type + Budget + Times + Transport */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -594,62 +763,59 @@ const ItineraryForm = () => {
               <SectionLabel icon={Users} required>Trip Type</SectionLabel>
               <CustomSelect options={TRIP_TYPES} value={formData.tripType} hasError={!!fe.tripType}
                 placeholder="Select type…"
-                onChange={v=>{ setFormData(p=>({...p,tripType:v})); touch("tripType"); }}/>
-              <FieldError msg={fe.tripType}/>
+                onChange={v => { setFormData(p => ({ ...p, tripType: v })); touch("tripType"); }} />
+              <FieldError msg={fe.tripType} />
             </div>
 
             <div className="flex flex-col gap-2">
               <SectionLabel icon={Wallet} required>Budget</SectionLabel>
               <CustomSelect options={BUDGETS} value={formData.budget} hasError={!!fe.budget}
                 placeholder="Select budget…"
-                onChange={v=>{ setFormData(p=>({...p,budget:v})); touch("budget"); }}/>
-              <FieldError msg={fe.budget}/>
+                onChange={v => { setFormData(p => ({ ...p, budget: v })); touch("budget"); }} />
+              <FieldError msg={fe.budget} />
             </div>
 
             <div className="flex flex-col gap-2">
               <SectionLabel icon={Sunrise} required>Daily Start Time</SectionLabel>
               <TimePicker value={formData.startTime} icon={Sunrise} hasError={!!fe.startTime}
                 placeholder="Choose start time…"
-                onChange={v=>{ setFormData(p=>({...p,startTime:v})); touch("startTime"); }}/>
-              <FieldError msg={fe.startTime}/>
+                onChange={v => { setFormData(p => ({ ...p, startTime: v })); touch("startTime"); }} />
+              <FieldError msg={fe.startTime} />
             </div>
 
             <div className="flex flex-col gap-2">
               <SectionLabel icon={Sunset} required>Daily End Time</SectionLabel>
               <TimePicker value={formData.endTime} icon={Sunset} hasError={!!fe.endTime}
                 placeholder="Choose end time…"
-                onChange={v=>{ setFormData(p=>({...p,endTime:v})); touch("endTime"); }}/>
-              <FieldError msg={fe.endTime}/>
+                onChange={v => { setFormData(p => ({ ...p, endTime: v })); touch("endTime"); }} />
+              <FieldError msg={fe.endTime} />
             </div>
 
             <div className="flex flex-col gap-2 sm:col-span-2">
               <SectionLabel icon={Bus} required>Transport Mode</SectionLabel>
               <CustomSelect options={TRANSPORT} value={formData.transportMode} hasError={!!fe.transportMode}
                 placeholder="Select transport…"
-                onChange={v=>{ setFormData(p=>({...p,transportMode:v})); touch("transportMode"); }}/>
-              <FieldError msg={fe.transportMode}/>
+                onChange={v => { setFormData(p => ({ ...p, transportMode: v })); touch("transportMode"); }} />
+              <FieldError msg={fe.transportMode} />
             </div>
           </div>
 
           {/* API Error */}
           {error && (
             <div className="flex items-center gap-3 px-4 py-3.5 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-dm">
-              <AlertTriangle size={17} className="flex-shrink-0"/> {error}
+              <AlertTriangle size={17} className="flex-shrink-0" /> {error}
             </div>
           )}
 
           {/* Submit */}
           <div className="text-center pt-2">
             <button type="submit"
-              className="inline-flex items-center gap-2.5 px-9 py-3.5 rounded-full font-semibold text-white text-sm font-dm
-                bg-gradient-to-br from-orange-400 to-orange-600
-                shadow-[0_8px_24px_rgba(232,105,74,0.30)]
-                hover:shadow-[0_14px_34px_rgba(232,105,74,0.38)]
+              className="premium-button inline-flex items-center gap-2.5 px-9 py-3.5 rounded-full font-semibold text-white text-sm font-dm
                 hover:-translate-y-0.5 active:translate-y-0
                 transition-all duration-200">
-              <Sparkles size={16} strokeWidth={2}/>
+              <Sparkles size={16} strokeWidth={2} />
               Generate My Itinerary
-              <ArrowRight size={16} strokeWidth={2.5}/>
+              <ArrowRight size={16} strokeWidth={2.5} />
             </button>
             <p className="mt-3 text-xs text-stone-400 font-light font-dm">
               Usually takes 10–20 seconds · Powered by AI

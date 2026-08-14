@@ -5,8 +5,11 @@ async function requireAdmin(req, res, next) {
   if (req.user?.role !== "admin") {
     return res.status(403).json({ code: "ADMIN_ACCESS_REQUIRED", message: "Administrator access is required" });
   }
-  const admin = await UserModel.findOne({ _id: req.user.userId, role: "admin", isActive: { $ne: false } }).select("_id").lean();
-  if (!admin) return res.status(403).json({ code: "ADMIN_ACCOUNT_INACTIVE", message: "Administrator account is inactive" });
+
+  const admin = await UserModel.findOne({ _id: req.user.userId, role: "admin", isActive: true }).select("_id").exec();
+  if (!admin) {
+    return res.status(403).json({ code: "ADMIN_ACCOUNT_INACTIVE", message: "Administrator account is inactive" });
+  }
   return next();
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "../../../AllStatesFeatures/Authentication/authSlice";
-import { Link, useNavigate } from "react-router-dom";
+import { clearErrors, loginUser } from "../../../AllStatesFeatures/Authentication/authSlice";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Loading from "../../General/Loading";
 import {
   Eye,
@@ -27,15 +27,31 @@ function Login() {
 
   const loading = useSelector((s) => s.auth.loading);
   const isAuthenticated = useSelector((s) => s.auth.isAuthenticated);
+  const authError = useSelector((s) => s.auth.error);
+  const location = useLocation();
+
+  // If a protected route redirected here it will pass the attempted location in state.from
+  const fromLocation = location.state?.from;
+  const fromPath = fromLocation ? `${fromLocation.pathname || "/"}${fromLocation.search || ""}` : null;
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/", { replace: true });
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated) {
+      // Navigate to the original location (preserve its state) or fallback to home
+      if (fromLocation) {
+        const targetPath = `${fromLocation.pathname || "/"}${fromLocation.search || ""}`;
+        navigate(targetPath, { state: fromLocation.state || null, replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
+    }
+  }, [isAuthenticated, navigate, fromLocation]);
 
   if (loading) return <Loading message="Verifying credentials…, this may take a few moments." color="border-t-orange-500" />;
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
+    if (authError) dispatch(clearErrors());
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -47,6 +63,7 @@ function Login() {
     } else {
       if (!formData.email) errs.email = "Email is required";
     }
+    if (authError) dispatch(clearErrors());
     setErrors(errs);
     if (Object.keys(errs).length) return;
     const payload = {
@@ -64,6 +81,11 @@ function Login() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-stone-800">Welcome back</h1>
           <p className="text-sm text-stone-500 mt-1">Log in to continue your journey with TripUp.</p>
+          {fromPath ? (
+            <p className="text-sm text-stone-500 mt-2">
+              Please sign in to continue to <span className="font-semibold text-stone-900">{fromPath}</span>
+            </p>
+          ) : null}
         </div>
 
         {/* Card */}
@@ -73,9 +95,9 @@ function Login() {
             {/* Email / Phone toggle */}
             {!usePhone ? (
               <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
+                <label className="block text-xs font-semibold tracking-wide uppercase text-stone-400">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
                 <div className="relative">
                   <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                   <input
@@ -139,6 +161,8 @@ function Login() {
               </div>
             </div>
 
+            {authError ? <p className="text-xs text-red-500">{authError}</p> : null}
+
             {/* Submit */}
             <button
               type="submit"
@@ -170,6 +194,14 @@ function Login() {
             >
               Create an account
               <ArrowRight size={11} />
+            </Link>
+          </div>
+          <div className="px-6 pb-4 text-center">
+            <Link
+              to="/forgot-password"
+              className="text-xs font-medium text-stone-500 hover:text-orange-500 transition-colors"
+            >
+              Forgot password?
             </Link>
           </div>
         </div>

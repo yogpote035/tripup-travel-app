@@ -2,13 +2,16 @@ const UserModel = require("../../models/UserModel");
 const FlightModel = require("../../models/FlightModel");
 const TrainModel = require("../../models/TrainModel");
 const BusModel = require("../../models/BusModel");
+const HotelModel = require("../../models/HotelModel");
 const FlightBookingModel = require("../../models/FlightBookingModel");
 const TrainBookingModel = require("../../models/TrainBookingModel");
 const BusBookingModel = require("../../models/BusBookingModel");
+const HotelBookingModel = require("../../models/HotelBookingModel");
 const PostModel = require("../../models/SocialFeed/PostModel");
 const SessionModel = require("../../models/SessionModel");
 const bcrypt = require("bcrypt");
 const PhoneNumberValidator = require("../../Middleware/PhoneNumberValidator");
+const { logger } = require("../../Middleware/Logger");
 
 const PAGE_SIZE_LIMIT = 100;
 const parsePaging = (query) => ({
@@ -31,32 +34,59 @@ function dateRange(query) {
 }
 
 async function allBookings(filter = {}) {
-  const [flights, trains, buses] = await Promise.all([
-    FlightBookingModel.find(filter).populate("user", "name email").lean(),
-    TrainBookingModel.find(filter).populate("user", "name email").lean(),
-    BusBookingModel.find(filter).populate("userId", "name email").lean(),
+  const [flights, trains, buses, hotels] = await Promise.all([
+    FlightBookingModel.find(filter).lean(),
+    TrainBookingModel.find(filter).lean(),
+    BusBookingModel.find(filter).lean(),
+    HotelBookingModel.find(filter).lean(),
   ]);
+
+  const userIds = [...new Set([
+    ...flights.map((item) => item.user).filter(Boolean),
+    ...trains.map((item) => item.user).filter(Boolean),
+    ...buses.map((item) => item.userId).filter(Boolean),
+    ...hotels.map((item) => item.user).filter(Boolean),
+  ])];
+
+  const users = userIds.length
+    ? await UserModel.find({ _id: { $in: userIds } }).select("_id name email").lean()
+    : [];
+
+  const userMap = new Map(users.map((user) => [String(user._id), user]));
+
   return [
-    ...flights.map((item) => ({ ...item, type: "flight", customer: item.user })),
-    ...trains.map((item) => ({ ...item, type: "train", customer: item.user })),
-    ...buses.map((item) => ({ ...item, type: "bus", customer: item.userId })),
+    ...flights.map((item) => ({ ...item, type: "flight", customer: userMap.get(String(item.user)) || null })),
+    ...trains.map((item) => ({ ...item, type: "train", customer: userMap.get(String(item.user)) || null })),
+    ...buses.map((item) => ({ ...item, type: "bus", customer: userMap.get(String(item.userId)) || null })),
+    ...hotels.map((item) => ({ ...item, type: "hotel", customer: userMap.get(String(item.user)) || null })),
   ];
 }
 
 exports.getDashboard = async (req, res) => {
   try {
     const since = new Date(); since.setMonth(since.getMonth() - 11); since.setDate(1); since.setHours(0, 0, 0, 0);
-    const [users, activeUsers, flights, trains, buses, posts, bookings] = await Promise.all([
-      UserModel.countDocuments(), UserModel.countDocuments({ isActive: { $ne: false } }), FlightModel.countDocuments(),
-      TrainModel.countDocuments(), BusModel.countDocuments(), PostModel.countDocuments(), allBookings({ createdAt: { $gte: since } }),
+    const [users, activeUsers, flights, trains, buses, hotels, posts, bookings] = await Promise.all([
+      UserModel.countDocuments(),
+      UserModel.countDocuments({ isActive: { $ne: false } }),
+      FlightModel.countDocuments(),
+      TrainModel.countDocuments(),
+      BusModel.countDocuments(),
+      HotelModel.countDocuments(),
+      PostModel.countDocuments(),
+      allBookings({ createdAt: { $gte: since } }),
     ]);
     const completed = bookings.filter((item) => item.status !== "cancelled");
     const monthMap = new Map();
     const dailyMap = new Map(); const destinationMap = new Map(); const typeMap = new Map(); const userMap = new Map();
     completed.forEach((item) => {
-      const created = bookingDate(item); if (!created) return;
-      const month = monthStart(new Date(created)).toISOString().slice(0, 7);
-      const day = dateOnly(new Date(created)).toISOString().slice(0, 10);
+      const created = bookingDate(item);
+      if (!created) return;
+
+      const dateValue = new Date(created);
+      if (Number.isNaN(dateValue.getTime())) return;
+
+      const month = monthStart(dateValue).toISOString().slice(0, 7);
+      const day = dateOnly(dateValue).toISOString().slice(0, 10);
       const amount = bookingAmount(item);
       monthMap.set(month, (monthMap.get(month) || 0) + amount);
       dailyMap.set(day, (dailyMap.get(day) || 0) + 1);
@@ -69,11 +99,46 @@ exports.getDashboard = async (req, res) => {
       const d = new Date(since.getFullYear(), since.getMonth() + index, 1); const key = d.toISOString().slice(0, 7);
       return { label: d.toLocaleString("en", { month: "short" }), value: monthMap.get(key) || 0 };
     });
-    const userGrowth = await UserModel.aggregate([{ $match: { createdAt: { $gte: since } } }, { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } }, value: { $sum: 1 } } }, { $sort: { _id: 1 } }]);
+    const userGrowthRows = await UserModel.find({ createdAt: { $gte: since } }).select("createdAt").lean();
+    const userGrowth = Object.values(userGrowthRows.reduce((acc, item) => {
+      const key = new Date(item.createdAt).toISOString().slice(0, 7);
+      acc[key] = acc[key] || { _id: key, value: 0 };
+      acc[key].value += 1;
+      return acc;
+    }, {})).sort((a, b) => a._id.localeCompare(b._id));
     const serialiseMap = (map, key) => [...map.entries()].map(([label, value]) => ({ [key]: label, value })).sort((a, b) => b.value - a.value);
-    const recentActivity = completed.sort((a, b) => new Date(bookingDate(b)) - new Date(bookingDate(a))).slice(0, 8).map((item) => ({ id: item._id, type: item.type, customer: item.customer?.name || "Guest", destination: item.to || item.destination || "Unknown", amount: bookingAmount(item), createdAt: bookingDate(item) }));
-    return res.json({ data: { metrics: { totalUsers: users, activeUsers, totalBookings: completed.length, flights, trains, buses, hotels: 0, posts, revenue: completed.reduce((sum, item) => sum + bookingAmount(item), 0) }, charts: { monthlyRevenue, dailyBookings: serialiseMap(dailyMap, "label").slice(0, 14).reverse(), userGrowth: userGrowth.map((item) => ({ label: item._id, value: item.value })), popularDestinations: serialiseMap(destinationMap, "label").slice(0, 5), bookingTypes: serialiseMap(typeMap, "label"), mostActiveUsers: [...userMap.values()].sort((a, b) => b.bookings - a.bookings).slice(0, 5) }, recentActivity } });
-  } catch (error) { return res.status(500).json({ message: "Unable to load dashboard" }); }
+    const recentActivity = completed
+      .sort((a, b) => new Date(bookingDate(b)) - new Date(bookingDate(a)))
+      .slice(0, 8)
+      .map((item) => ({ id: item._id, type: item.type, customer: item.customer?.name || "Guest", destination: item.to || item.destination || "Unknown", amount: bookingAmount(item), createdAt: bookingDate(item) }));
+    return res.json({
+      data: {
+        metrics: {
+          totalUsers: users,
+          activeUsers,
+          totalBookings: completed.length,
+          flights,
+          trains,
+          buses,
+          hotels,
+          posts,
+          revenue: completed.reduce((sum, item) => sum + bookingAmount(item), 0),
+        },
+        charts: {
+          monthlyRevenue,
+          dailyBookings: serialiseMap(dailyMap, "label").slice(0, 14).reverse(),
+          userGrowth: userGrowth.map((item) => ({ label: item._id, value: item.value })),
+          popularDestinations: serialiseMap(destinationMap, "label").slice(0, 5),
+          bookingTypes: serialiseMap(typeMap, "label"),
+          mostActiveUsers: [...userMap.values()].sort((a, b) => b.bookings - a.bookings).slice(0, 5),
+        },
+        recentActivity,
+      },
+    });
+  } catch (error) {
+    logger.error("❌ Admin dashboard failed", { error: error.message, stack: error.stack });
+    return res.status(500).json({ message: "Unable to load dashboard" });
+  }
 };
 
 exports.getUsers = async (req, res) => {
@@ -156,6 +221,58 @@ exports.getBookings = async (req, res) => {
     items = items.slice((page - 1) * limit, page * limit).map((item) => ({ id: item._id, type: item.type, status: item.status, customer: item.customer?.name || "Guest", email: item.customer?.email || "", route: `${item.from || item.source || "—"} → ${item.to || item.destination || "—"}`, amount: bookingAmount(item), date: bookingDate(item) }));
     return res.json({ data: { items, pagination: { page, limit, total, pages: Math.ceil(total / limit) } } });
   } catch (error) { return res.status(500).json({ message: "Unable to load bookings" }); }
+};
+
+exports.getHotelBookings = async (req, res) => {
+  try {
+    const { page, limit } = parsePaging(req.query);
+    const search = String(req.query.search || "").toLowerCase();
+    const status = String(req.query.status || "").toLowerCase();
+
+    let items = await HotelBookingModel.find({ hotel: req.params.id }).lean();
+    if (status && ["pending", "confirmed", "cancelled", "refunded", "expired"].includes(status)) {
+      items = items.filter((item) => String(item.status || "").toLowerCase() === status);
+    }
+    if (search) {
+      items = items.filter((item) =>
+        [item.roomType, item.status, item.hotelName, item._id]
+          .concat(item.customer?.name || item.customer?.email || "")
+          .some((value) => String(value || "").toLowerCase().includes(search)),
+      );
+    }
+
+    const userIds = [...new Set(items.map((item) => String(item.user)).filter(Boolean))];
+    const users = userIds.length
+      ? await UserModel.find({ _id: { $in: userIds } }).select("_id name email").lean()
+      : [];
+    const userMap = new Map(users.map((user) => [String(user._id), user]));
+
+    items = items.map((item) => ({
+      ...item,
+      customer: userMap.get(String(item.user)) || null,
+    }));
+
+    items.sort((a, b) => new Date(b.bookingDate) - new Date(a.bookingDate));
+    const total = items.length;
+    const pageItems = items.slice((page - 1) * limit, page * limit).map((item) => ({
+      id: item._id,
+      status: item.status,
+      customer: item.customer?.name || item.customer?.email || "Guest",
+      email: item.customer?.email || "",
+      roomType: item.roomType,
+      checkIn: item.checkIn,
+      checkOut: item.checkOut,
+      rooms: item.rooms,
+      guests: item.guests,
+      amount: bookingAmount(item),
+      createdAt: item.createdAt,
+    }));
+
+    return res.json({ data: { items: pageItems, pagination: { page, limit, total, pages: Math.ceil(total / limit) } } });
+  } catch (error) {
+    logger.error("❌ Admin hotel bookings failed", { error: error.message, stack: error.stack });
+    return res.status(500).json({ message: "Unable to load hotel bookings for this hotel" });
+  }
 };
 
 exports.getPosts = async (req, res) => {

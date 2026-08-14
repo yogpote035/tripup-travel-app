@@ -1,18 +1,45 @@
 const UserModel = require("../../models/UserModel");
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 const validateEmail = require("../../Middleware/validateEmail");
 const PhoneNumberValidator = require("../../Middleware/PhoneNumberValidator");
 const { v4: uuidv4 } = require("uuid");
 const SessionModel = require("../../models/SessionModel");
 const { hashToken } = require("../../utils/hashToken");
-const { generateAccessToken, generateRefreshToken } = require("../../utils/tokenUtils");
+const { generateAccessToken, generateRefreshToken, generatePasswordResetToken, verifyPasswordResetToken } = require("../../utils/tokenUtils");
 const { setRefreshTokenCookie } = require("../../utils/cookieUtils");
 const ensureBootstrapAdmin = require("../../utils/bootstrapAdmin");
+const { sendMail, buildPasswordResetEmail } = require("../../utils/mailService");
+
+async function sendPasswordResetEmail(targetEmail, resetToken) {
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const resetLink = `${frontendUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
+
+  const transporter = nodemailer.createTransport({
+    service: process.env.MAIL_SERVICE || "gmail",
+    host: process.env.MAIL_HOST,
+    port: Number(process.env.MAIL_PORT || 587),
+    secure: process.env.MAIL_SECURE === "true",
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS,
+    },
+  });
+
+  const emailContent = buildPasswordResetEmail(resetLink);
+  await sendMail({
+    to: targetEmail,
+    subject: emailContent.subject,
+    text: emailContent.text,
+    html: emailContent.html,
+  });
+}
 
 module.exports.Signup = async (request, response) => {
   let { name, email, phone, password } = request.body;
-  console.log("signup request body", name, email, password, phone);
-  if (!name || !email || !phone || !password) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  console.log("signup request body", name, normalizedEmail, password, phone);
+  if (!name || !normalizedEmail || !phone || !password) {
     return response.status(400).json({ message: "All fields are required" });
   }
 
@@ -22,7 +49,7 @@ module.exports.Signup = async (request, response) => {
     return response.status(400).json({ message: "Invalid phone number" });
   }
 
-  const isEmailValid = await validateEmail(email);
+  const isEmailValid = await validateEmail(normalizedEmail);
   if (!isEmailValid) {
     return response.status(400).json({ message: "Email does not appear to be valid." });
   }
@@ -39,7 +66,7 @@ module.exports.Signup = async (request, response) => {
     return response.status(409).json({ message: "Phone number already in use" });
   }
 
-  const existingEmailUser = await UserModel.findOne({ email });
+  const existingEmailUser = await UserModel.findOne({ email: normalizedEmail });
 
   if (existingEmailUser) {
     return response.status(409).json({ message: "Email already in use" });
@@ -51,7 +78,7 @@ module.exports.Signup = async (request, response) => {
 
     const newUser = new UserModel({
       name,
-      email,
+      email: normalizedEmail,
       phone,
       password: hashedPassword,
       role: "user", // default role
@@ -95,10 +122,11 @@ module.exports.Signup = async (request, response) => {
 
 module.exports.Login = async (request, response) => {
   let { email, phone, password } = request.body;
+  const normalizedEmail = String(email || "").trim().toLowerCase();
 
-  console.log("Login request body", email ? email : phone, password);
+  console.log("Login request body", normalizedEmail || phone, password);
 
-  if ((!email && !phone) || !password) {
+  if ((!normalizedEmail && !phone) || !password) {
     return response.status(400).json({ message: "All fields are required" });
   }
   if (phone) {
@@ -114,7 +142,7 @@ module.exports.Login = async (request, response) => {
     console.log(phone);
   }
 
-  if (email) {
+  if (normalizedEmail) {
     // const isEmailValid = await validateEmail(email);
     // if (!isEmailValid) {
     //   return response
@@ -132,8 +160,8 @@ module.exports.Login = async (request, response) => {
       }
     }
 
-    if (!existingUser && email) {
-      existingUser = await UserModel.findOne({ email });
+    if (!existingUser && normalizedEmail) {
+      existingUser = await UserModel.findOne({ email: normalizedEmail });
       if (!existingUser) {
         return response.status(404).json({ message: "User not found" });
       }
@@ -183,6 +211,50 @@ module.exports.Login = async (request, response) => {
   }
 };
 
+module.exports.ForgotPassword = async (request, response) => {
+  const email = String(request.body?.email || "").trim().toLowerCase();
+  if (!email) return response.status(400).json({ message: "Email is required" });
+
+  try {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return response.status(200).json({
+        message: "If an account exists for that email, a reset link has been prepared.",
+      });
+    }
+
+    const resetToken = await generatePasswordResetToken(user);
+    await sendPasswordResetEmail(email, resetToken);
+    return response.status(200).json({
+      message: "If an account exists for that email, a reset link has been prepared.",
+      data: process.env.NODE_ENV !== "production" ? { resetToken } : undefined,
+    });
+  } catch (error) {
+    console.error("Forgot password error", error);
+    return response.status(500).json({ message: "Unable to process password reset request" });
+  }
+};
+
+module.exports.ResetPassword = async (request, response) => {
+  const { token, password } = request.body || {};
+  if (!token || !password) return response.status(400).json({ message: "A reset token and a new password are required" });
+  if (String(password).length < 8) return response.status(400).json({ message: "Password must contain at least 8 characters" });
+
+  try {
+    const payload = await verifyPasswordResetToken(token);
+    const user = await UserModel.findById(payload.sub);
+    if (!user) return response.status(404).json({ message: "User not found" });
+
+    const salt = await bcrypt.genSalt(12);
+    user.password = await bcrypt.hash(password, salt);
+    await user.save();
+    return response.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Reset password error", error);
+    return response.status(400).json({ message: "Invalid or expired reset token" });
+  }
+};
+
 /** Authenticates an administrator without changing the customer login contract. */
 module.exports.AdminLogin = async (request, response) => {
   const { email, password } = request.body;
@@ -214,6 +286,12 @@ module.exports.AdminLogin = async (request, response) => {
       data: { user: { _id: admin._id, name: admin.name, email: admin.email, role: admin.role }, accessToken },
     });
   } catch (error) {
-    return response.status(500).json({ message: "Unable to sign in" });
+    console.error("Admin login error:", error);
+    return response.status(500).json({
+      message:
+        process.env.NODE_ENV === "production"
+          ? "Unable to sign in"
+          : error.message || "Unable to sign in",
+    });
   }
 };

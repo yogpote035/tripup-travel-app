@@ -4,6 +4,7 @@ const encoder = new TextEncoder();
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+const RESET_TOKEN_SECRET = process.env.PASSWORD_RESET_SECRET || ACCESS_TOKEN_SECRET;
 const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN || "15m";
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 
@@ -54,9 +55,30 @@ async function verifyRefreshToken(token) {
   return payload;
 }
 
+async function generatePasswordResetToken(user) {
+  const jwt = await new SignJWT({ sub: user._id.toString(), type: "password-reset" })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setIssuedAt()
+    .setExpirationTime("15m")
+    .sign(encoder.encode(RESET_TOKEN_SECRET));
+  return jwt;
+}
+
+async function verifyPasswordResetToken(token) {
+  const { payload } = await jwtVerify(token, encoder.encode(RESET_TOKEN_SECRET));
+  if (!payload || payload.type !== "password-reset") {
+    const err = new Error("Invalid password reset token");
+    err.code = "PASSWORD_RESET_INVALID";
+    throw err;
+  }
+  return payload;
+}
+
 module.exports = {
   generateAccessToken,
   generateRefreshToken,
   verifyAccessToken,
   verifyRefreshToken,
+  generatePasswordResetToken,
+  verifyPasswordResetToken,
 };
