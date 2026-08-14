@@ -14,7 +14,7 @@ import likedPostsReducer from "../AllStatesFeatures/SocialFeed/likedPostsSlice";
 import locationReducer from "../AllStatesFeatures/Location/locationSlice";
 import RecentActivityReducer from "../AllStatesFeatures/Recent Activity/RecentActivitySlice";
 import themeReducer from "../AllStatesFeatures/Theme/ThemeSlice";
-import adminReducer from "../AllStatesFeatures/Admin/adminSlice";
+import adminReducer from "../AllStatesFeatures/Admin/AdminSlice";
 import notificationsReducer from "../AllStatesFeatures/Notifications/NotificationsSlice";
 
 let Store = {}; //initialize because export default
