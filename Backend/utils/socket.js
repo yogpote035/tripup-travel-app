@@ -9,6 +9,8 @@ function init(server) {
                 'http://localhost:5173',
                 'http://localhost:5174',
                 'http://localhost:5175',
+                'https://tripup-travel-app-eight.vercel.app',
+                /^https:\/\/[a-z0-9-]+\.vercel\.app$/i,
             ],
             credentials: true,
         },

@@ -27,6 +27,12 @@ const config = getConfig();
 const app = express();
 const PORT = config.port;
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (config.cors.origins.includes(origin)) return true;
+  return /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+};
+
 //   SECURITY HEADERS - HELMET
 app.use(securityHeaders());
 
@@ -40,12 +46,12 @@ app.use("/api/", globalLimiter);
 const corsOptions = {
   origin: function (origin, callback) {
     logger.info("🔍 CORS Origin Check", { origin });
-    if (!origin || config.cors.origins.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
-    } else {
-      logger.warn("❌ CORS Rejected", { origin });
-      return callback(new Error("Not allowed by CORS"));
     }
+
+    logger.warn("❌ CORS Rejected", { origin });
+    return callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
   optionsSuccessStatus: 200,
