@@ -25,7 +25,7 @@ import NotificationsPanel from '../components/Notifications/NotificationsPanel';
 /* ── Small reusable helpers ── */
 
 const StubDivider = () => (
-  <div className="hidden md:flex flex-col items-center flex-shrink-0">
+  <div className="hidden lg:flex flex-col items-center flex-shrink-0">
     <div className="w-3 h-3 rounded-full border-2 border-orange-200 bg-orange-50" />
     <div
       className="w-px"
@@ -97,16 +97,16 @@ const Navbar = () => {
         {/* Perforation strip */}
         <div className="h-1 w-full" style={{ background: perforation }} />
 
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 h-16 flex items-center justify-between gap-1 sm:gap-2 md:gap-3">
           {/* Logo */}
-          <Link to="/" className="flex items-center flex-shrink-0">
-            <img src="/new2.png" alt="TripUp" className="h-11 w-auto" />
+          <Link to="/" className="flex items-center flex-shrink-0 min-w-0">
+            <img src="/new2.png" alt="TripUp" className="h-8 sm:h-11 w-auto" />
           </Link>
 
           <StubDivider />
 
           {/* Flight route badge */}
-          <div className="hidden md:flex items-center gap-2 bg-stone-900 rounded-full px-4 py-1.5 flex-shrink-0 cursor-pointer"
+          <div className="hidden xl:flex items-center gap-2 bg-stone-900 rounded-full px-4 py-1.5 flex-shrink-0 cursor-pointer"
             onClick={() => {
               navigate("/");
             }}
@@ -127,7 +127,7 @@ const Navbar = () => {
 
           <StubDivider />
           {/* Theme toggle */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             <button
               onClick={() => dispatch(toggleTheme())}
               aria-label="Toggle theme"
@@ -138,12 +138,12 @@ const Navbar = () => {
             </button>
           </div>
 
-          <div className="hidden md:flex items-center ml-3">
+          <div className="hidden lg:flex items-center ml-3">
             <NotificationsPanel />
           </div>
 
           {/* Desktop nav links */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1">
             {[
               { to: "/bookings", gate: "A1", label: "Bookings" },
               { to: "/itinerary", gate: "B2", label: "Itinerary" },
@@ -164,12 +164,12 @@ const Navbar = () => {
             ))}
           </nav>
 
-          <StubDivider />
+          <div className="hidden lg:flex"> <StubDivider /> </div>
 
           {/* Board button */}
           <button
             onClick={toggleSidebar}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 active:scale-95 text-white px-4 py-2 rounded-lg font-black tracking-widest text-sm uppercase transition-all duration-150 flex-shrink-0"
+            className="ml-auto flex items-center gap-2 bg-orange-500 hover:bg-orange-400 active:scale-95 text-white px-3 sm:px-4 py-2 rounded-lg font-black tracking-widest text-xs sm:text-sm uppercase transition-all duration-150 flex-shrink-0"
           >
             <FaBars className="text-xs" />
             <span>BOARD</span>
@@ -189,8 +189,11 @@ const Navbar = () => {
       {/* ────── SIDEBAR / BOARDING PASS ────── */}
       <aside
         ref={sidebarRef}
-        className={`fixed top-0 right-0 h-full w-64 bg-orange-50 border-l-2 border-orange-200 z-50 flex flex-col transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 h-full w-64 sm:w-72 bg-orange-50 border-l-2 border-orange-200 z-50 flex flex-col transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
+        style={{
+          maxWidth: 'min(100vw - 40px, 280px)'
+        }}
       >
         {/* Perforation strip */}
         <div
@@ -235,80 +238,80 @@ const Navbar = () => {
                 { to: "/saved-posts", icon: <FaBookmark className="text-orange-500" />, label: "Saved Posts", authOnly: true },
                 { to: "/liked-posts", icon: <FaHeart className="text-red-400" />, label: "Liked Posts", authOnly: true },
               ].filter(item => !item.authOnly || user)
-               .map(({ to, icon, label }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  onClick={toggleSidebar}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-orange-100 text-stone-700 hover:text-orange-600 transition-all text-sm font-semibold mb-1"
-                >
-                  <span className="w-7 h-7 flex items-center justify-center bg-orange-100 rounded-md text-base">
-                    {icon}
-                  </span>
-                  {label}
-                </Link>
-              ))
+                .map(({ to, icon, label }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    onClick={toggleSidebar}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-orange-100 text-stone-700 hover:text-orange-600 transition-all text-sm font-semibold mb-1"
+                  >
+                    <span className="w-7 h-7 flex items-center justify-center bg-orange-100 rounded-md text-base">
+                      {icon}
+                    </span>
+                    {label}
+                  </Link>
+                ))
             }
           </div>
 
           {/* Auth section */}
           <div className="px-4 pt-4 pb-3">
-          <p className="text-xs font-semibold tracking-widest text-stone-400 uppercase mb-2">
-            Passenger
-          </p>
-          {user ? (
-            <>
-              <SidebarLink to="/locations" icon={<FaMapMarkerAlt />} onClick={toggleSidebar}>
-                Explore Locations
-              </SidebarLink>
-              <SidebarLink to="/saved-posts" icon={<FaBookmark />} onClick={toggleSidebar}>
-                Saved Posts
-              </SidebarLink>
-              <SidebarLink to="/liked-posts" icon={<FaHeart />} onClick={toggleSidebar}>
-                Liked Posts
-              </SidebarLink>
-              <SidebarLink to="/profile" icon={<FaUser />} onClick={toggleSidebar}>
-                View Profile
-              </SidebarLink>
-              <SidebarLink
-                to="/recent-activity"
-                icon={<FaTicketAlt />}
-                onClick={toggleSidebar}
-              >
-                Recent Activity
-              </SidebarLink>
-              <button
-                onClick={() => {
-                  handleLogout();
-                  toggleSidebar();
-                }}
-                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-stone-700 hover:text-red-500 transition-all text-sm font-semibold mb-1"
-              >
-                <span className="w-7 h-7 flex items-center justify-center bg-orange-100 rounded-md text-orange-500 text-xs flex-shrink-0">
-                  <FaSignOutAlt />
-                </span>
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <SidebarLink to="/login" icon={<FaSignInAlt />} onClick={toggleSidebar}>
-                Login
-              </SidebarLink>
-              <SidebarLink to="/signup" icon={<FaUserPlus />} onClick={toggleSidebar}>
-                Sign Up
-              </SidebarLink>
-            </>
-          )}
+            <p className="text-xs font-semibold tracking-widest text-stone-400 uppercase mb-2">
+              Passenger
+            </p>
+            {user ? (
+              <>
+                <SidebarLink to="/locations" icon={<FaMapMarkerAlt />} onClick={toggleSidebar}>
+                  Explore Locations
+                </SidebarLink>
+                <SidebarLink to="/saved-posts" icon={<FaBookmark />} onClick={toggleSidebar}>
+                  Saved Posts
+                </SidebarLink>
+                <SidebarLink to="/liked-posts" icon={<FaHeart />} onClick={toggleSidebar}>
+                  Liked Posts
+                </SidebarLink>
+                <SidebarLink to="/profile" icon={<FaUser />} onClick={toggleSidebar}>
+                  View Profile
+                </SidebarLink>
+                <SidebarLink
+                  to="/recent-activity"
+                  icon={<FaTicketAlt />}
+                  onClick={toggleSidebar}
+                >
+                  Recent Activity
+                </SidebarLink>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    toggleSidebar();
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-stone-700 hover:text-red-500 transition-all text-sm font-semibold mb-1"
+                >
+                  <span className="w-7 h-7 flex items-center justify-center bg-orange-100 rounded-md text-orange-500 text-xs flex-shrink-0">
+                    <FaSignOutAlt />
+                  </span>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <SidebarLink to="/login" icon={<FaSignInAlt />} onClick={toggleSidebar}>
+                  Login
+                </SidebarLink>
+                <SidebarLink to="/signup" icon={<FaUserPlus />} onClick={toggleSidebar}>
+                  Sign Up
+                </SidebarLink>
+              </>
+            )}
 
-          <button
-            type="button"
-            onClick={() => dispatch(toggleTheme())}
-            className="mt-4 w-full px-3 py-2 rounded-lg border border-orange-200 bg-orange-50 text-stone-700 hover:bg-orange-100 transition-all text-sm font-semibold"
-          >
-            {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => dispatch(toggleTheme())}
+              className="mt-4 w-full px-3 py-2 rounded-lg border border-orange-200 bg-orange-50 text-stone-700 hover:bg-orange-100 transition-all text-sm font-semibold"
+            >
+              {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            </button>
+          </div>
         </div>
 
         {/* end .user-sidebar-menu wrapper */}

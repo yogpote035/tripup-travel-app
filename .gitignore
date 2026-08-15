@@ -1,0 +1,11 @@
+# Local and deployment secrets
+.env
+.env.*
+!.env.example
+Backend/.env
+Frontend/.env
+
+# Generated output
+node_modules/
+dist/
+coverage/

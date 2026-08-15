@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Bell, CheckCheck, Trash2, Sparkles, CircleAlert } from 'lucide-react';
 import { fetchNotifications, markRead as markReadThunk, markAllRead as markAllReadThunk, clearAllNotifications as clearAllNotificationsThunk } from '../../../AllStatesFeatures/Notifications/NotificationsSlice';
+import "../travel-experience.css";
 
 export default function NotificationsPanel() {
     const dispatch = useDispatch();
@@ -53,15 +54,15 @@ export default function NotificationsPanel() {
     };
 
     return (
-        <div className="relative">
-            <button ref={buttonRef} onClick={() => setOpen((v) => !v)} className="relative flex h-10 w-10 items-center justify-center rounded-full border border-orange-200 bg-white text-stone-700 shadow-sm transition hover:border-orange-300 hover:text-orange-500">
+        <div className="notification-luxe relative z-[60]">
+            <button ref={buttonRef} onClick={() => setOpen((v) => !v)} className="notification-luxe-trigger relative flex h-10 w-10 items-center justify-center rounded-full border border-orange-200 bg-white text-stone-700 shadow-sm transition hover:border-orange-300 hover:text-orange-500" aria-label="Open notifications" aria-expanded={open}>
                 <Bell className="h-5 w-5" />
                 {unread > 0 && <span className="absolute -top-1 -right-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold text-white">{unread}</span>}
             </button>
 
             {open && (
-                <div ref={panelRef} className="absolute right-0 mt-2 w-88 overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-xl shadow-orange-100/80 z-50">
-                    <div className="border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white px-4 py-3">
+                <div ref={panelRef} className="notification-luxe-panel absolute right-0 top-full mt-2 w-88 overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-xl shadow-orange-100/80 z-[100]">
+                    <div className="notification-luxe-header border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white px-4 py-3">
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <div className="flex items-center gap-2">
@@ -98,7 +99,7 @@ export default function NotificationsPanel() {
                             </div>
                         ) : (
                             items.map((n) => (
-                                <div key={n._id || n.id} className={`border-b border-orange-100 p-3 transition ${n.read ? 'bg-white' : 'bg-orange-50/80'}`}>
+                                <div key={n._id || n.id} className={`notification-luxe-item border-b border-orange-100 p-3 transition ${n.read ? 'bg-white' : 'bg-orange-50/80'}`}>
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
                                             <div className="text-sm font-semibold text-stone-800">{n.title || n.type || 'Update'}</div>

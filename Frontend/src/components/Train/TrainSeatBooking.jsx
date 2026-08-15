@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { bookTrainSeats } from "../../../AllStatesFeatures/Train/BookTrainTicketSlice";
 import Loading from "../../General/Loading";
+import { LuxuryDatePicker } from "../General/LuxuryCalendar";
 import {
   Train,
   MapPin,
@@ -152,15 +153,7 @@ const TrainSeatBooking = () => {
               </div>
               <div>
                 <Label>Journey Date</Label>
-                <div className="relative">
-                  <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                  <input
-                    type="date"
-                    value={journeyDate}
-                    disabled
-                    className={`${disabledInputCls} pl-10`}
-                  />
-                </div>
+                <LuxuryDatePicker value={journeyDate} disabled />
               </div>
             </div>
           </SectionCard>

@@ -214,7 +214,7 @@ export default function SinglePostView() {
               </span>
               <span className="inline-flex items-center gap-1.5 text-sm text-stone-500 font-medium bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-full">
                 <Star size={14} className="text-orange-400" />
-                {posts?.locationRating ? posts.locationRating.toFixed(1) : "No ratings yet"}
+                {posts?.locationRating ? Number(posts.locationRating).toFixed(1) : "No ratings yet"}
               </span>
             </div>
 

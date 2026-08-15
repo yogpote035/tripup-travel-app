@@ -583,11 +583,6 @@ const Itinerary = () => {
   return (
     <div
       className="itinerary-experience min-h-screen font-dm pb-24"
-      style={{
-        background:
-          "linear-gradient(160deg, #FAF7F2 0%, #FDF0E8 40%, #FAF7F2 100%)",
-        backgroundAttachment: "fixed",
-      }}
     >
       <FontLoader />
 

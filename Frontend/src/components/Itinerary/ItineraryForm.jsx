@@ -5,6 +5,7 @@ import { searchLocations } from "../../../AllStatesFeatures/Location/locationSli
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../General/Loading";
+import { LuxuryDateRangePicker } from "../General/LuxuryCalendar";
 import {
   MapPin, Calendar, Heart, Users, Wallet,
   Sunrise, Sunset, Bus, Sparkles, AlertTriangle,
@@ -80,8 +81,8 @@ const FontLoader = () => (
       background:#fdf9f5; font-family:'DM Sans',sans-serif; font-size:0.875rem;
       cursor:pointer; transition:all .2s; text-align:left;
     }
-    .trig-base:hover { border-color:#f5c4b8; background:white; }
-    .trig-open { border-color:#E8694A!important; box-shadow:0 0 0 3px rgba(232,105,74,.10)!important; background:white!important; }
+    .trig-base:hover { border-color:#f5c4b8; }
+    .trig-open { border-color:#E8694A!important; box-shadow:0 0 0 3px rgba(232,105,74,.10)!important; }
     .trig-err  { border-color:#F5A592!important; background:#FFF8F6!important; }
   `}</style>
 );
@@ -298,11 +299,11 @@ function TimePicker({ value, onChange, placeholder, icon: Icon, hasError }) {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 z-50 w-56 bg-white border-[1.5px] border-stone-200 rounded-2xl overflow-hidden anim-pop
+        <div className="itinerary-picker-popover absolute top-full left-0 mt-2 z-50 w-56 bg-white border-[1.5px] border-stone-200 rounded-2xl overflow-hidden anim-pop
           shadow-[0_20px_60px_rgba(26,18,8,.13),0_6px_18px_rgba(26,18,8,.07)]">
 
           {/* Header preview */}
-          <div className="px-4 py-3 bg-gradient-to-br from-stone-50 to-orange-50/30 border-b border-stone-100">
+          <div className="itinerary-picker-preview px-4 py-3 bg-gradient-to-br from-stone-50 to-orange-50/30 border-b border-stone-100">
             <p className="text-[0.62rem] font-bold uppercase tracking-[.12em] text-stone-400 font-dm mb-0.5">{placeholder}</p>
             <p className="font-serif-display text-2xl font-bold text-orange-500 leading-none tracking-tight">
               {display || "—"}
@@ -719,9 +720,10 @@ const ItineraryForm = () => {
           {/* Trip Dates */}
           <div className="flex flex-col gap-2">
             <SectionLabel icon={Calendar} required>Trip Dates</SectionLabel>
-            <DateRangePicker
+            <LuxuryDateRangePicker
+              startDate={formData.startDate}
+              endDate={formData.endDate}
               onChange={({ startDate, endDate }) => { setFormData(p => ({ ...p, startDate, endDate })); touch("startDate"); touch("endDate"); }}
-              hasError={!!fe.dates}
             />
             <FieldError msg={fe.dates} />
           </div>

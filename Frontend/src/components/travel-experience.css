@@ -33,3 +33,40 @@
 .dark .itinerary-experience .border-stone-100, .dark .itinerary-experience .border-stone-200, .dark .premium-shell .border-stone-100, .dark .premium-shell .border-stone-200 { border-color: #33454d !important; }
 .dark .itinerary-experience .bg-orange-50, .dark .premium-shell .bg-orange-50 { background: #2d2921 !important; }
 .dark .itinerary-experience .perforation { border-color: #3b4d54 !important; }
+
+/* Itinerary: make the trip planner feel like a private travel dossier. */
+.itinerary-experience {
+  background: linear-gradient(145deg, #fbf7ee 0%, #f1eadc 46%, #f8f5ed 100%);
+  background-attachment: fixed;
+}
+.itinerary-experience .ticket-card, .itinerary-experience .premium-card {
+  border: 1px solid rgba(181, 138, 59, .24);
+  box-shadow: 0 24px 54px rgba(30, 49, 43, .12);
+}
+.itinerary-experience .premium-header {
+  background: linear-gradient(135deg, #fcf7ed, #f4ead7) !important;
+}
+.itinerary-experience .premium-step { background: #fff8e9; border: 1px solid #ead8b4; }
+.itinerary-experience .premium-field { background: rgba(255,255,255,.76); }
+.dark .itinerary-experience { background: radial-gradient(circle at 8% 0%, #203d38, transparent 34rem), #0d191a !important; }
+.dark .itinerary-experience .premium-card, .dark .itinerary-experience .ticket-card { background: #142625 !important; border-color: #3b544f !important; box-shadow: 0 24px 54px rgba(0,0,0,.28); }
+.dark .itinerary-experience .premium-header { background: linear-gradient(135deg, #192e2c, #1e3833) !important; }
+.dark .itinerary-experience .premium-step { background: #263b36 !important; border-color: #496056 !important; }
+.dark .itinerary-experience .premium-field { background: #10201f !important; color: #e7f0ed !important; }
+.dark .itinerary-experience .itinerary-picker-popover { background: #142625 !important; border-color: #3b544f !important; }
+.dark .itinerary-experience .itinerary-picker-preview { background: linear-gradient(135deg, #1a302d, #142625) !important; border-color: #3b544f !important; }
+
+/* Notifications: a compact concierge desk instead of a generic dropdown. */
+.notification-luxe-trigger { border-color: #dfcb9f !important; box-shadow: 0 8px 18px rgba(47, 61, 54, .10) !important; }
+.notification-luxe-trigger:hover { border-color: #ba9145 !important; color: #a47726 !important; transform: translateY(-1px); }
+.notification-luxe-panel { width: min(23rem, calc(100vw - 1.5rem)); border-color: #dfcb9f !important; box-shadow: 0 24px 55px rgba(24, 46, 40, .20) !important; }
+.notification-luxe-header { background: linear-gradient(115deg, #f8efd9, #fffdf8) !important; border-color: #e3d5b7 !important; }
+.notification-luxe-item { border-color: #eee3cf !important; }
+.notification-luxe-item:not(.bg-white) { background: #fff8e9 !important; }
+.notification-luxe-item:hover { background: #f8f0df !important; }
+.dark .notification-luxe-trigger { background: #1b302d !important; border-color: #476259 !important; color: #e6efeb !important; }
+.dark .notification-luxe-panel { background: #142625 !important; border-color: #425c53 !important; box-shadow: 0 24px 55px rgba(0,0,0,.45) !important; }
+.dark .notification-luxe-header { background: linear-gradient(115deg, #203a34, #172b29) !important; border-color: #425c53 !important; }
+.dark .notification-luxe-item { border-color: #354d47 !important; background: #142625 !important; }
+.dark .notification-luxe-item:not(.bg-white) { background: #213933 !important; }
+.dark .notification-luxe-panel .bg-stone-50\/70 { background: #10201f !important; }

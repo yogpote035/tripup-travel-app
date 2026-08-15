@@ -2,72 +2,92 @@
 
 :root {
   color-scheme: light;
-  background-color: #fff;
+  --luxury-ink: #172526;
+  --luxury-muted: #667571;
+  --luxury-paper: #fbf8f2;
+  --luxury-surface: #ffffff;
+  --luxury-line: #e7dfd0;
+  --luxury-gold: #b58a3b;
+  --luxury-gold-light: #f5e8c9;
+  --luxury-forest: #1d4a40;
+  --luxury-coral: #e46d49;
+  --luxury-focus: rgba(181, 138, 59, 0.28);
+  accent-color: var(--luxury-forest);
+  background-color: var(--luxury-paper);
 }
 
 .dark {
   color-scheme: dark;
-  background-color: #0f172a;
+  --luxury-ink: #e7f0ed;
+  --luxury-muted: #a6b8b3;
+  --luxury-paper: #0c1718;
+  --luxury-surface: #142524;
+  --luxury-line: #324844;
+  --luxury-gold: #dfbb6a;
+  --luxury-gold-light: #3b321e;
+  --luxury-forest: #23574b;
+  --luxury-coral: #f28a68;
+  background-color: var(--luxury-paper);
 }
 
 .dark body {
-  background-color: #0f172a;
-  color: #e2e8f0;
+  background-color: var(--luxury-paper);
+  color: var(--luxury-ink);
 }
 
 .dark input,
 .dark textarea,
 .dark select,
 .dark button {
-  background-color: #111827;
-  color: #e2e8f0;
-  border-color: #374151;
+  background-color: var(--luxury-surface);
+  color: var(--luxury-ink);
+  border-color: var(--luxury-line);
 }
 
 .dark .bg-orange-50 {
-  background-color: #111827 !important;
+  background-color: var(--luxury-surface) !important;
 }
 
 .dark .bg-white {
-  background-color: #111827 !important;
+  background-color: var(--luxury-surface) !important;
 }
 
 .dark .text-stone-900 {
-  color: #e2e8f0 !important;
+  color: var(--luxury-ink) !important;
 }
 
 .dark .text-stone-500 {
-  color: #94a3b8 !important;
+  color: var(--luxury-muted) !important;
 }
 
 .dark .text-stone-400 {
-  color: #cbd5e1 !important;
+  color: var(--luxury-muted) !important;
 }
 
 .dark .border-orange-200,
 .dark .border-stone-200,
 .dark .border-stone-300 {
-  border-color: #374151 !important;
+  border-color: var(--luxury-line) !important;
 }
 
 .dark .bg-orange-100 {
-  background-color: #1f2937 !important;
+  background-color: color-mix(in srgb, var(--luxury-surface) 84%, var(--luxury-gold) 16%) !important;
 }
 
 .dark .bg-orange-50/50 {
-  background-color: rgba(30, 41, 59, 0.5) !important;
+  background-color: color-mix(in srgb, var(--luxury-surface) 72%, transparent) !important;
 }
 
 .dark .bg-stone-900 {
-  background-color: #0f172a !important;
+  background-color: var(--luxury-paper) !important;
 }
 
 .dark .bg-white/70 {
-  background-color: rgba(15, 23, 42, 0.7) !important;
+  background-color: color-mix(in srgb, var(--luxury-surface) 70%, transparent) !important;
 }
 
 .dark .hover\:bg-orange-100:hover {
-  background-color: #1f2937 !important;
+  background-color: color-mix(in srgb, var(--luxury-surface) 78%, var(--luxury-gold) 22%) !important;
 }
 
 .dark .bg-orange-500 {
@@ -79,10 +99,10 @@
 }
 
 .dark .border-orange-100 {
-  border-color: #475569 !important;
+  border-color: var(--luxury-line) !important;
 }
 
-..dark .shadow-sm {
+.dark .shadow-sm {
   box-shadow: 0 1px 2px rgba(255, 255, 255, 0.05);
 }
 
@@ -101,9 +121,9 @@
 }
 
 .custom-toast-dark {
-  background: #111827 !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #475569 !important;
+  background: var(--luxury-surface) !important;
+  color: var(--luxury-ink) !important;
+  border: 1px solid var(--luxury-line) !important;
 }
 
 .custom-toast-body {
@@ -123,10 +143,342 @@ button:focus {
   box-shadow: none !important;
 }
 
-/* Keep accessibility by showing a subtle focus ring for keyboard users (prefers-focus-visible) */
+/* Keep accessibility by showing the TripUp focus ring instead of browser blue */
 @media (prefers-reduced-motion: no-preference) {
   :focus-visible {
-    outline: 2px solid rgba(59, 130, 246, 0.8);
+    outline: 2px solid var(--luxury-gold);
     outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--luxury-focus);
   }
+}
+
+/* Shared TripUp visual language: warm, tailored surfaces in light mode and
+   deep evergreen contrast in dark mode. These rules intentionally enhance
+   existing utility-based screens without changing their markup or behavior. */
+html {
+  background: var(--luxury-paper);
+}
+body {
+  background:
+    radial-gradient(
+      circle at 0% -10%,
+      rgba(216, 181, 104, 0.16),
+      transparent 28rem
+    ),
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(40, 101, 85, 0.1),
+      transparent 30rem
+    ),
+    var(--luxury-paper);
+  color: var(--luxury-ink);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  letter-spacing: -0.01em;
+}
+#root {
+  min-height: 100vh;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+input,
+select,
+textarea {
+  border-color: var(--luxury-line) !important;
+  border-radius: 0.85rem;
+  accent-color: var(--luxury-forest);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--luxury-gold) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--luxury-gold) 18%, transparent) !important;
+}
+
+/* Common Tailwind surfaces used throughout customer-facing pages. */
+.bg-orange-50,
+.bg-slate-50 {
+  background-color: transparent !important;
+}
+.bg-white {
+  background-color: color-mix(
+    in srgb,
+    var(--luxury-surface) 94%,
+    transparent
+  ) !important;
+  border-color: var(--luxury-line) !important;
+}
+.border-orange-100,
+.border-orange-200,
+.border-stone-100,
+.border-stone-200,
+.border-slate-200,
+.border-slate-300 {
+  border-color: var(--luxury-line) !important;
+}
+.text-stone-900,
+.text-stone-800,
+.text-slate-900,
+.text-slate-800 {
+  color: var(--luxury-ink) !important;
+}
+.text-stone-700,
+.text-slate-700 {
+  color: color-mix(
+    in srgb,
+    var(--luxury-ink) 80%,
+    var(--luxury-muted)
+  ) !important;
+}
+.text-stone-500,
+.text-stone-400,
+.text-slate-500,
+.text-slate-600 {
+  color: var(--luxury-muted) !important;
+}
+.text-orange-500,
+.text-orange-600 {
+  color: var(--luxury-coral) !important;
+}
+.bg-orange-100 {
+  background-color: var(--luxury-gold-light) !important;
+}
+
+.bg-orange-500,
+.bg-slate-900,
+.bg-stone-900 {
+  background: linear-gradient(135deg, var(--luxury-forest), #142f2b) !important;
+  box-shadow: 0 9px 20px rgba(21, 61, 52, 0.18);
+}
+.bg-orange-500:hover,
+.bg-slate-900:hover,
+.bg-stone-900:hover {
+  filter: brightness(1.12);
+}
+.bg-orange-400 {
+  background-color: var(--luxury-coral) !important;
+}
+
+.rounded-3xl.bg-white,
+.rounded-2xl.bg-white,
+.rounded-xl.bg-white {
+  box-shadow: 0 14px 34px rgba(39, 53, 48, 0.08);
+}
+.dark body {
+  background:
+    radial-gradient(
+      circle at 0% -10%,
+      rgba(95, 130, 103, 0.15),
+      transparent 30rem
+    ),
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(218, 180, 100, 0.08),
+      transparent 28rem
+    ),
+    var(--luxury-paper);
+}
+.dark .bg-white {
+  background-color: var(--luxury-surface) !important;
+}
+.dark .bg-slate-50,
+.dark .bg-orange-50,
+.dark .bg-stone-50,
+.dark .bg-stone-100 {
+  background-color: #10201f !important;
+}
+.dark .bg-slate-100,
+.dark .bg-orange-100 {
+  background-color: #203634 !important;
+}
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #0f1e1d !important;
+  color: var(--luxury-ink) !important;
+}
+.dark .text-stone-900,
+.dark .text-stone-800,
+.dark .text-slate-900,
+.dark .text-slate-800 {
+  color: var(--luxury-ink) !important;
+}
+.dark .text-stone-700,
+.dark .text-slate-700 {
+  color: #c7d6d1 !important;
+}
+.dark .text-stone-500,
+.dark .text-stone-400,
+.dark .text-slate-500,
+.dark .text-slate-600 {
+  color: var(--luxury-muted) !important;
+}
+.dark .bg-orange-500,
+.dark .bg-slate-900,
+.dark .bg-stone-900 {
+  background: linear-gradient(135deg, #347562, #163c35) !important;
+}
+
+@media (max-width: 640px) {
+  body {
+    letter-spacing: 0;
+  }
+  .rounded-3xl {
+    border-radius: 1.25rem;
+  }
+  .rounded-2xl {
+    border-radius: 1rem;
+  }
+}
+
+/* Theme stabilization for booking, profile, social, location and system pages. */
+.bg-emerald-50,
+.bg-green-50 {
+  background-color: #edf7f1 !important;
+}
+.bg-emerald-100,
+.bg-green-100 {
+  background-color: #d9eee2 !important;
+}
+.text-emerald-700,
+.text-green-700 {
+  color: #25704f !important;
+}
+.text-emerald-600,
+.text-green-600 {
+  color: #2d805a !important;
+}
+.border-emerald-200,
+.border-green-200 {
+  border-color: #b7dac5 !important;
+}
+.bg-rose-50,
+.bg-red-50 {
+  background-color: #fff1ed !important;
+}
+.bg-red-100 {
+  background-color: #fce2dc !important;
+}
+.text-rose-800,
+.text-red-700 {
+  color: #9b3e30 !important;
+}
+.text-rose-700,
+.text-red-600 {
+  color: #b04735 !important;
+}
+.text-red-500 {
+  color: #ce573f !important;
+}
+.border-rose-200,
+.border-red-200 {
+  border-color: #efc3b8 !important;
+}
+.bg-blue-600,
+.bg-blue-700 {
+  background: linear-gradient(135deg, #285f69, #1b474d) !important;
+}
+.text-blue-600 {
+  color: #2e7580 !important;
+}
+.border-slate-500,
+.border-stone-700,
+.border-stone-800 {
+  border-color: color-mix(
+    in srgb,
+    var(--luxury-forest) 45%,
+    var(--luxury-line)
+  ) !important;
+}
+
+.dark .bg-emerald-50,
+.dark .bg-green-50 {
+  background-color: #18362b !important;
+}
+.dark .bg-emerald-100,
+.dark .bg-green-100 {
+  background-color: #214938 !important;
+}
+.dark .text-emerald-700,
+.dark .text-emerald-600,
+.dark .text-green-700,
+.dark .text-green-600 {
+  color: #9bd8b2 !important;
+}
+.dark .border-emerald-200,
+.dark .border-green-200 {
+  border-color: #397259 !important;
+}
+.dark .bg-rose-50,
+.dark .bg-red-50 {
+  background-color: #3a2522 !important;
+}
+.dark .bg-red-100 {
+  background-color: #4a2d28 !important;
+}
+.dark .text-rose-800,
+.dark .text-rose-700,
+.dark .text-red-700,
+.dark .text-red-600,
+.dark .text-red-500 {
+  color: #ffb6a5 !important;
+}
+.dark .border-rose-200,
+.dark .border-red-200 {
+  border-color: #824a40 !important;
+}
+.dark .bg-blue-600,
+.dark .bg-blue-700 {
+  background: linear-gradient(135deg, #2e6f6a, #1f4f4d) !important;
+}
+.dark .text-blue-600 {
+  color: #9dd2cf !important;
+}
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .bg-gray-700,
+.dark .bg-gray-600 {
+  background-color: #1a2e2d !important;
+}
+.dark .text-gray-300,
+.dark .text-gray-400 {
+  color: #b4c5c0 !important;
+}
+
+/* Avoid hidden content where legacy layouts set only a light background. */
+.dark .shadow-xl,
+.dark .shadow-2xl {
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.36) !important;
+}
+.dark .divide-stone-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-orange-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--luxury-line) !important;
+}
+.dark ::selection {
+  background: rgba(223, 187, 106, 0.38);
+  color: #fff;
+}
+::selection {
+  background: rgba(181, 138, 59, 0.28);
+  color: var(--luxury-ink);
 }

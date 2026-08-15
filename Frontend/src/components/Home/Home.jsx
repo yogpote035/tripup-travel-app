@@ -106,7 +106,7 @@ const Home = () => {
     <div className="min-h-screen bg-orange-50 text-stone-800 pt-7">
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden bg-stone-900 py-24 px-6 text-center">
+      <section className="relative overflow-hidden bg-stone-900 py-16 sm:py-24 px-4 sm:px-6 text-center">
         {/* Top perforation */}
         <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: perforation }} />
 
@@ -120,45 +120,45 @@ const Home = () => {
         />
 
         <div className="relative z-10 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-orange-500/20 border border-orange-500/40 rounded-full px-4 py-2 mb-6">
+          <div className="inline-flex items-center gap-2 bg-orange-500/20 border border-orange-500/40 rounded-full px-3 sm:px-4 py-2 mb-4 sm:mb-6 text-center flex-wrap justify-center">
             <Sparkles size={14} className="text-orange-400" />
-            <span className="text-sm text-orange-300 font-semibold tracking-wide uppercase">
+            <span className="text-xs sm:text-sm text-orange-300 font-semibold tracking-wide uppercase">
               Your Journey Begins Here
             </span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-black text-white mb-4 leading-none uppercase tracking-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-white mb-3 sm:mb-4 leading-tight sm:leading-none uppercase tracking-tight break-words">
             Welcome to{" "}
             <span className="text-orange-400">TripUp</span>
           </h1>
 
           {/* Flight route display */}
-          <div className="flex items-center justify-center gap-4 my-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 my-4 sm:my-6">
             <div className="text-center">
               <p className="text-xs text-stone-500 uppercase tracking-widest mb-0.5">From</p>
-              <p className="font-black text-3xl text-white tracking-widest">HME</p>
+              <p className="font-black text-2xl sm:text-3xl text-white tracking-widest">HME</p>
               <p className="text-xs text-stone-500">Home Base</p>
             </div>
-            <div className="flex flex-col items-center gap-1">
+            <div className="hidden sm:flex flex-col items-center gap-1">
               <FaPlane className="text-orange-400 text-xl" />
               <div className="h-px w-20" style={{ background: dashedH }} />
               <p className="text-xs text-stone-500 tracking-widest uppercase">nonstop</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-stone-500 uppercase tracking-widest mb-0.5">To</p>
-              <p className="font-black text-3xl text-orange-400 tracking-widest">WORLD</p>
+              <p className="font-black text-2xl sm:text-3xl text-orange-400 tracking-widest">WORLD</p>
               <p className="text-xs text-stone-500">Everywhere</p>
             </div>
           </div>
 
-          <p className="text-stone-400 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
+          <p className="text-stone-400 text-base sm:text-lg mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2">
             Your one-stop platform for booking tickets, planning itineraries, and
             recording your travel moments — via Train, Bus, or Flight.
           </p>
 
           <Link
             to="/itinerary"
-            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 active:scale-95 text-white px-8 py-4 rounded-xl text-base font-black tracking-widest uppercase transition-all shadow-lg"
+            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 active:scale-95 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black tracking-widest uppercase transition-all shadow-lg"
           >
             Create Your Plan
             <ArrowRight size={18} />
@@ -170,23 +170,23 @@ const Home = () => {
       </section>
 
       {/* ── SERVICES ── */}
-      <section className="py-20 px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-12">
+      <section className="py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-8 sm:mb-12">
           <p className="text-xs font-black tracking-widest text-orange-500 uppercase mb-2">
             — Departure Gates —
           </p>
-          <h2 className="text-4xl font-black text-stone-900 uppercase tracking-wide">
+          <h2 className="text-2xl sm:text-4xl font-black text-stone-900 uppercase tracking-wide">
             Book with TripUp
           </h2>
-          <p className="text-stone-400 mt-2">Choose your preferred mode of travel</p>
+          <p className="text-stone-400 mt-2 text-sm sm:text-base">Choose your preferred mode of travel</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
           {services.map((service, idx) => (
             <Link
               to={service.path}
               key={idx}
-              className={`group relative bg-white border-2 ${service.border} rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col`}
+              className={`group relative bg-white border-2 ${service.border} rounded-xl sm:rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col`}
             >
               {/* Top perforation accent */}
               <div className="h-1 w-full" style={{ background: perforation }} />
@@ -241,29 +241,29 @@ const Home = () => {
       </section>
 
       {/* ── FEATURES ── */}
-      <section className="py-4 px-6 max-w-6xl mx-auto">
+      <section className="py-4 sm:py-4 px-4 sm:px-6 max-w-6xl mx-auto">
         {/* Full-width stub divider */}
-        <div className="flex items-center mb-12">
+        <div className="flex items-center mb-8 sm:mb-12">
           <div className="w-5 h-5 rounded-full bg-orange-50 border-2 border-orange-200 -ml-1 flex-shrink-0" />
           <div className="flex-1 h-px" style={{ background: dashedH }} />
           <div className="w-5 h-5 rounded-full bg-orange-50 border-2 border-orange-200 -mr-1 flex-shrink-0" />
         </div>
 
-        <div className="text-center mb-12">
+        <div className="text-center mb-8 sm:mb-12">
           <p className="text-xs font-black tracking-widest text-orange-500 uppercase mb-2">
             — Amenities on Board —
           </p>
-          <h2 className="text-4xl font-black text-stone-900 uppercase tracking-wide">
+          <h2 className="text-2xl sm:text-4xl font-black text-stone-900 uppercase tracking-wide">
             What You Can Do
           </h2>
-          <p className="text-stone-400 mt-2">Explore all the features TripUp offers</p>
+          <p className="text-stone-400 mt-2 text-sm sm:text-base">Explore all the features TripUp offers</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {features.map((feature, idx) => (
             <div
               key={idx}
-              className="bg-white border-2 border-orange-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+              className="bg-white border-2 border-orange-200 rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
             >
               <div className="h-1 w-full" style={{ background: perforation }} />
               <div className="p-6">
@@ -287,7 +287,7 @@ const Home = () => {
 
       {/* ── CTA ── */}
       {!isAuthenticated && (
-        <section className="relative mt-16 overflow-hidden bg-stone-900 py-20 px-6 text-center">
+        <section className="relative mt-12 sm:mt-16 overflow-hidden bg-stone-900 py-12 sm:py-20 px-4 sm:px-6 text-center">
           <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: perforation }} />
 
           <div
@@ -299,18 +299,18 @@ const Home = () => {
           />
 
           <div className="relative z-10 max-w-xl mx-auto">
-            <p className="text-xs font-black tracking-widest text-orange-500 uppercase mb-3">
+            <p className="text-xs font-black tracking-widest text-orange-500 uppercase mb-2 sm:mb-3">
               — Final Call —
             </p>
-            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-wide mb-4 leading-none">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white uppercase tracking-wide mb-3 sm:mb-4 leading-tight sm:leading-none">
               Start Your Journey Now
             </h2>
-            <p className="text-stone-400 mb-8 text-base">
+            <p className="text-stone-400 mb-6 sm:mb-8 text-sm sm:text-base px-2">
               Join thousands of travelers exploring the world with TripUp.
             </p>
             <Link
               to="/signup"
-              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 active:scale-95 text-white px-8 py-4 rounded-xl text-base font-black tracking-widest uppercase transition-all shadow-lg"
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 active:scale-95 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black tracking-widest uppercase transition-all shadow-lg"
             >
               Sign Up Free
               <ArrowRight size={18} />
@@ -318,7 +318,7 @@ const Home = () => {
           </div>
 
           {/* Barcode */}
-          <div className="flex justify-center items-end gap-px h-8 mt-12 opacity-20">
+          <div className="flex justify-center items-end gap-px h-6 sm:h-8 mt-8 sm:mt-12 opacity-20">
             {[3, 1, 2, 1, 4, 1, 2, 3, 1, 2, 1, 3, 2, 1, 3, 1, 2, 1, 4, 2, 1, 3, 1, 2, 3, 1, 2].map((w, i) => (
               <div
                 key={i}

@@ -6,6 +6,7 @@ import { searchLocations } from "../../../AllStatesFeatures/Location/locationSli
 import Loading from "../../General/Loading";
 import { IndianRupeeIcon } from "lucide-react";
 import "../travel-experience.css";
+import { LuxuryDatePicker } from "../General/LuxuryCalendar";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -257,20 +258,21 @@ const HotelSearch = () => {
                             <div className="grid gap-4">
                                 <label className="block">
                                     <span className="text-sm font-medium text-slate-700">Check-in</span>
-                                    <input
-                                        type="date"
+                                    <LuxuryDatePicker
                                         value={bookingState.checkIn}
-                                        onChange={(event) => setBookingState((prev) => ({ ...prev, checkIn: event.target.value }))}
-                                        className="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 focus:border-slate-500 focus:outline-none"
+                                        onChange={(checkIn) => setBookingState((prev) => ({ ...prev, checkIn, checkOut: prev.checkOut && prev.checkOut <= checkIn ? "" : prev.checkOut }))}
+                                        className="mt-2"
+                                        placeholder="Choose check-in date"
                                     />
                                 </label>
                                 <label className="block">
                                     <span className="text-sm font-medium text-slate-700">Check-out</span>
-                                    <input
-                                        type="date"
+                                    <LuxuryDatePicker
                                         value={bookingState.checkOut}
-                                        onChange={(event) => setBookingState((prev) => ({ ...prev, checkOut: event.target.value }))}
-                                        className="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 focus:border-slate-500 focus:outline-none"
+                                        onChange={(checkOut) => setBookingState((prev) => ({ ...prev, checkOut }))}
+                                        minDate={bookingState.checkIn || undefined}
+                                        className="mt-2"
+                                        placeholder="Choose check-out date"
                                     />
                                 </label>
                                 <div className="grid grid-cols-1 gap-4">

@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { fetchTrainsBetweenStations } from "../../../AllStatesFeatures/Train/AllTrainsSlice";
 import { ArrowLeftRight, MapPin, Calendar, Search, Train, X } from "lucide-react";
+import { LuxuryDatePicker } from "../General/LuxuryCalendar";
 
 const inputCls =
   "w-full pl-10 pr-4 py-3 rounded-xl bg-orange-50 border border-orange-200 text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all";
@@ -141,17 +142,7 @@ const SearchTrain = ({ onDateChange }) => {
               </Field>
 
               <Field label="Travel Date">
-                <div className="relative">
-                  <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                  <input
-                    type="date"
-                    value={date}
-                    required
-                    onChange={(e) => setDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                    className={inputCls}
-                  />
-                </div>
+                <LuxuryDatePicker value={date} onChange={setDate} placeholder="Select travel date" />
               </Field>
             </div>
 

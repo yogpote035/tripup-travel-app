@@ -1,5 +1,6 @@
 const { createPool, initSchema, testConnection } = require("./database/connection");
 const ensureBootstrapAdmin = require("./utils/bootstrapAdmin");
+const ensureBootstrapTestUser = require("./utils/bootstrapTestUser");
 
 const MAX_DB_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
@@ -11,6 +12,7 @@ const connectToDatabase = async (attempt = 1) => {
     await initSchema(pool);
     console.log("Connected To TiDB/MySQL Database");
     await ensureBootstrapAdmin();
+    await ensureBootstrapTestUser();
     return pool;
   } catch (err) {
     const message = `Database connection attempt ${attempt} failed: ${err.message}`;

@@ -899,6 +899,105 @@ td small {
 .admin-login-card .password-toggle:hover {
   color: #f97316; /* text-orange-500 */
 }
+
+/* Premium TripUp operations theme. Kept scoped to the admin shell to avoid
+   changing customer-facing screens. */
+.admin-shell {
+  --ink: #18312d;
+  --muted: #647b74;
+  --line: #dce5dd;
+  --brand: #b58a3b;
+  --soft: #f7eedb;
+  background:
+    radial-gradient(circle at 3% 0%, rgba(181, 138, 59, .14), transparent 25rem),
+    radial-gradient(circle at 98% 4%, rgba(29, 74, 64, .12), transparent 28rem),
+    #f8f7f2;
+}
+.admin-sidebar,
+.admin-sidebar-top,
+.admin-sidebar-footer {
+  background: linear-gradient(180deg, #173a33 0%, #102723 100%);
+}
+.admin-sidebar { border-right: 1px solid rgba(223, 187, 106, .16); box-shadow: 16px 0 42px rgba(14, 38, 32, .12); }
+.admin-logo { color: #fff9eb; letter-spacing: -.03em; }
+.admin-logo small { color: #dfbb6a; }
+.admin-sidebar nav { gap: 6px; }
+.admin-sidebar nav a { border: 1px solid transparent; color: #c0d0ca; font-weight: 600; }
+.admin-sidebar nav a.active,
+.admin-sidebar nav a:hover { background: linear-gradient(90deg, rgba(223, 187, 106, .2), rgba(223, 187, 106, .07)); border-color: rgba(223, 187, 106, .2); color: #fff8e6; }
+.admin-sidebar-footer { border-top-color: rgba(223, 187, 106, .16); }
+.admin-sidebar-user span { color: #dfbb6a; }
+.admin-signout { background: rgba(8, 32, 28, .44); border-color: rgba(223, 187, 106, .3); color: #fff8e6; }
+.admin-signout:hover { background: rgba(181, 138, 59, .22); }
+.admin-header { background: rgba(255, 255, 252, .78); backdrop-filter: blur(18px); border-bottom-color: rgba(181, 138, 59, .22); }
+.admin-breadcrumb a { color: #96702c; font-weight: 700; }
+.admin-profile > button { background: #f2ecdf; border: 1px solid #e4d5b5; color: #29463f; }
+.admin-theme-toggle { border-radius: 50% !important; height: 34px; justify-content: center; padding: 0 !important; width: 34px; }
+.admin-profile { align-items: center; display: flex; gap: 8px; }
+.admin-profile-menu { background: #fffdf7; border-color: #e4d5b5; border-radius: 12px; box-shadow: 0 16px 40px rgba(29, 57, 48, .16); }
+.admin-main { padding-top: 34px; }
+.admin-page-heading p { color: #98732d; letter-spacing: .12em; }
+.admin-page-heading h1 { color: #19342e; letter-spacing: -.04em; }
+.admin-metric,
+.admin-chart,
+.admin-table-card,
+.admin-activity,
+.admin-create-card,
+.admin-dialog { background: rgba(255, 255, 252, .86); border-color: rgba(181, 138, 59, .22); box-shadow: 0 14px 38px rgba(34, 58, 49, .07); }
+.admin-metric { overflow: hidden; }
+.admin-metric::after { background: linear-gradient(180deg, #c9a45a, #8b6828); border-radius: 99px; content: ""; height: 50px; opacity: .14; position: absolute; right: -16px; top: -17px; width: 50px; }
+.admin-metric > span,
+.admin-activity article > span { background: #f6edda; color: #9d762e; }
+.admin-bar span { background: linear-gradient(180deg, #d7b46a, #9e792f); }
+.admin-toolbar select,
+.admin-search,
+.admin-pagination button,
+.admin-create-card input { background: #fffdf8; border-color: #dfd3ba; color: var(--ink); }
+.admin-search input { background: transparent; color: var(--ink); }
+th { background: #f7f1e4; color: #6a776d; }
+tr:hover td { background: rgba(247, 237, 219, .48); }
+.admin-chip { background: #edf3eb; color: #41645a; }
+.admin-secondary { background: #edf3eb; color: #31584d; }
+.admin-primary,
+.admin-login button { background: linear-gradient(135deg, #c39a49, #94702b); box-shadow: 0 8px 18px rgba(148, 112, 43, .2); }
+.admin-primary:hover { filter: brightness(1.06); }
+.admin-pagination button:hover,
+.admin-secondary:hover { background: #f6edda; }
+
+.dark .admin-shell {
+  --ink: #e8f0eb;
+  --muted: #a7bbb2;
+  --line: #35524a;
+  --brand: #dfbb6a;
+  --soft: #263d36;
+  background: radial-gradient(circle at 4% 0%, rgba(65, 114, 96, .3), transparent 30rem), #0c1716;
+}
+.dark .admin-sidebar,
+.dark .admin-sidebar-top,
+.dark .admin-sidebar-footer { background: linear-gradient(180deg, #112923, #091a17); }
+.dark .admin-header { background: rgba(16, 35, 30, .86); border-bottom-color: #35524a; }
+.dark .admin-profile > button { background: #1a332d; border-color: #3a574e; color: #e8f0eb; }
+.dark .admin-page-heading h1 { color: #eff7f2; }
+.dark .admin-metric,
+.dark .admin-chart,
+.dark .admin-table-card,
+.dark .admin-activity,
+.dark .admin-create-card,
+.dark .admin-dialog { background: #142923; border-color: #35524a; box-shadow: 0 14px 38px rgba(0, 0, 0, .22); }
+.dark .admin-toolbar select,
+.dark .admin-search,
+.dark .admin-pagination button,
+.dark .admin-create-card input { background: #10231e; border-color: #35524a; color: #e8f0eb; }
+.dark .admin-search input { background: transparent; color: #e8f0eb; }
+.dark th { background: #1c342d; color: #b6c9c0; }
+.dark tr:hover td { background: rgba(39, 70, 60, .38); }
+.dark .admin-chip { background: #213b33; color: #c5d8cf; }
+.dark .admin-secondary { background: #213b33; color: #e8f0eb; }
+.dark .admin-pagination button:hover,
+.dark .admin-secondary:hover { background: #2a4a40; }
+.dark .admin-profile-menu { background: #142923; border-color: #35524a; }
+.dark .admin-profile-menu a,
+.dark .admin-profile-menu button { color: #e8f0eb; }
 .admin-login-card label svg {
   color: #a8a29e;
   left: 7.5px;
