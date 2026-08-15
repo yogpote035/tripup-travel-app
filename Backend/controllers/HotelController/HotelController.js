@@ -29,12 +29,16 @@ exports.searchHotels = async (req, res) => {
     try {
         const { city = "", name = "" } = req.query;
         const filter = { isActive: true };
+        const searchTerms = [];
 
         if (city.trim()) {
-            filter.city = { $regex: new RegExp(city.trim(), "i") };
+            searchTerms.push({ city: new RegExp(city.trim(), "i") });
         }
         if (name.trim()) {
-            filter.name = { $regex: new RegExp(name.trim(), "i") };
+            searchTerms.push({ name: new RegExp(name.trim(), "i") });
+        }
+        if (searchTerms.length) {
+            filter.$or = searchTerms;
         }
 
         const hotels = await HotelModel.find(filter)

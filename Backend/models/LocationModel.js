@@ -160,7 +160,9 @@ LocationModel.find = function find(filter = {}) {
             let sql = "SELECT * FROM locations";
             if (conditions.length) sql += ` WHERE ${conditions.join(" AND ")}`;
             if (this.sortValue) {
-                const entries = Object.entries(this.sortValue);
+                const entries = typeof this.sortValue === "string"
+                    ? this.sortValue.split(/\s+/).filter(Boolean).map((field) => [field.replace(/^-/, ""), field.startsWith("-") ? -1 : 1])
+                    : Object.entries(this.sortValue);
                 if (entries.length) {
                     const order = entries.map(([key, direction]) => `${normalizeKey(key)} ${direction === -1 ? "DESC" : "ASC"}`).join(", ");
                     sql += ` ORDER BY ${order}`;
@@ -209,6 +211,15 @@ LocationModel.findOne = function findOne(filter = {}) {
         },
     };
     return queryBuilder;
+};
+
+LocationModel.countDocuments = async function countDocuments(filter = {}) {
+    const { conditions, values } = buildLocationWhereClause(filter);
+    const rows = await query(
+        `SELECT COUNT(*) AS count FROM locations${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""}`,
+        values
+    );
+    return Number(rows[0]?.count || 0);
 };
 
 LocationModel.findByIdAndUpdate = async function findByIdAndUpdate(id, update = {}) {

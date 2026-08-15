@@ -55,41 +55,71 @@ function addDuration(baseTime, durationStr) {
     .padStart(2, "0")}`;
 }
 
-function getStationData(mapOrObj, station) {
-  if (mapOrObj instanceof Map) {
-    mapOrObj = Object.fromEntries(mapOrObj.entries());
-  }
-
-  const matchKey = Object.keys(mapOrObj).find(
-    (k) => k.toLowerCase() === station.toLowerCase()
-  );
-  return matchKey ? mapOrObj[matchKey] : null;
+function toStationMap(mapOrObj) {
+  if (!mapOrObj) return {};
+  if (mapOrObj instanceof Map) return Object.fromEntries(mapOrObj.entries());
+  if (typeof mapOrObj === "object") return { ...mapOrObj };
+  return {};
 }
+
+function normalizeStationName(value) {
+  return String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function getStationData(mapOrObj, station) {
+  const normalizedMap = toStationMap(mapOrObj);
+  const matchKey = Object.keys(normalizedMap).find(
+    (k) => normalizeStationName(k) === normalizeStationName(station)
+  );
+  return matchKey ? normalizedMap[matchKey] : null;
+}
+
+module.exports.__test__ = {
+  toStationMap,
+  normalizeStationName,
+};
 
 module.exports.findBus = async (req, res) => {
   const { source, destination, date } = req.query;
+  const normalizedSource = normalizeStationName(source);
+  const normalizedDestination = normalizeStationName(destination);
   console.log("Request Query For Find Bus: ", source, destination, date);
 
   try {
-    if (!source || !destination || !date) {
+    if (!normalizedSource || !normalizedDestination || !date) {
       return res.status(400).json({ message: "Missing required parameters" });
     }
 
+    const normalizedSourceLabel = String(source || "").trim();
+    const normalizedDestinationLabel = String(destination || "").trim();
     const dayOfWeek = new Date(date).toLocaleDateString("en-US", {
       weekday: "long",
     });
 
-    const buses = await BusModel.find({
+    let buses = await BusModel.find({
       route: {
         $all: [
-          new RegExp(`^${source}$`, "i"),
-          new RegExp(`^${destination}$`, "i"),
+          new RegExp(`^${normalizedSourceLabel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+          new RegExp(`^${normalizedDestinationLabel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
         ],
       },
       days: {
-        $in: [new RegExp(`^${dayOfWeek}$`, "i")],
+        $in: [new RegExp(`^${dayOfWeek}$`, "i"), /^Daily$/i],
       },
     });
+    // SQL compatibility layers may not apply Mongo-style $all/$in operators
+    // consistently to JSON columns. Fall back to a JS filter over the loaded
+    // rows so valid buses (including Daily schedules) remain searchable.
+    if (!buses.length) {
+      const allBuses = await BusModel.find({}).lean();
+      buses = allBuses.filter((bus) => {
+        const route = Array.isArray(bus.route) ? bus.route.map((stop) => normalizeStationName(stop)) : [];
+        const days = Array.isArray(bus.days) ? bus.days.map(String) : [];
+        return route.includes(normalizedSource)
+          && route.includes(normalizedDestination)
+          && (!days.length || days.some((day) => /^daily$/i.test(day) || new RegExp(`^${dayOfWeek}$`, "i").test(day)));
+      });
+    }
     console.log("Before Filter Bus: ", buses.length);
     if (!buses.length) {
       return res.status(200).json([]);
@@ -97,9 +127,9 @@ module.exports.findBus = async (req, res) => {
 
     const filtered = buses
       .map((bus) => {
-        const route = bus.route.map((r) => r.toLowerCase());
-        const sourceIndex = route.indexOf(source.toLowerCase());
-        const destIndex = route.indexOf(destination.toLowerCase());
+        const route = (Array.isArray(bus.route) ? bus.route : []).map((r) => normalizeStationName(r));
+        const sourceIndex = route.indexOf(normalizedSource);
+        const destIndex = route.indexOf(normalizedDestination);
 
         if (
           sourceIndex === -1 ||
@@ -109,8 +139,8 @@ module.exports.findBus = async (req, res) => {
           return null;
         }
 
-        const sourceData = getStationData(bus.stationMap, source);
-        const destData = getStationData(bus.stationMap, destination);
+        const sourceData = getStationData(bus.stationMap, normalizedSourceLabel);
+        const destData = getStationData(bus.stationMap, normalizedDestinationLabel);
 
         if (!sourceData || !destData) return null;
 
@@ -133,8 +163,8 @@ module.exports.findBus = async (req, res) => {
           route: bus.route,
           totalSeats: bus.totalSeats,
           availableSeats: bus.availableSeats,
-          source,
-          destination,
+          source: normalizedSourceLabel,
+          destination: normalizedDestinationLabel,
           distance,
           fare,
           departureAt,
@@ -184,8 +214,8 @@ module.exports.bookBusSeats = async (req, res) => {
       return res.status(404).json({ message: "Bus not found" });
     }
 
-    // Convert Map to plain object
-    const stationMap = Object.fromEntries(bus.stationMap);
+    // Convert Map to plain object safely for both Map and plain-object storage
+    const stationMap = toStationMap(bus.stationMap);
 
     // Validate route order
     const route = bus.route.map((r) => r.toLowerCase());

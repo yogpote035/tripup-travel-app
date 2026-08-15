@@ -12,8 +12,8 @@ import {
   Armchair,
   CheckCircle2,
   AlertCircle,
+  Bus,
 } from "lucide-react";
-import { FaPlane } from "react-icons/fa";
 
 const perforation =
   "repeating-linear-gradient(90deg,#e8622a 0,#e8622a 12px,transparent 12px,transparent 20px)";
@@ -102,11 +102,11 @@ const BusBookingForm = () => {
                   Boarding Pass · Bus
                 </p>
                 <p className="text-white font-black text-lg tracking-widest uppercase">
-                  TRIPUP AIRWAYS
+                  {bus.company || bus.operator || bus.type || "Bus"}
                 </p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center">
-                <FaPlane className="text-orange-400 text-base" />
+                <Bus size={18} className="text-orange-400" strokeWidth={1.8} />
               </div>
             </div>
 
@@ -120,7 +120,7 @@ const BusBookingForm = () => {
                 <p className="text-xs text-stone-500 mt-0.5">{bus.source}</p>
               </div>
               <div className="flex-1 flex flex-col items-center gap-1 px-2">
-                <FaPlane className="text-orange-400 text-sm" />
+                  <Bus size={16} className="text-orange-400" strokeWidth={1.8} />
                 <div className="w-full h-px" style={{ background: dashedH }} />
                 <p className="text-xs text-stone-600 tracking-widest uppercase">
                   {bus.journeyDate}

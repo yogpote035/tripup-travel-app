@@ -80,3 +80,19 @@ test("SQL session and notification filters support Mongo-style operators", () =>
   assert.ok(notificationWhere.conditions.some((clause) => clause.includes("created_at")));
   assert.ok(notificationWhere.conditions.some((clause) => clause.includes("is_read")));
 });
+
+test("bus station maps accept either Map or plain object input", () => {
+  const BusController = require(path.join(backendRoot, "controllers", "BusController", "BusController"));
+  const mapInput = new Map([
+    ["Delhi", { distance: 0, duration: "0h" }],
+    ["Jaipur", { distance: 250, duration: "6h" }],
+  ]);
+
+  const plainInput = {
+    Delhi: { distance: 0, duration: "0h" },
+    Jaipur: { distance: 250, duration: "6h" },
+  };
+
+  assert.deepEqual(BusController.__test__.toStationMap(mapInput), plainInput);
+  assert.deepEqual(BusController.__test__.toStationMap(plainInput), plainInput);
+});

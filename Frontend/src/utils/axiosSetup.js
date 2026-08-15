@@ -2,7 +2,7 @@ import axios from "axios";
 import Store from "../../MainStoreOfRedux/CentralStore.js";
 import { setAccessToken, logout } from "../../AllStatesFeatures/Authentication/authSlice.js";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:5000/api`;
 
 if (!import.meta.env.VITE_API_BASE_URL) {
   console.warn("VITE_API_BASE_URL was not set; falling back to http://localhost:5000/api");

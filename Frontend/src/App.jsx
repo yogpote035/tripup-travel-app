@@ -65,7 +65,8 @@ import BookingHistory from "./components/Booking/BookingHistory.jsx";
 import HotelSearch from "./components/Hotel/HotelSearch.jsx";
 import "./components/Admin/admin.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:5000/api`;
+let bootstrapRefreshPromise = null;
 
 function App() {
   const dispatch = useDispatch();
@@ -90,24 +91,20 @@ function App() {
       dispatch(setAuthInitialized(false));
 
       try {
-        const hasRefreshCookie = document.cookie
-          .split("; ")
-          .some((cookie) => cookie.startsWith("refreshToken="));
-
-        if (!hasRefreshCookie) {
-          if (mounted) {
-            dispatch(setAccessToken(null));
-          }
-          return;
+        if (!bootstrapRefreshPromise) {
+          bootstrapRefreshPromise = axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true })
+            .finally(() => { bootstrapRefreshPromise = null; });
         }
-
-        const res = await axios.post(`${API_BASE_URL}/auth/refresh`);
+        const res = await bootstrapRefreshPromise;
         if (res.status === 200 && mounted) {
           const token = res.data?.data?.accessToken;
           dispatch(setAccessToken(token));
         }
       } catch {
-        if (mounted) {
+        // A login can complete while the initial refresh request is still in
+        // flight. Do not let a stale 401 from that refresh clear the freshly
+        // issued access token and immediately redirect the user back to login.
+        if (mounted && !localStorage.getItem("token")) {
           dispatch(setAccessToken(null));
         }
       } finally {

@@ -15,7 +15,7 @@ const storedToken = localStorage.getItem("token");
 const storedUserId = localStorage.getItem("userId");
 const storedUsername = localStorage.getItem("username");
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:5000/api`;
 
 const initialState = {
   user: storedUserId && storedUsername ? {
@@ -199,7 +199,8 @@ export const loginUser = (payload) => async (dispatch) => {
         email, //based on mobile or email
         phone,
         password,
-      }
+      },
+      { withCredentials: true }
     );
     if (status === 200) {
       toast.success(data.message || "Login successful");
@@ -268,7 +269,7 @@ export const signupUser = (payload) => async (dispatch) => {
 export const loginAdmin = ({ email, password }) => async (dispatch) => {
   dispatch(loginRequest());
   try {
-    const { data } = await axios.post(`${API_BASE_URL}/auth/admin/login`, { email, password });
+    const { data } = await axios.post(`${API_BASE_URL}/auth/admin/login`, { email, password }, { withCredentials: true });
     dispatch(loginSuccess(data.data));
     toast.success(data.message || "Administrator login successful");
     return { success: true };

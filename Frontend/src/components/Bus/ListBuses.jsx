@@ -10,7 +10,6 @@ import {
   IndianRupee,
   Armchair,
 } from "lucide-react";
-import { FaPlane } from "react-icons/fa";
 
 const perforation =
   "repeating-linear-gradient(90deg,#e8622a 0,#e8622a 12px,transparent 12px,transparent 20px)";
@@ -42,7 +41,7 @@ const ListBuses = () => {
           <div className="h-1.5" style={{ background: perforation }} />
           <div className="bg-stone-900 px-6 py-4 flex items-center justify-between">
             <p className="text-xs font-black tracking-widest text-stone-500 uppercase">No Results</p>
-            <FaPlane className="text-orange-400 text-base" />
+            <Bus size={18} className="text-orange-400" strokeWidth={1.8} />
           </div>
           <div className="flex items-center px-4">
             <div className="w-5 h-5 rounded-full bg-orange-50 border-2 border-orange-200 -ml-6 flex-shrink-0" />
@@ -162,7 +161,7 @@ const ListBuses = () => {
                   <div className="w-full flex items-center gap-1">
                     <div className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
                     <div className="flex-1 h-px" style={{ background: dashedH }} />
-                    <FaPlane className="text-orange-400 text-xs flex-shrink-0" />
+                    <Bus size={14} className="text-orange-400 flex-shrink-0" strokeWidth={1.8} />
                     <div className="flex-1 h-px" style={{ background: dashedH }} />
                     <div className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
                   </div>

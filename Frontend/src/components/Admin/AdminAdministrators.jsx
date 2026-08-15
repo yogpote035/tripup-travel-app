@@ -87,7 +87,7 @@ export default function AdminAdministrators() {
                         </thead>
                         <tbody>
                             {state.items.map((admin) => (
-                                <tr key={admin._id}>
+                                <tr key={admin._id || admin.id || admin.email}>
                                     <td><b>{admin.name}</b></td>
                                     <td>{admin.email}</td>
                                     <td>{admin.phone}</td>

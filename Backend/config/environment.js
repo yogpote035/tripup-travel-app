@@ -61,7 +61,7 @@ const getConfig = () => ({
         refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET || "refresh-secret",
     },
     cors: {
-        origins: (process.env.ALLOWED_ORIGINS || "http://localhost:5173,http://localhost:5174,http://localhost:5175,https://tripup-travel-app-eight.vercel.app").split(
+        origins: (process.env.ALLOWED_ORIGINS || "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,https://tripup-travel-app-eight.vercel.app").split(
             ","
         ).map((origin) => origin.trim()).filter(Boolean),
     },

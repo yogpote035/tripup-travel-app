@@ -2,6 +2,19 @@ const { randomUUID } = require("crypto");
 const { query } = require("../database/connection");
 const { wrapDocument } = require("./sqlCompat");
 
+function parseJsonValue(value, fallback) {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value !== "string") return value;
+  try { return JSON.parse(value); } catch { return fallback; }
+}
+
+function parseArray(value) {
+  const parsed = parseJsonValue(value, null);
+  if (Array.isArray(parsed)) return parsed;
+  if (typeof value === "string") return value.split(",").map((item) => item.trim()).filter(Boolean);
+  return [];
+}
+
 function normalizeBusRow(row) {
   if (!row) return null;
   return {
@@ -10,19 +23,19 @@ function normalizeBusRow(row) {
     busNumber: row.bus_number || row.busNumber,
     company: row.company,
     operator: row.operator,
-    route: row.route ? JSON.parse(row.route) : [],
-    stationMap: row.station_map ? JSON.parse(row.station_map) : {},
+    route: parseArray(row.route),
+    stationMap: parseJsonValue(row.station_map, {}) || {},
     baseFarePerKm: row.base_fare_per_km || row.baseFarePerKm,
     departureTime: row.departure_time || row.departureTime,
     arrivalTime: row.arrival_time || row.arrivalTime,
     duration: row.duration,
-    days: row.days ? JSON.parse(row.days) : [],
+    days: parseArray(row.days),
     type: row.type,
-    driverLocation: row.driver_location ? JSON.parse(row.driver_location) : null,
+    driverLocation: parseJsonValue(row.driver_location, null),
     status: row.status,
     totalSeats: row.total_seats || row.totalSeats,
     availableSeats: row.available_seats || row.availableSeats,
-    seats: row.seats ? JSON.parse(row.seats) : [],
+    seats: parseArray(row.seats),
     createdAt: row.created_at ? new Date(row.created_at) : null,
     updatedAt: row.updated_at ? new Date(row.updated_at) : null,
   };

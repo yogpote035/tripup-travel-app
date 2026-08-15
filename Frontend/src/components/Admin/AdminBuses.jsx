@@ -331,7 +331,7 @@ function BusForm({ bus, onClose }) {
                         <button type="button" className="admin-secondary" onClick={onClose}>
                             Cancel
                         </button>
-                        <button type="submit" className="admin-primary" disabled={saving}>
+                        <button type="submit" onClick={save} className="admin-primary" disabled={saving}>
                             {saving ? "Saving..." : "Save bus"}
                         </button>
                     </div>

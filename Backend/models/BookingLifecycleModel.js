@@ -107,6 +107,12 @@ BookingLifecycleModel.findOne = async function findOne(filter = {}) {
   return wrapDocument(normalizeBookingLifecycleRow(rows[0]), BookingLifecycleModel);
 };
 
+BookingLifecycleModel.findById = async function findById(id) {
+  if (!id) return null;
+  const rows = await query("SELECT * FROM booking_lifecycles WHERE id = ? LIMIT 1", [id]);
+  return wrapDocument(normalizeBookingLifecycleRow(rows[0]), BookingLifecycleModel);
+};
+
 BookingLifecycleModel.create = async function create(data = {}) {
   const item = new BookingLifecycleModel(data);
   await item.save();

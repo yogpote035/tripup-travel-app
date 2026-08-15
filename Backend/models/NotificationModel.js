@@ -51,6 +51,33 @@ function toDbNotification(item) {
     };
 }
 
+function buildWhereClause(filter = {}) {
+    const columnMap = { _id: "id", id: "id", user: "user_id", userId: "user_id", read: "is_read", isRead: "is_read", createdAt: "created_at", updatedAt: "updated_at" };
+    const conditions = [];
+    const values = [];
+
+    Object.entries(filter).forEach(([field, rawValue]) => {
+        if (rawValue === undefined || rawValue === null) return;
+        const column = columnMap[field] || field;
+        const normalise = (value) => column === "is_read" && typeof value === "boolean" ? (value ? 1 : 0) : value;
+
+        if (rawValue && typeof rawValue === "object" && !(rawValue instanceof Date) && !Array.isArray(rawValue)) {
+            Object.entries(rawValue).forEach(([operator, value]) => {
+                const operators = { $gt: ">", $gte: ">=", $lt: "<", $lte: "<=", $ne: "!=" };
+                if (operators[operator]) {
+                    conditions.push(`${column} ${operators[operator]} ?`);
+                    values.push(normalise(value));
+                }
+            });
+            return;
+        }
+        conditions.push(`${column} = ?`);
+        values.push(normalise(rawValue));
+    });
+
+    return { conditions, values };
+}
+
 class NotificationModel {
     constructor(data = {}) {
         Object.assign(this, normalizeNotificationRow(toDbNotification(data)));
@@ -209,5 +236,7 @@ NotificationModel.deleteMany = async function deleteMany(filter = {}) {
     }
     return { deletedCount: ids.length };
 };
+
+NotificationModel.__test__ = { buildWhereClause };
 
 module.exports = NotificationModel;

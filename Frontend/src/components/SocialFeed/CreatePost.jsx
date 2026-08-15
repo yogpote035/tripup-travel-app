@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { TextField, createTheme, ThemeProvider } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material";
 import Loading from "../../General/Loading";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -228,17 +228,17 @@ const CreatePost = () => {
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
                     value={travelDate}
+                    closeOnSelect
                     onChange={(newDate) => {
                       setTravelDate(newDate);
                       setValue("travelDate", newDate);
                     }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        fullWidth
-                        required
-                        size="small"
-                        sx={{
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        required: true,
+                        size: "small",
+                        sx: {
                           "& .MuiOutlinedInput-root": {
                             bgcolor: "#fff7ed",
                             borderRadius: "12px",
@@ -254,9 +254,9 @@ const CreatePost = () => {
                           "& .MuiSvgIcon-root": { color: "#f97316" },
                           "& .MuiInputLabel-root": { display: "none" },
                           "& legend": { display: "none" },
-                        }}
-                      />
-                    )}
+                        },
+                      },
+                    }}
                   />
                 </LocalizationProvider>
               </Field>

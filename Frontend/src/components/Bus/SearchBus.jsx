@@ -6,7 +6,6 @@ import {
   Bus, MapPin, Search, AlertCircle, Loader2, ArrowRight,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
-import { FaPlane } from "react-icons/fa";
 
 /* ── Design tokens ── */
 const perf =
@@ -222,7 +221,7 @@ const BusSearch = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-xs font-black tracking-widest text-stone-500 uppercase mb-0.5">Ticket Search · Bus</p>
-              <p className="text-white font-black text-lg tracking-widest uppercase">TRIPUP AIRWAYS</p>
+              <p className="text-white font-black text-lg tracking-widest uppercase">TRIPUP BUS</p>
             </div>
             <div className="w-10 h-10 bg-orange-500/20 border border-orange-500/40 rounded-xl flex items-center justify-center">
               <Bus size={18} className="text-orange-400" strokeWidth={1.5} />
@@ -238,7 +237,7 @@ const BusSearch = () => {
               </p>
             </div>
             <div className="flex flex-col items-center gap-1 px-3 flex-shrink-0">
-              <FaPlane className="text-orange-400 text-sm" />
+              <Bus size={16} className="text-orange-400" strokeWidth={1.8} />
               <div className="w-16 h-px" style={{ background: dash }} />
               <p className="text-xs text-stone-600 tracking-widest uppercase">{displayDate}</p>
             </div>

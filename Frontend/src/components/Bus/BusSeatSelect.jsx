@@ -8,10 +8,9 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  User,
   IndianRupee,
+  Bus,
 } from "lucide-react";
-import { FaPlane } from "react-icons/fa";
 
 const perforation =
   "repeating-linear-gradient(90deg,#e8622a 0,#e8622a 12px,transparent 12px,transparent 20px)";
@@ -40,22 +39,53 @@ const BusSeatSelect = () => {
 
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { seats = [], bus } = state;
+  const routeState = state || {};
+  const bus = routeState.bus || {};
+  // Bus records can come from SQL as JSON strings or from older clients with
+  // slightly different seat field names. Normalize them once at the boundary
+  // so every layout and booking action uses the same shape.
+  const rawSeatValue = Array.isArray(routeState.seats) ? routeState.seats : bus.seats;
+  const busType = String(bus.type || "")
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+  const isSleeperBus = busType === "sleeper";
+  const rawSeats = Array.isArray(rawSeatValue)
+    ? rawSeatValue
+    : typeof rawSeatValue === "string"
+    ? (() => {
+        try { return JSON.parse(rawSeatValue); } catch { return []; }
+      })()
+    : [];
+  const seats = rawSeats.map((seat, index) => ({
+    ...seat,
+    seatNumber: seat.seatNumber ?? seat.number ?? index + 1,
+    // Older bus records generated seats as "Seater" even when the bus itself
+    // was configured as Sleeper. The bus-level type is authoritative here.
+    seatType: String(isSleeperBus ? "sleeper" : seat.seatType || seat.type || bus.type || "seater")
+      .toLowerCase()
+      .replace(/[\s_-]+/g, ""),
+    isBooked:
+      Boolean(seat.isBooked) || String(seat.status || "").toLowerCase() === "booked",
+  }));
 
   const toggleSeat = (seatNumber) => {
     setSelectedSeats((prev) =>
-      prev.includes(seatNumber) ? prev.filter((n) => n !== seatNumber) : [...prev, seatNumber]
+      prev.includes(String(seatNumber))
+        ? prev.filter((n) => n !== String(seatNumber))
+        : [...prev, String(seatNumber)]
     );
   };
 
   const handleConfirm = () => {
     if (selectedSeats.length === 0) { toast.warn("Please select at least one seat."); return; }
-    const selectedSeatObjects = seats.filter((s) => selectedSeats.includes(s.seatNumber));
+    const selectedSeatObjects = seats.filter((s) => selectedSeats.includes(String(s.seatNumber)));
     navigate("/bus-seat-book", { state: { selectedSeats: selectedSeatObjects, bus } });
   };
 
-  const allSeater = seats.every((s) => s.seatType === "seater");
-  const allSleeper = seats.every((s) => s.seatType === "sleeper");
+  const allSleeper = seats.length > 0 && (isSleeperBus || seats.every((s) => s.seatType.includes("sleeper")));
+  // Luxury, AC, semi-sleeper and legacy mixed records use the standard
+  // four-column seat grid unless every seat is explicitly a sleeper berth.
+  const allSeater = seats.length > 0 && !allSleeper;
   const upperDeck = allSleeper ? seats.filter((s) => s.seatNumber % 2 === 0) : [];
   const lowerDeck = allSleeper ? seats.filter((s) => s.seatNumber % 2 !== 0) : [];
 
@@ -75,11 +105,11 @@ const BusSeatSelect = () => {
                   Seat Selection · Bus
                 </p>
                 <p className="text-white font-black text-lg tracking-widest uppercase">
-                  TRIPUP AIRWAYS
+                  {bus.company || bus.operator || bus.type || "Bus"}
                 </p>
               </div>
               <div className="w-10 h-10 bg-orange-500/20 border border-orange-500/40 rounded-xl flex items-center justify-center">
-                <FaPlane className="text-orange-400 text-base" />
+                <Bus size={18} className="text-orange-400" strokeWidth={1.8} />
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -90,7 +120,7 @@ const BusSeatSelect = () => {
                 </p>
               </div>
               <div className="flex-1 flex flex-col items-center gap-1 px-2">
-                <FaPlane className="text-orange-400 text-sm" />
+                <Bus size={16} className="text-orange-400" strokeWidth={1.8} />
                 <div className="w-full h-px" style={{ background: dashedH }} />
                 <p className="text-xs text-stone-600 tracking-widest uppercase">{bus.busNumber}</p>
               </div>
@@ -156,7 +186,7 @@ const BusSeatSelect = () => {
                       key={seat.seatNumber}
                       disabled={seat.isBooked}
                       onClick={() => toggleSeat(seat.seatNumber)}
-                      className={`w-14 h-14 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-200 font-black ${seatClass(seat.isBooked, selectedSeats.includes(seat.seatNumber))}`}
+                      className={`w-14 h-14 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-200 font-black ${seatClass(seat.isBooked, selectedSeats.includes(String(seat.seatNumber)))}`}
                     >
                       <Armchair size={18} strokeWidth={2} />
                       <span className="text-xs mt-0.5">{seat.seatNumber}</span>
@@ -171,7 +201,7 @@ const BusSeatSelect = () => {
                       key={seat.seatNumber}
                       disabled={seat.isBooked}
                       onClick={() => toggleSeat(seat.seatNumber)}
-                      className={`w-14 h-14 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-200 font-black ${seatClass(seat.isBooked, selectedSeats.includes(seat.seatNumber))}`}
+                      className={`w-14 h-14 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-200 font-black ${seatClass(seat.isBooked, selectedSeats.includes(String(seat.seatNumber)))}`}
                     >
                       <Armchair size={18} strokeWidth={2} />
                       <span className="text-xs mt-0.5">{seat.seatNumber}</span>
@@ -210,7 +240,7 @@ const BusSeatSelect = () => {
                         {row[2] && (
                           <SleeperBerth
                             seat={row[2]}
-                            isSelected={selectedSeats.includes(row[2].seatNumber)}
+                            isSelected={selectedSeats.includes(String(row[2].seatNumber))}
                             onToggle={toggleSeat}
                             fare={bus.fare}
                           />
@@ -222,7 +252,7 @@ const BusSeatSelect = () => {
                           <SleeperBerth
                             key={seat.seatNumber}
                             seat={seat}
-                            isSelected={selectedSeats.includes(seat.seatNumber)}
+                            isSelected={selectedSeats.includes(String(seat.seatNumber))}
                             onToggle={toggleSeat}
                             fare={bus.fare}
                           />
@@ -238,10 +268,10 @@ const BusSeatSelect = () => {
         )}
 
         {/* Mixed warning */}
-        {!allSeater && !allSleeper && (
+        {seats.length === 0 && (
           <div className="bg-white border-2 border-orange-200 rounded-2xl p-5 flex items-center gap-3 mb-6">
             <AlertTriangle size={20} className="text-orange-400 flex-shrink-0" />
-            <span className="text-stone-600 font-semibold text-sm">Mixed seat types are currently not supported.</span>
+            <span className="text-stone-600 font-semibold text-sm">Seat availability is not available for this bus.</span>
           </div>
         )}
 
@@ -302,7 +332,7 @@ const SleeperBerth = ({ seat, isSelected, onToggle, fare }) => (
     <button
       disabled={seat.isBooked}
       onClick={() => onToggle(seat.seatNumber)}
-      className={`w-12 h-20 rounded-xl border-2 flex items-center justify-center transition-all duration-200 ${
+      className={`w-14 h-20 sm:w-16 sm:h-24 rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all duration-200 ${
         seat.isBooked
           ? "bg-red-100 border-red-300 text-red-400 cursor-not-allowed"
           : isSelected
@@ -310,7 +340,13 @@ const SleeperBerth = ({ seat, isSelected, onToggle, fare }) => (
           : "bg-white border-orange-200 text-stone-400 hover:bg-orange-50 hover:border-orange-400"
       }`}
     >
-      <User size={20} strokeWidth={1.5} />
+      <img
+        src="/Sleeper-Seat.png"
+        alt={`Sleeper berth ${seat.seatNumber}`}
+        className={`h-full w-full max-h-20 sm:max-h-24 object-contain p-1 sm:p-1.5 ${
+          seat.isBooked ? "opacity-45 grayscale" : ""
+        }`}
+      />
     </button>
     <div className="flex items-center gap-0.5 mt-1">
       {seat.isBooked ? (
