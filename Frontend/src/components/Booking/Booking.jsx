@@ -1,4 +1,4 @@
-import { TrainFront, Bus, PlaneTakeoff, History, ArrowRight,  } from "lucide-react";
+import { TrainFront, Bus, PlaneTakeoff, History, ArrowRight, } from "lucide-react";
 import { Link } from "react-router-dom";
 import Loading from "../../General/Loading";
 import { useSelector } from "react-redux";
@@ -49,10 +49,10 @@ const services = [
   {
     icon: FaHome,
     title: "Hotel Booking",
-    path: "/hotels",
+    path: "/bookings/hotels",
     gate: "D4",
     code: "HTL",
-    description: "Browse hotels and reserve rooms for your trip",
+    description: "View your hotel stay history and reservations",
     accent: "text-sky-600",
     bg: "bg-sky-50",
     border: "border-sky-200",

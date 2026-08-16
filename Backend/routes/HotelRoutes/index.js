@@ -12,10 +12,10 @@ const {
 const router = express.Router();
 
 router.get("/", searchHotels);
+router.get("/bookings", verifyJWE, getMyHotelBookings);
 router.get("/:id", getHotelDetails);
 router.post("/book", verifyJWE, bookHotel);
 router.post("/book/:id/confirm", verifyJWE, confirmHotelBooking);
 router.post("/:id/review", verifyJWE, submitHotelReview);
-router.get("/bookings", verifyJWE, getMyHotelBookings);
 
 module.exports = router;

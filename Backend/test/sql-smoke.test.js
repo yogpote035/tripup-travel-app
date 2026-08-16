@@ -81,6 +81,17 @@ test("SQL session and notification filters support Mongo-style operators", () =>
   assert.ok(notificationWhere.conditions.some((clause) => clause.includes("is_read")));
 });
 
+test("itinerary search accepts regex filters without crashing SQL conversion", () => {
+  const ItineraryModel = require(path.join(backendRoot, "models", "ItineraryModel"));
+  const where = ItineraryModel.__test__.buildWhereClause({
+    user: "u-1",
+    $or: [{ origin: /manmad/i }, { destination: /goa/i }],
+  });
+
+  assert.ok(where.conditions.some((clause) => clause.includes("LIKE")));
+  assert.ok(where.values.some((value) => String(value).includes("manmad")));
+});
+
 test("bus station maps accept either Map or plain object input", () => {
   const BusController = require(path.join(backendRoot, "controllers", "BusController", "BusController"));
   const mapInput = new Map([

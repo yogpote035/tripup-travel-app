@@ -63,6 +63,7 @@ import AdminLocations from "./components/Admin/AdminLocations.jsx";
 import AdminHotels from "./components/Admin/AdminHotels.jsx";
 import BookingHistory from "./components/Booking/BookingHistory.jsx";
 import HotelSearch from "./components/Hotel/HotelSearch.jsx";
+import HotelBookingHistory from "./components/Hotel/HotelBookingHistory.jsx";
 import "./components/Admin/admin.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:5000/api`;
@@ -196,6 +197,14 @@ function App() {
               }
             />
             <Route path="/booking-history" element={<ProtectedRoutes><BookingHistory /></ProtectedRoutes>} />
+            <Route
+              path="/bookings/hotels"
+              element={
+                <ProtectedRoutes>
+                  <HotelBookingHistory />
+                </ProtectedRoutes>
+              }
+            />
             <Route
               exact
               path="/itinerary"
@@ -362,7 +371,6 @@ function App() {
             {/* For Non Existing Route */}
             <Route path="*" element={<PageNotFound />} />
           </Routes>
-          {!isAdminArea && <div className="mt-10"></div>}
         </main>
 
         {!isAdminArea && <Footer />}

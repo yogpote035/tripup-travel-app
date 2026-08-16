@@ -36,7 +36,7 @@ const ListBuses = () => {
 
   if (buses.length === 0)
     return (
-      <div className="flex items-center justify-center mt-16 px-4">
+      <div className="flex items-center justify-center mt-16 px-4 bg-orange-50">
         <div className="bg-white border-2 border-orange-200 rounded-3xl overflow-hidden max-w-md w-full shadow-lg">
           <div className="h-1.5" style={{ background: perforation }} />
           <div className="bg-stone-900 px-6 py-4 flex items-center justify-between">
@@ -207,7 +207,7 @@ const ListBuses = () => {
 
             {/* Barcode footer */}
             <div className="bg-stone-900 px-6 py-2.5 flex items-end gap-px h-8 border-t border-stone-800">
-              {[2,1,3,1,2,1,3,2,1,2,1,3,1,2,1,3,2,1,2,3,1,2,3,1,2,1,3,2].map((w, i) => (
+              {[2, 1, 3, 1, 2, 1, 3, 2, 1, 2, 1, 3, 1, 2, 1, 3, 2, 1, 2, 3, 1, 2, 3, 1, 2, 1, 3, 2].map((w, i) => (
                 <div
                   key={i}
                   className="bg-white rounded-sm"

@@ -241,10 +241,29 @@ exports.submitHotelReview = async (req, res) => {
 exports.getMyHotelBookings = async (req, res) => {
     try {
         const bookings = await HotelBookingModel.find({ user: req.user.userId })
-            .populate("hotel", "name city pricePerNight")
             .sort({ bookingDate: -1 })
             .lean();
-        res.json({ data: bookings });
+
+        const hydratedBookings = await Promise.all(
+            bookings.map(async (booking) => {
+                const hotelRef = booking.hotel;
+                let hotelInfo = null;
+
+                if (hotelRef) {
+                    const hotelDoc = await HotelModel.findById(hotelRef);
+                    hotelInfo = hotelDoc && typeof hotelDoc === "object" ? hotelDoc.toObject ? hotelDoc.toObject() : hotelDoc : null;
+                }
+
+                return {
+                    ...booking,
+                    hotel: hotelInfo || booking.hotel || null,
+                    hotelName: booking.hotelName || hotelInfo?.name || "Hotel booking",
+                    city: booking.city || hotelInfo?.city || null,
+                };
+            })
+        );
+
+        res.json({ data: hydratedBookings });
     } catch (error) {
         console.error("Error fetching hotel bookings:", error);
         res.status(500).json({ message: "Error fetching hotel bookings" });

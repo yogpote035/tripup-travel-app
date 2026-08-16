@@ -3,7 +3,7 @@ import ListBuses from "./ListBuses";
 
 function BusPage() {
   return (
-    <div>
+    <div className="min-h-screen bg-orange-50 text-black pt-20 pb-10">
       <BusSearch />
       <ListBuses />
     </div>
