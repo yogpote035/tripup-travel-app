@@ -153,7 +153,7 @@ const Home = () => {
 
           <p className="text-stone-400 text-base sm:text-lg mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2">
             Your one-stop platform for booking tickets, planning itineraries, and
-            recording your travel moments — via Train, Bus, or Flight.
+            recording your travel moments — via Train, Bus, Flight or Hotels.
           </p>
 
           <Link
